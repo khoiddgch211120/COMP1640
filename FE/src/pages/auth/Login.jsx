@@ -148,18 +148,18 @@ const Login = () => {
     onClick={() => navigate("/forgot-password")}
     className="text-[#5D5A6F] text-[14px] hover:text-gray-700"
   >
-    Quên mật khẩu?
+    Forgot Password?
   </button>
 </div>
 
 <div className="text-center text-[14px] text-[#5D5A6F] mt-2">
-  Bạn không có tài khoản?{" "}
+Don't have an account? {" "}
   <button
     type="button"
     onClick={() => navigate("/register")}
     className="text-[#DC2626] font-medium hover:underline"
   >
-    Tạo 1 tài khoản
+    Creat one
   </button>
 </div>
           </form>
