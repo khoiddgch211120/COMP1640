@@ -1,0 +1,6 @@
+export const ROLES = {
+    ADMIN: "ADMIN",
+    QA_MANAGER: "QA_MANAGER",
+    QA_COORDINATOR: "QA_COORDINATOR",
+    STAFF: "STAFF",
+  };
