@@ -1,7 +1,9 @@
 D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\exception\BadRequestException.java
+D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\controller\UserController.java
 D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\service\impl\DepartmentServiceImpl.java
 D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\exception\GlobalExceptionHandler.java
 D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\security\JwtTokenUtil.java
+D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\service\impl\UserServiceImpl.java
 D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\dto\request\LoginRequest.java
 D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\model\Role.java
 D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\repository\RoleRepository.java
@@ -22,8 +24,11 @@ D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\model\Department
 D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\dto\response\LoginResponse.java
 D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\controller\AuthController.java
 D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\config\SwaggerConfig.java
+D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\dto\request\UserRequest.java
 D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\dto\request\RegisterRequest.java
+D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\service\UserService.java
 D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\exception\UnauthorizedException.java
 D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\security\JwtAuthenticationFilter.java
 D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\service\impl\AuthServiceImpl.java
+D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\dto\response\UserResponse.java
 D:\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\security\CustomUserDetailsService.java
