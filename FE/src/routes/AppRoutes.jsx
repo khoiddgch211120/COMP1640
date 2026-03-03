@@ -4,17 +4,22 @@ import Register from "../pages/auth/Register";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import ProtectedRoute from "./ProtectedRoute";
 import MainLayout from "../layouts/MainLayout";
+import AdminLayout from "../layouts/AdminLayout";
 import { ROLES } from "../constants/roles";
+
 import IdeaList from "../pages/ideas/IdeaList";
 import SubmitIdea from "../pages/ideas/SubmitIdea";
 import IdeaDetail from "../pages/ideas/IdeaDetail";
 import Statistics from "../pages/statistics/Statistics";
+import AdminAcademicYear from "../pages/admin/AdminAcademicYear";
+import AdminDashboard from "../pages/admin/AdminDashboard";
+import UsersManagement from "../pages/admin/UsersManagement"; // 🔥 thêm dòng này
+import DepartmentManagement from "../pages/admin/DepartmentManagement";
 
-// Temporary pages
+// Optional dashboards
 const StaffDashboard = () => <h1>Staff Dashboard</h1>;
 const ManagerDashboard = () => <h1>QA Manager Dashboard</h1>;
 const CoordinatorDashboard = () => <h1>QA Coordinator Dashboard</h1>;
-const AdminDashboard = () => <h1>Admin Dashboard</h1>;
 
 const AppRoutes = () => {
   return (
@@ -24,7 +29,7 @@ const AppRoutes = () => {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
-      {/* PROTECTED SYSTEM */}
+      {/* USER SYSTEM */}
       <Route
         element={
           <ProtectedRoute>
@@ -32,7 +37,6 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
-        {/* STAFF DASHBOARD */}
         <Route
           path="/"
           element={
@@ -42,7 +46,6 @@ const AppRoutes = () => {
           }
         />
 
-        {/* IDEA LIST */}
         <Route
           path="/ideas"
           element={
@@ -50,7 +53,7 @@ const AppRoutes = () => {
               allowedRoles={[
                 ROLES.STAFF,
                 ROLES.QA_COORDINATOR,
-                ROLES.QA_MANAGER
+                ROLES.QA_MANAGER,
               ]}
             >
               <IdeaList />
@@ -58,7 +61,6 @@ const AppRoutes = () => {
           }
         />
 
-        {/* IDEA DETAIL */}
         <Route
           path="/ideas/:id"
           element={
@@ -66,7 +68,7 @@ const AppRoutes = () => {
               allowedRoles={[
                 ROLES.STAFF,
                 ROLES.QA_COORDINATOR,
-                ROLES.QA_MANAGER
+                ROLES.QA_MANAGER,
               ]}
             >
               <IdeaDetail />
@@ -74,7 +76,6 @@ const AppRoutes = () => {
           }
         />
 
-        {/* SUBMIT IDEA - STAFF ONLY */}
         <Route
           path="/submit-idea"
           element={
@@ -84,17 +85,6 @@ const AppRoutes = () => {
           }
         />
 
-        {/* QA MANAGER DASHBOARD */}
-        <Route
-          path="/manager"
-          element={
-            <ProtectedRoute allowedRoles={[ROLES.QA_MANAGER]}>
-              <ManagerDashboard />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* 📊 STATISTICS - QA_MANAGER ONLY */}
         <Route
           path="/statistics"
           element={
@@ -104,7 +94,15 @@ const AppRoutes = () => {
           }
         />
 
-        {/* QA COORDINATOR */}
+        <Route
+          path="/manager"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.QA_MANAGER]}>
+              <ManagerDashboard />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/coordinator"
           element={
@@ -113,19 +111,34 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
+      </Route>
 
-        {/* ADMIN */}
+      {/* ADMIN SYSTEM */}
+      <Route
+        element={
+          <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+            <AdminLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/admin" element={<AdminDashboard />} />
+
         <Route
-          path="/admin"
-          element={
-            <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
+          path="/admin/academic-years"
+          element={<AdminAcademicYear />}
+        />
+      <Route
+        path="/admin/departments"
+        element={<DepartmentManagement />}
+      />
+        {/* 🔥 NEW ROUTE */}
+        <Route
+          path="/admin/users"
+          element={<UsersManagement />}
         />
       </Route>
 
-      {/* fallback */}
+      {/* FALLBACK */}
       <Route path="*" element={<Navigate to="/login" />} />
     </Routes>
   );

@@ -5,14 +5,14 @@ const initialState = {
     {
       id: "2023-2024",
       name: "Academic Year 2023-2024",
-      closureDate: "2024-03-31",
-      finalClosureDate: "2024-04-15"
+      closureDate: "2027-03-31",
+      finalClosureDate: "2027-04-15"
     },
     {
       id: "2024-2025",
       name: "Academic Year 2024-2025",
-      closureDate: "2025-03-31",
-      finalClosureDate: "2025-04-15"
+      closureDate: "2027-03-31",
+      finalClosureDate: "2027-04-15"
     }
   ],
   currentAcademicYear: {
@@ -29,11 +29,36 @@ const academicYearSlice = createSlice({
   reducers: {
     setCurrentAcademicYear: (state, action) => {
       state.currentAcademicYear = action.payload;
+    },
+
+    addAcademicYear: (state, action) => {
+      state.items.push(action.payload);
+    },
+
+    updateAcademicYear: (state, action) => {
+      const index = state.items.findIndex(
+        (year) => year.id === action.payload.id
+      );
+
+      if (index !== -1) {
+        state.items[index] = action.payload;
+      }
+
+      // Nếu đang edit year active → cập nhật luôn current
+      if (
+        state.currentAcademicYear &&
+        state.currentAcademicYear.id === action.payload.id
+      ) {
+        state.currentAcademicYear = action.payload;
+      }
     }
   }
 });
 
-export const { setCurrentAcademicYear } =
-  academicYearSlice.actions;
+export const {
+  setCurrentAcademicYear,
+  addAcademicYear,
+  updateAcademicYear
+} = academicYearSlice.actions;
 
 export default academicYearSlice.reducer;
