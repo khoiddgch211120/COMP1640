@@ -1,12 +1,20 @@
 package com.example.comp1640.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-@Getter
-@AllArgsConstructor
 public class LoginResponse {
 
     private String token;
     private String email;
+
+    public LoginResponse(String token, String email) {
+        this.token = token;
+        this.email = email;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+    public String getEmail() {
+        return email;
+    }
 }

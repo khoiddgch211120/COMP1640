@@ -1,19 +1,22 @@
 package com.example.comp1640.service.impl;
 
+import java.time.LocalDateTime;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+
 import com.example.comp1640.dto.request.LoginRequest;
 import com.example.comp1640.dto.request.RegisterRequest;
 import com.example.comp1640.dto.response.LoginResponse;
 import com.example.comp1640.dto.response.RegisterResponse;
+import com.example.comp1640.exception.BadRequestException;
+import com.example.comp1640.exception.ResourceNotFoundException;
 import com.example.comp1640.model.Role;
 import com.example.comp1640.model.User;
 import com.example.comp1640.repository.RoleRepository;
 import com.example.comp1640.repository.UserRepository;
 import com.example.comp1640.security.JwtTokenUtil;
 import com.example.comp1640.service.AuthService;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -38,7 +41,7 @@ public class AuthServiceImpl implements AuthService {
         public RegisterResponse register(RegisterRequest request) {
 
                 if (userRepo.existsByEmail(request.getEmail())) {
-                        throw new RuntimeException("Email đã tồn tại");
+                        throw new BadRequestException("Email đã tồn tại");
                 }
 
                 Role defaultRole = roleRepo.findByRoleName("ACADEMIC")
@@ -68,12 +71,12 @@ public class AuthServiceImpl implements AuthService {
         public LoginResponse login(LoginRequest request) {
 
                 User user = userRepo.findByEmail(request.getEmail())
-                                .orElseThrow(() -> new RuntimeException("Email không tồn tại"));
+                                .orElseThrow(() -> new ResourceNotFoundException("Email không tồn tại"));
 
                 if (!passwordEncoder.matches(
                                 request.getPassword(),
                                 user.getPasswordHash())) {
-                        throw new RuntimeException("Sai mật khẩu");
+                        throw new BadRequestException("Sai mật khẩu");
                 }
 
                 String token = jwtUtil.generateToken(user.getEmail());

@@ -3,6 +3,7 @@ package com.example.comp1640.security;
 import com.example.comp1640.model.User;
 import com.example.comp1640.repository.UserRepository;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -33,7 +34,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             return org.springframework.security.core.userdetails.User
                     .withUsername(user.getEmail())
                     .password(user.getPasswordHash())
-                    .authorities()
+                    .authorities(new GrantedAuthority[0])
                     .build();
         }
 
