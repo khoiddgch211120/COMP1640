@@ -4,7 +4,9 @@ import com.example.comp1640.dto.request.LoginRequest;
 import com.example.comp1640.dto.request.RegisterRequest;
 import com.example.comp1640.dto.response.LoginResponse;
 import com.example.comp1640.dto.response.RegisterResponse;
+import com.example.comp1640.model.Role;
 import com.example.comp1640.model.User;
+import com.example.comp1640.repository.RoleRepository;
 import com.example.comp1640.repository.UserRepository;
 import com.example.comp1640.security.JwtTokenUtil;
 import com.example.comp1640.service.AuthService;
@@ -17,14 +19,17 @@ import java.time.LocalDateTime;
 public class AuthServiceImpl implements AuthService {
 
         private final UserRepository userRepo;
+        private final RoleRepository roleRepo;
         private final PasswordEncoder passwordEncoder;
         private final JwtTokenUtil jwtUtil;
 
         public AuthServiceImpl(
                         UserRepository userRepo,
+                        RoleRepository roleRepo,
                         PasswordEncoder passwordEncoder,
                         JwtTokenUtil jwtUtil) {
                 this.userRepo = userRepo;
+                this.roleRepo = roleRepo;
                 this.passwordEncoder = passwordEncoder;
                 this.jwtUtil = jwtUtil;
         }
@@ -36,11 +41,20 @@ public class AuthServiceImpl implements AuthService {
                         throw new RuntimeException("Email đã tồn tại");
                 }
 
+                Role defaultRole = roleRepo.findByRoleName("ACADEMIC")
+                        .orElseGet(() -> {
+                                Role r = new Role();
+                                r.setRoleName("ACADEMIC");
+                                r.setDescription("Default role for registered users");
+                                return roleRepo.save(r);
+                        });
+
                 User user = new User();
                 user.setFullName(request.getFullName());
                 user.setEmail(request.getEmail());
                 user.setPasswordHash(
                                 passwordEncoder.encode(request.getPassword()));
+                user.setRole(defaultRole);
                 user.setIsActive(true);
                 user.setCreatedAt(LocalDateTime.now());
                 user.setUpdatedAt(LocalDateTime.now());
