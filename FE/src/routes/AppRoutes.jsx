@@ -7,6 +7,8 @@ import MainLayout from "../layouts/MainLayout";
 import { ROLES } from "../constants/roles";
 import IdeaList from "../pages/ideas/IdeaList";
 import SubmitIdea from "../pages/ideas/SubmitIdea";
+import IdeaDetail from "../pages/ideas/IdeaDetail";
+import Statistics from "../pages/statistics/Statistics";
 
 // Temporary pages
 const StaffDashboard = () => <h1>Staff Dashboard</h1>;
@@ -56,6 +58,22 @@ const AppRoutes = () => {
           }
         />
 
+        {/* IDEA DETAIL */}
+        <Route
+          path="/ideas/:id"
+          element={
+            <ProtectedRoute
+              allowedRoles={[
+                ROLES.STAFF,
+                ROLES.QA_COORDINATOR,
+                ROLES.QA_MANAGER
+              ]}
+            >
+              <IdeaDetail />
+            </ProtectedRoute>
+          }
+        />
+
         {/* SUBMIT IDEA - STAFF ONLY */}
         <Route
           path="/submit-idea"
@@ -66,12 +84,22 @@ const AppRoutes = () => {
           }
         />
 
-        {/* QA MANAGER */}
+        {/* QA MANAGER DASHBOARD */}
         <Route
           path="/manager"
           element={
             <ProtectedRoute allowedRoles={[ROLES.QA_MANAGER]}>
               <ManagerDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 📊 STATISTICS - QA_MANAGER ONLY */}
+        <Route
+          path="/statistics"
+          element={
+            <ProtectedRoute allowedRoles={[ROLES.QA_MANAGER]}>
+              <Statistics />
             </ProtectedRoute>
           }
         />

@@ -56,9 +56,50 @@ const ideaSlice = createSlice({
           createdAt: new Date().toISOString()
         }
       })
+    },
+
+    /* 👁️ Increase view */
+    incrementView: (state, action) => {
+      const idea = state.ideas.find(i => i.id === action.payload);
+      if (idea) {
+        idea.views += 1;
+      }
+    },
+
+    /* 👍👎 Vote */
+    toggleVote: (state, action) => {
+      const { ideaId, userId, type } = action.payload;
+      const idea = state.ideas.find(i => i.id === ideaId);
+      if (!idea) return;
+
+      // remove previous vote
+      idea.upvotes = idea.upvotes.filter(id => id !== userId);
+      idea.downvotes = idea.downvotes.filter(id => id !== userId);
+
+      if (type === "up") idea.upvotes.push(userId);
+      if (type === "down") idea.downvotes.push(userId);
+    },
+
+    /* 💬 Add comment */
+    addComment: (state, action) => {
+      const { ideaId, comment } = action.payload;
+      const idea = state.ideas.find(i => i.id === ideaId);
+      if (!idea) return;
+
+      idea.comments.push({
+        id: nanoid(),
+        ...comment,
+        createdAt: new Date().toISOString()
+      });
     }
   }
 });
 
-export const { addIdea } = ideaSlice.actions;
+export const {
+  addIdea,
+  incrementView,
+  toggleVote,
+  addComment
+} = ideaSlice.actions;
+
 export default ideaSlice.reducer;
