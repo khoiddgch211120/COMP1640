@@ -1,0 +1,16 @@
+D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\Comp1640Application.java
+D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\entity\AcademicYear.java
+D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\entity\Category.java
+D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\entity\Comment.java
+D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\entity\Department.java
+D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\entity\Document.java
+D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\entity\Idea.java
+D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\entity\IdeaCategory.java
+D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\entity\IdeaCategoryKey.java
+D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\entity\NotificationLog.java
+D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\entity\Role.java
+D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\entity\TermsCondition.java
+D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\entity\User.java
+D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\entity\UserTermsAcceptance.java
+D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\entity\UserTermsKey.java
+D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\entity\Vote.java

@@ -1,12 +1,22 @@
+package com.example.comp1640.entity;
+
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "notification_log")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class NotificationLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "log_id")
     private Integer logId;
 
     @ManyToOne
@@ -17,10 +27,11 @@ public class NotificationLog {
     @JoinColumn(name = "idea_id")
     private Idea idea;
 
+    @Column(name = "notif_type")
     private String notifType;
 
     private String status;
 
+    @Column(name = "sent_at")
     private LocalDateTime sentAt;
-
 }
