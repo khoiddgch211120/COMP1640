@@ -1,9 +1,7 @@
 package com.example.comp1640.security;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -12,71 +10,72 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final JwtTokenUtil jwtTokenUtil;
-    private final UserDetailsService userDetailsService;
+        private final JwtTokenUtil jwtTokenUtil;
+        private final UserDetailsService userDetailsService;
+        private final TokenBlacklistService blacklistService;
 
-    public JwtAuthenticationFilter(
-            JwtTokenUtil jwtTokenUtil,
-            @Lazy UserDetailsService userDetailsService
-    ) {
-        this.jwtTokenUtil = jwtTokenUtil;
-        this.userDetailsService = userDetailsService;
-    }
-
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getServletPath();
-        return path.startsWith("/auth/")
-                || path.startsWith("/swagger-ui/")
-                || path.startsWith("/v3/api-docs");
-    }
-
-    @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
-
-        String authHeader = request.getHeader("Authorization");
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response);
-            return;
+        public JwtAuthenticationFilter(
+                        JwtTokenUtil jwtTokenUtil,
+                        @Lazy UserDetailsService userDetailsService,
+                        TokenBlacklistService blacklistService) {
+                this.jwtTokenUtil = jwtTokenUtil;
+                this.userDetailsService = userDetailsService;
+                this.blacklistService = blacklistService;
         }
 
-        String token = authHeader.substring(7);
-
-        if (!jwtTokenUtil.validateToken(token)) {
-            filterChain.doFilter(request, response);
-            return;
+        @Override
+        protected boolean shouldNotFilter(HttpServletRequest request) {
+                String path = request.getServletPath();
+                return path.startsWith("/auth/")
+                                || path.startsWith("/swagger-ui/")
+                                || path.startsWith("/v3/api-docs");
         }
 
-        String email = jwtTokenUtil.getEmailFromToken(token);
+        @Override
+        protected void doFilterInternal(
+                        HttpServletRequest request,
+                        HttpServletResponse response,
+                        FilterChain filterChain) throws ServletException, IOException {
 
-        if (email != null &&
-                SecurityContextHolder.getContext().getAuthentication() == null) {
+                String authHeader = request.getHeader("Authorization");
 
-            UserDetails userDetails =
-                    userDetailsService.loadUserByUsername(email);
+                if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                        filterChain.doFilter(request, response);
+                        return;
+                }
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
+                String token = authHeader.substring(7);
 
-            SecurityContextHolder
-                    .getContext()
-                    .setAuthentication(authentication);
+                if (!jwtTokenUtil.validateToken(token) || blacklistService.isBlacklisted(token)) {
+                        filterChain.doFilter(request, response);
+                        return;
+                }
+
+                String email = jwtTokenUtil.getEmailFromToken(token);
+
+                if (email != null
+                                && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                        UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+
+                        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                                        userDetails,
+                                        null,
+                                        userDetails.getAuthorities());
+
+                        SecurityContextHolder
+                                        .getContext()
+                                        .setAuthentication(authentication);
+                }
+
+                filterChain.doFilter(request, response);
         }
-
-        filterChain.doFilter(request, response);
-    }
 }

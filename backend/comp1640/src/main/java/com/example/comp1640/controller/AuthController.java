@@ -5,7 +5,9 @@ import com.example.comp1640.dto.request.RegisterRequest;
 import com.example.comp1640.dto.response.LoginResponse;
 import com.example.comp1640.dto.response.RegisterResponse;
 import com.example.comp1640.service.AuthService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/auth")
@@ -28,7 +30,11 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public String logout() {
-        return "Logout thành công (client xoá token)";
+    public ResponseEntity<String> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            authService.logout(authHeader.substring(7));
+        }
+        return ResponseEntity.ok("Logout thanh cong");
     }
 }

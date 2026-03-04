@@ -11,11 +11,13 @@ import com.example.comp1640.dto.response.LoginResponse;
 import com.example.comp1640.dto.response.RegisterResponse;
 import com.example.comp1640.exception.BadRequestException;
 import com.example.comp1640.exception.ResourceNotFoundException;
+import com.example.comp1640.exception.UnauthorizedException;
 import com.example.comp1640.model.Role;
 import com.example.comp1640.model.User;
 import com.example.comp1640.repository.RoleRepository;
 import com.example.comp1640.repository.UserRepository;
 import com.example.comp1640.security.JwtTokenUtil;
+import com.example.comp1640.security.TokenBlacklistService;
 import com.example.comp1640.service.AuthService;
 
 @Service
@@ -25,16 +27,19 @@ public class AuthServiceImpl implements AuthService {
         private final RoleRepository roleRepo;
         private final PasswordEncoder passwordEncoder;
         private final JwtTokenUtil jwtUtil;
+        private final TokenBlacklistService blacklistService;
 
         public AuthServiceImpl(
                         UserRepository userRepo,
                         RoleRepository roleRepo,
                         PasswordEncoder passwordEncoder,
-                        JwtTokenUtil jwtUtil) {
+                        JwtTokenUtil jwtUtil,
+                        TokenBlacklistService blacklistService) {
                 this.userRepo = userRepo;
                 this.roleRepo = roleRepo;
                 this.passwordEncoder = passwordEncoder;
                 this.jwtUtil = jwtUtil;
+                this.blacklistService = blacklistService;
         }
 
         @Override
@@ -73,14 +78,22 @@ public class AuthServiceImpl implements AuthService {
                 User user = userRepo.findByEmail(request.getEmail())
                                 .orElseThrow(() -> new ResourceNotFoundException("Email không tồn tại"));
 
-                if (!passwordEncoder.matches(
-                                request.getPassword(),
-                                user.getPasswordHash())) {
+                if (Boolean.FALSE.equals(user.getIsActive())) {
+                        throw new UnauthorizedException("Tài khoản đã bị vô hiệu hóa");
+                }
+
+                if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
                         throw new BadRequestException("Sai mật khẩu");
                 }
 
                 String token = jwtUtil.generateToken(user.getEmail());
+                String role = user.getRole() != null ? user.getRole().getRoleName() : null;
 
-                return new LoginResponse(token, user.getEmail());
+                return new LoginResponse(token, user.getEmail(), role);
+        }
+
+        @Override
+        public void logout(String token) {
+                blacklistService.blacklist(token);
         }
 }
