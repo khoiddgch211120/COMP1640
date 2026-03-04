@@ -3,6 +3,8 @@ package com.example.comp1640.service.impl;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import com.example.comp1640.dto.response.DocumentResponse;
+import com.example.comp1640.exception.BadRequestException;
+import com.example.comp1640.exception.ResourceNotFoundException;
 import com.example.comp1640.model.Document;
 import com.example.comp1640.model.Idea;
 import com.example.comp1640.model.User;
@@ -34,18 +36,21 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public DocumentResponse upload(Integer ideaId, MultipartFile file) {
         Idea idea = ideaRepository.findById(ideaId)
-                .orElseThrow(() -> new RuntimeException("Idea not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ý tưởng với id: " + ideaId));
 
+        // Chỉ chủ idea mới được upload file
         User currentUser = getCurrentUser();
         if (!idea.getUser().getUserId().equals(currentUser.getUserId())) {
-            throw new AccessDeniedException("You can only upload files to your own idea");
+            throw new AccessDeniedException("Bạn chỉ được upload file cho ý tưởng của mình");
         }
 
         try {
+            // Upload lên Cloudinary, lưu vào folder theo ideaId
             Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
                     ObjectUtils.asMap(
                             "folder", "comp1640/ideas/" + ideaId,
-                            "resource_type", "auto"));
+                            "resource_type", "auto"
+                    ));
 
             Document document = new Document();
             document.setIdea(idea);
@@ -57,7 +62,7 @@ public class DocumentServiceImpl implements DocumentService {
 
             return toResponse(documentRepository.save(document));
         } catch (IOException e) {
-            throw new RuntimeException("File upload failed: " + e.getMessage());
+            throw new BadRequestException("Upload file thất bại: " + e.getMessage());
         }
     }
 
@@ -70,20 +75,23 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public void delete(Integer documentId) {
         Document document = documentRepository.findById(documentId)
-                .orElseThrow(() -> new RuntimeException("Document not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy file với id: " + documentId));
 
         User currentUser = getCurrentUser();
         boolean isAdmin = currentUser.getRole() != null &&
                 "ADMIN".equals(currentUser.getRole().getRoleName());
 
+        // ADMIN hoặc chủ idea mới được xóa file
         if (!document.getIdea().getUser().getUserId().equals(currentUser.getUserId()) && !isAdmin) {
-            throw new AccessDeniedException("You can only delete your own files");
+            throw new AccessDeniedException("Bạn chỉ được xóa file của ý tưởng mình");
         }
 
         try {
-            cloudinary.uploader().destroy(document.getPublicId(), ObjectUtils.asMap("resource_type", "auto"));
+            // Xóa file khỏi Cloudinary theo public_id
+            cloudinary.uploader().destroy(document.getPublicId(),
+                    ObjectUtils.asMap("resource_type", "auto"));
         } catch (IOException e) {
-            throw new RuntimeException("Failed to delete file from Cloudinary: " + e.getMessage());
+            throw new BadRequestException("Xóa file trên Cloudinary thất bại: " + e.getMessage());
         }
 
         documentRepository.delete(document);
@@ -92,7 +100,7 @@ public class DocumentServiceImpl implements DocumentService {
     private User getCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user hiện tại"));
     }
 
     private DocumentResponse toResponse(Document doc) {
@@ -102,6 +110,7 @@ public class DocumentServiceImpl implements DocumentService {
                 doc.getFileName(),
                 doc.getFileUrl(),
                 doc.getFileType(),
-                doc.getUploadedAt());
+                doc.getUploadedAt()
+        );
     }
 }

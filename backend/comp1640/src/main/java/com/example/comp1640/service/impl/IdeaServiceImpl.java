@@ -24,25 +24,16 @@ import com.example.comp1640.repository.CategoryRepository;
 import com.example.comp1640.repository.IdeaRepository;
 import com.example.comp1640.repository.UserRepository;
 import com.example.comp1640.service.IdeaService;
+import lombok.RequiredArgsConstructor;
 
 @Service
+@RequiredArgsConstructor
 public class IdeaServiceImpl implements IdeaService {
 
     private final IdeaRepository ideaRepo;
     private final UserRepository userRepo;
     private final AcademicYearRepository academicYearRepo;
     private final CategoryRepository categoryRepo;
-
-    public IdeaServiceImpl(
-            IdeaRepository ideaRepo,
-            UserRepository userRepo,
-            AcademicYearRepository academicYearRepo,
-            CategoryRepository categoryRepo) {
-        this.ideaRepo = ideaRepo;
-        this.userRepo = userRepo;
-        this.academicYearRepo = academicYearRepo;
-        this.categoryRepo = categoryRepo;
-    }
 
     @Override
     @Transactional

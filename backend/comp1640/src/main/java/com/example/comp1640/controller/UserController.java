@@ -31,26 +31,26 @@ public class UserController {
 
     // Chỉ ADMIN mới được tạo user
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
     public ResponseEntity<UserResponse> create(@RequestBody UserRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.create(request));
     }
 
     // Chỉ ADMIN mới xem được tất cả user
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
     public ResponseEntity<List<UserResponse>> getAll() {
         return ResponseEntity.ok(userService.getAll());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
     public ResponseEntity<UserResponse> getById(@PathVariable Integer id) {
         return ResponseEntity.ok(userService.getById(id));
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
     public ResponseEntity<UserResponse> update(
             @PathVariable Integer id,
             @RequestBody UserRequest request) {
@@ -59,7 +59,7 @@ public class UserController {
 
     // Xóa hẳn user
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();
@@ -67,7 +67,7 @@ public class UserController {
 
     // Kích hoạt / vô hiệu hóa user
     @PatchMapping("/{id}/toggle-active")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
     public ResponseEntity<Void> toggleActive(@PathVariable Integer id) {
         userService.toggleActive(id);
         return ResponseEntity.noContent().build();
