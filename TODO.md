@@ -1,24 +1,39 @@
-# TODO - Entity Update Plan
+# COMP1640 Implementation TODO
 
-## Status: Completed ✓
+## Step 1: Configure MySQL Database Connection
+- [x] Update application.properties with MySQL connection details
 
-### All Entity Files Created Successfully:
+## Step 2: Create Database Schema (SQL Script)
+- [x] Create SQL script to initialize the database
 
-- [x] 1. UserTermsKey.java - Composite primary key class
-- [x] 2. Role.java - Updated with Lombok annotations
-- [x] 3. Department.java - Updated with Lombok annotations
-- [x] 4. User.java - Updated with Lombok annotations, relationships
-- [x] 5. TermsCondition.java - Updated with Lombok annotations
-- [x] 6. UserTermsAcceptance.java - Updated with composite key, relationships
-- [x] 7. AcademicYear.java - Updated with Lombok annotations
-- [x] 8. Category.java - Updated with Lombok annotations
-- [x] 9. Idea.java - Updated with Lombok annotations, OneToMany relationships
-- [x] 10. IdeaCategory.java - Junction table entity
-- [x] 11. IdeaCategoryKey.java - Composite key for IdeaCategory
-- [x] 12. Document.java - Updated with Lombok annotations
-- [x] 13. Comment.java - Updated with Lombok annotations
-- [x] 14. Vote.java - Updated with Lombok annotations, unique constraint
-- [x] 15. NotificationLog.java - Updated with Lombok annotations
+## Step 3: Create Repositories
+- [x] AcademicYearRepository
+- [x] CategoryRepository
+- [x] IdeaRepository
+- [x] UserRepository
+- [x] VoteRepository
+- [x] DocumentRepository
 
-### Build Status: SUCCESS
+## Step 4: Create DTOs
+- [x] AcademicYearDTO
+- [x] CategoryDTO
+- [x] IdeaDTO
+- [x] DocumentDTO
+- [x] CreateIdeaRequest
+- [x] UpdateIdeaRequest
+
+## Step 5: Create Services
+- [x] AcademicYearService
+- [x] CategoryService
+- [x] IdeaService
+
+## Step 6: Create Controllers
+- [x] AcademicYearController
+- [x] CategoryController
+- [x] IdeaController
+
+## Step 7: Additional Configuration
+- [x] GlobalExceptionHandler
+- [x] SecurityConfig
+- [x] data.sql initialization script
 
