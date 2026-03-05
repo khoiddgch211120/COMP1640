@@ -8,6 +8,7 @@ import java.util.List;
 public interface CommentService {
     CommentResponse add(Integer ideaId, CommentRequest request);
     List<CommentResponse> getByIdea(Integer ideaId);
+    List<CommentResponse> getLatest();
     CommentResponse update(Integer commentId, CommentRequest request);
     void delete(Integer commentId);
 }

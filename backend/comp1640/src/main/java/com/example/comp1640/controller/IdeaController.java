@@ -2,6 +2,9 @@ package com.example.comp1640.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,12 +37,33 @@ public class IdeaController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ideaService.submit(request));
     }
 
-    // Lấy danh sách, lọc theo yearId và/hoặc deptId
+    // Danh sách idea, lọc theo yearId/deptId, phân trang (mặc định 5/trang)
     @GetMapping
-    public ResponseEntity<List<IdeaResponse>> getAll(
+    public ResponseEntity<Page<IdeaResponse>> getAll(
             @RequestParam(required = false) Integer yearId,
-            @RequestParam(required = false) Integer deptId) {
-        return ResponseEntity.ok(ideaService.getAll(yearId, deptId));
+            @RequestParam(required = false) Integer deptId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        var pageable = PageRequest.of(page, size, Sort.by("submittedAt").descending());
+        return ResponseEntity.ok(ideaService.getAll(yearId, deptId, pageable));
+    }
+
+    // Ý tưởng phổ biến nhất (phân trang)
+    @GetMapping("/most-popular")
+    public ResponseEntity<Page<IdeaResponse>> getMostPopular(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        var pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(ideaService.getMostPopular(pageable));
+    }
+
+    // Ý tưởng mới nhất (phân trang)
+    @GetMapping("/latest")
+    public ResponseEntity<Page<IdeaResponse>> getLatest(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+        var pageable = PageRequest.of(page, size);
+        return ResponseEntity.ok(ideaService.getLatest(pageable));
     }
 
     // Lấy theo id (tăng view_count)

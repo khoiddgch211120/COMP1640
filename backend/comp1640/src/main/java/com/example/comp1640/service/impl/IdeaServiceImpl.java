@@ -3,9 +3,13 @@ package com.example.comp1640.service.impl;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -87,22 +91,33 @@ public class IdeaServiceImpl implements IdeaService {
     }
 
     @Override
-    public List<IdeaResponse> getAll(Integer yearId, Integer deptId) {
-        List<Idea> ideas;
+    public Page<IdeaResponse> getAll(Integer yearId, Integer deptId, Pageable pageable) {
+        Page<Idea> ideas;
         if (yearId != null && deptId != null) {
-            ideas = ideaRepo.findByAcademicYear_YearIdAndDepartment_DeptId(yearId, deptId);
+            ideas = ideaRepo.findByAcademicYear_YearIdAndDepartment_DeptId(yearId, deptId, pageable);
         } else if (yearId != null) {
-            ideas = ideaRepo.findByAcademicYear_YearId(yearId);
+            ideas = ideaRepo.findByAcademicYear_YearId(yearId, pageable);
         } else if (deptId != null) {
-            ideas = ideaRepo.findByDepartment_DeptId(deptId);
+            ideas = ideaRepo.findByDepartment_DeptId(deptId, pageable);
         } else {
-            ideas = ideaRepo.findAll();
+            ideas = ideaRepo.findAll(pageable);
         }
 
-        User currentUser = getCurrentUser();
-        return ideas.stream()
-                .map(i -> toResponse(i, currentUser))
-                .collect(Collectors.toList());
+        // Cho phép guest xem (không cần đăng nhập)
+        User currentUser = getCurrentUserOptional().orElse(null);
+        return ideas.map(i -> toResponse(i, currentUser));
+    }
+
+    @Override
+    public Page<IdeaResponse> getMostPopular(Pageable pageable) {
+        User currentUser = getCurrentUserOptional().orElse(null);
+        return ideaRepo.findMostPopular(pageable).map(i -> toResponse(i, currentUser));
+    }
+
+    @Override
+    public Page<IdeaResponse> getLatest(Pageable pageable) {
+        User currentUser = getCurrentUserOptional().orElse(null);
+        return ideaRepo.findLatest(pageable).map(i -> toResponse(i, currentUser));
     }
 
     @Override
@@ -112,7 +127,9 @@ public class IdeaServiceImpl implements IdeaService {
         // Tăng view count
         idea.setViewCount(idea.getViewCount() + 1);
         ideaRepo.save(idea);
-        return toResponse(idea, getCurrentUser());
+        // Cho phép guest xem
+        User currentUser = getCurrentUserOptional().orElse(null);
+        return toResponse(idea, currentUser);
     }
 
     @Override
@@ -170,7 +187,8 @@ public class IdeaServiceImpl implements IdeaService {
 
     @Override
     public List<IdeaResponse> getMostViewed(Integer yearId) {
-        User currentUser = getCurrentUser();
+        // Cho phép guest xem
+        User currentUser = getCurrentUserOptional().orElse(null);
         return ideaRepo.findMostViewed(yearId).stream()
                 .map(i -> toResponse(i, currentUser))
                 .collect(Collectors.toList());
@@ -183,13 +201,28 @@ public class IdeaServiceImpl implements IdeaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ý tưởng với id: " + id));
     }
 
+    /** Lấy user đang đăng nhập, ném lỗi nếu chưa xác thực */
     private User getCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepo.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user hiện tại"));
     }
 
+    /** Lấy user đang đăng nhập, trả về empty nếu là guest (không cần đăng nhập) */
+    private Optional<User> getCurrentUserOptional() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+            return Optional.empty();
+        }
+        return userRepo.findByEmail(auth.getName());
+    }
+
+    /**
+     * ADMIN và QA_MGR được xem danh tính thật của ý tưởng ẩn danh.
+     * Guest (viewer = null) không được xem.
+     */
     private boolean canViewIdentity(User viewer) {
+        if (viewer == null) return false;
         String role = viewer.getRole() != null ? viewer.getRole().getRoleName() : "";
         return role.equals("ADMIN") || role.equals("QA_MGR");
     }

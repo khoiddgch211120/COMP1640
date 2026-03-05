@@ -12,27 +12,32 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("/documents")
+@RequestMapping("/ideas/{ideaId}/documents")
 @RequiredArgsConstructor
 public class DocumentController {
 
     private final DocumentService documentService;
 
+    // Upload file đính kèm cho ý tưởng (chỉ chủ idea)
     @Operation(summary = "Upload file đính kèm cho idea")
-    @PostMapping(value = "/upload/{ideaId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<DocumentResponse> upload(
             @PathVariable Integer ideaId,
             @RequestParam("file") MultipartFile file) {
         return ResponseEntity.ok(documentService.upload(ideaId, file));
     }
 
-    @GetMapping("/idea/{ideaId}")
+    // Lấy danh sách file đính kèm của một ý tưởng
+    @GetMapping
     public ResponseEntity<List<DocumentResponse>> getByIdea(@PathVariable Integer ideaId) {
         return ResponseEntity.ok(documentService.getByIdea(ideaId));
     }
 
+    // Xóa file đính kèm (chủ idea hoặc ADMIN)
     @DeleteMapping("/{documentId}")
-    public ResponseEntity<Void> delete(@PathVariable Integer documentId) {
+    public ResponseEntity<Void> delete(
+            @PathVariable Integer ideaId,
+            @PathVariable Integer documentId) {
         documentService.delete(documentId);
         return ResponseEntity.ok().build();
     }

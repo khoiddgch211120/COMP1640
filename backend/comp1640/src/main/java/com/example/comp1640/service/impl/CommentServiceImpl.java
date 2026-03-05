@@ -13,12 +13,14 @@ import com.example.comp1640.repository.UserRepository;
 import com.example.comp1640.service.CommentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -58,8 +60,17 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<CommentResponse> getByIdea(Integer ideaId) {
-        User currentUser = getCurrentUser();
+        // Cho phép guest xem (không cần đăng nhập)
+        User currentUser = getCurrentUserOptional().orElse(null);
         return commentRepository.findByIdeaIdeaIdOrderByCreatedAtAsc(ideaId)
+                .stream().map(c -> toResponse(c, currentUser)).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<CommentResponse> getLatest() {
+        // Cho phép guest xem (không cần đăng nhập)
+        User currentUser = getCurrentUserOptional().orElse(null);
+        return commentRepository.findTop20ByOrderByCreatedAtDesc()
                 .stream().map(c -> toResponse(c, currentUser)).collect(Collectors.toList());
     }
 
@@ -112,18 +123,29 @@ public class CommentServiceImpl implements CommentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy bình luận với id: " + commentId));
     }
 
+    /** Lấy user đang đăng nhập, ném lỗi nếu chưa xác thực */
     private User getCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user hiện tại"));
     }
 
+    /** Lấy user đang đăng nhập, trả về empty nếu là guest */
+    private Optional<User> getCurrentUserOptional() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+            return Optional.empty();
+        }
+        return userRepository.findByEmail(auth.getName());
+    }
+
     /**
      * Chuyển Comment entity sang DTO.
      * Nếu comment ẩn danh và người xem không phải ADMIN/QA_MGR → ẩn tên và id tác giả.
+     * Guest (viewer = null) luôn thấy "Ẩn danh".
      */
     private CommentResponse toResponse(Comment comment, User viewer) {
-        String role = viewer.getRole() != null ? viewer.getRole().getRoleName() : "";
+        String role = (viewer != null && viewer.getRole() != null) ? viewer.getRole().getRoleName() : "";
         boolean canSeeIdentity = role.equals("ADMIN") || role.equals("QA_MGR");
         boolean anonymous = Boolean.TRUE.equals(comment.getIsAnonymous());
 

@@ -2,6 +2,7 @@ package com.example.comp1640.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -28,13 +29,24 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
 
-                        .requestMatchers(
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**")
-                        .permitAll()
+                        // Swagger UI
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
 
+                        // Auth endpoints
                         .requestMatchers("/auth/**").permitAll()
 
+                        // Public GET endpoints (không cần đăng nhập theo SRS section 3.1)
+                        .requestMatchers(HttpMethod.GET,
+                                "/ideas", "/ideas/most-popular", "/ideas/most-viewed", "/ideas/latest",
+                                "/ideas/*",
+                                "/ideas/*/comments", "/comments/latest",
+                                "/ideas/*/documents",
+                                "/categories",
+                                "/departments",
+                                "/terms"
+                        ).permitAll()
+
+                        // Tất cả request còn lại phải xác thực
                         .anyRequest().authenticated())
                 .addFilterBefore(
                         jwtFilter,
