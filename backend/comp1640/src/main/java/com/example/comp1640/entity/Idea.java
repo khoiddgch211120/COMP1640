@@ -1,71 +1,70 @@
 package com.example.comp1640.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "idea")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Idea {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idea_id")
     private Integer ideaId;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
-    @JoinColumn(name = "dept_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dept_id", nullable = false)
     private Department department;
 
-    @ManyToOne
-    @JoinColumn(name = "year_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "year_id", nullable = false)
     private AcademicYear academicYear;
 
+    @Column(nullable = false, length = 500)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(name = "is_anonymous")
-    private Boolean isAnonymous;
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean isAnonymous = false;
 
-    @Column(name = "is_disabled")
-    private Boolean isDisabled;
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean isDisabled = false;
 
-    @Column(name = "view_count")
-    private Integer viewCount;
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer viewCount = 0;
 
-    @Column(name = "terms_accepted")
-    private Boolean termsAccepted;
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean termsAccepted = false;
 
-    @Column(name = "submitted_at")
+    @CreationTimestamp
     private LocalDateTime submittedAt;
 
-    @Column(name = "updated_at")
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    // ── Many-to-Many with Category ───────────────────────────
     @ManyToMany
-    @JoinTable(name = "idea_category", joinColumns = @JoinColumn(name = "idea_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
-    private List<Category> categories = new ArrayList<>();
-
-    @OneToMany(mappedBy = "idea", cascade = CascadeType.ALL)
-    private List<Document> documents = new ArrayList<>();
-
-    @OneToMany(mappedBy = "idea", cascade = CascadeType.ALL)
-    private List<Comment> comments = new ArrayList<>();
-
-    @OneToMany(mappedBy = "idea", cascade = CascadeType.ALL)
-    private List<Vote> votes = new ArrayList<>();
+    @JoinTable(
+        name = "idea_category",
+        joinColumns = @JoinColumn(name = "idea_id"),
+        inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    @Builder.Default
+    private Set<Category> categories = new HashSet<>();
 }

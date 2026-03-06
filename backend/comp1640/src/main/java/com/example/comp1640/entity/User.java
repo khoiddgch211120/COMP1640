@@ -1,49 +1,50 @@
 package com.example.comp1640.entity;
 
+import com.example.comp1640.enums.StaffType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "user")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
     private Integer userId;
 
-    @ManyToOne
-    @JoinColumn(name = "dept_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dept_id")          // nullable for admin
     private Department department;
 
-    @ManyToOne
-    @JoinColumn(name = "role_id")
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
-    @Column(name = "full_name")
+    @Column(nullable = false, length = 255)
     private String fullName;
 
+    @Column(nullable = false, unique = true, length = 255)
     private String email;
 
-    @Column(name = "password_hash")
+    @Column(nullable = false, length = 255)
     private String passwordHash;
 
-    @Column(name = "staff_type")
-    private String staffType;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private StaffType staffType;
 
-    @Column(name = "is_active")
-    private Boolean isActive;
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean isActive = true;
 
-    @Column(name = "created_at")
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 }
