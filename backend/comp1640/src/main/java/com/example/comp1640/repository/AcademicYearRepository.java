@@ -1,13 +1,19 @@
 package com.example.comp1640.repository;
 
-import com.example.comp1640.entity.AcademicYear;
+import java.time.LocalDate;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-import java.util.List;
+import com.example.comp1640.model.AcademicYear;
 
-@Repository
 public interface AcademicYearRepository extends JpaRepository<AcademicYear, Integer> {
-    List<AcademicYear> findAllByOrderByYearIdDesc();
-}
 
+    boolean existsByYearLabel(String yearLabel);
+
+    // Lấy năm học hiện tại: hôm nay nằm trong khoảng trước final_closure_date
+    @Query("SELECT a FROM AcademicYear a WHERE :today <= a.finalClosureDate ORDER BY a.ideaClosureDate DESC")
+    Optional<AcademicYear> findCurrent(@Param("today") LocalDate today);
+}

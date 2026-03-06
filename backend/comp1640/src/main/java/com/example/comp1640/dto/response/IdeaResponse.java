@@ -1,41 +1,38 @@
 package com.example.comp1640.dto.response;
 
-import com.example.comp1640.entity.Category;
-import com.example.comp1640.entity.Idea;
-
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Set;
 
-public record IdeaResponse(
-    Integer ideaId,
-    String  title,
-    String  content,
-    String  authorName,    // null if anonymous
-    String  deptName,
-    String  yearLabel,
-    Boolean isAnonymous,
-    Boolean isDisabled,
-    Integer viewCount,
-    Integer voteScore,
-    Integer myVote,        // +1, -1, or null
-    List<String> categories,
-    LocalDateTime submittedAt
-) {
-    public static IdeaResponse from(Idea idea, boolean showAuthor, Integer voteScore, Integer myVote) {
-        return new IdeaResponse(
-            idea.getIdeaId(),
-            idea.getTitle(),
-            idea.getContent(),
-            showAuthor ? idea.getUser().getFullName() : null,
-            idea.getDepartment().getDeptName(),
-            idea.getAcademicYear().getYearLabel(),
-            idea.getIsAnonymous(),
-            idea.getIsDisabled(),
-            idea.getViewCount(),
-            voteScore,
-            myVote,
-            idea.getCategories().stream().map(Category::getCategoryName).toList(),
-            idea.getSubmittedAt()
-        );
-    }
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class IdeaResponse {
+
+    private Integer ideaId;
+    private String title;
+    private String content;
+
+    // Ẩn danh: trả null nếu isAnonymous = true (trừ ADMIN/QA_MGR)
+    private String authorName;
+    private Integer authorId;
+
+    private String departmentName;
+    private String academicYearLabel;
+    private Set<String> categories;
+
+    private Boolean isAnonymous;
+    private Boolean isDisabled;
+    private Integer viewCount;
+    private long upvotes;
+    private long downvotes;
+    private Boolean termsAccepted;
+
+    private LocalDateTime submittedAt;
+    private LocalDateTime updatedAt;
 }

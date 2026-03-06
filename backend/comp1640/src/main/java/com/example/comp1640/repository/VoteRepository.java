@@ -1,20 +1,23 @@
 package com.example.comp1640.repository;
 
-import com.example.comp1640.entity.Vote;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.example.comp1640.model.Vote;
+import com.example.comp1640.model.Vote.VoteType;
 
-@Repository
 public interface VoteRepository extends JpaRepository<Vote, Integer> {
-   List<Vote> findByIdea_IdeaId(Integer ideaId);
 
-   Optional<Vote> findByUser_UserIdAndIdea_IdeaId(Integer userId, Integer ideaId);
+    Optional<Vote> findByIdea_IdeaIdAndUser_UserId(Integer ideaId, Integer userId);
 
-   @Query("SELECT SUM(v.voteType) FROM Vote v WHERE v.idea.ideaId = :ideaId")
-   Integer getSumVoteTypeByIdeaId(@Param("ideaId") Integer ideaId);
+    long countByIdea_IdeaIdAndVoteType(Integer ideaId, VoteType voteType);
+
+    @Query("SELECT COUNT(v) FROM Vote v WHERE v.idea.ideaId = :ideaId AND v.voteType = 'UPVOTE'")
+    long countUpvotes(@Param("ideaId") Integer ideaId);
+
+    @Query("SELECT COUNT(v) FROM Vote v WHERE v.idea.ideaId = :ideaId AND v.voteType = 'DOWNVOTE'")
+    long countDownvotes(@Param("ideaId") Integer ideaId);
 }

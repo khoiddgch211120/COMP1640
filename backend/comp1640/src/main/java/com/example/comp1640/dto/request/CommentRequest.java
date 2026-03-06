@@ -1,3 +1,11 @@
 package com.example.comp1640.dto.request;
-import jakarta.validation.constraints.NotBlank;
-public record CommentRequest(@NotBlank String content, Boolean isAnonymous) {}
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class CommentRequest {
+    private String content;
+    private Boolean isAnonymous = false;
+}

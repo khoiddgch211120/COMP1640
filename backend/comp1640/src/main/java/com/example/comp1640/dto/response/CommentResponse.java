@@ -1,21 +1,21 @@
 package com.example.comp1640.dto.response;
 
-import com.example.comp1640.entity.Comment;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
-public record CommentResponse(
-    Integer commentId, Integer ideaId,
-    String  authorName, Boolean isAnonymous,
-    String  content, LocalDateTime createdAt
-) {
-    public static CommentResponse from(Comment c) {
-        return new CommentResponse(
-            c.getCommentId(),
-            c.getIdea().getIdeaId(),
-            c.getIsAnonymous() ? null : c.getUser().getFullName(),
-            c.getIsAnonymous(),
-            c.getContent(),
-            c.getCreatedAt()
-        );
-    }
+@Getter
+@Setter
+@AllArgsConstructor
+public class CommentResponse {
+    private Integer commentId;
+    private Integer ideaId;
+    private String authorName;
+    private Integer authorId;
+    private String content;
+    private Boolean isAnonymous;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
