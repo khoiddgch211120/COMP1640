@@ -27,6 +27,7 @@ import com.example.comp1640.repository.AcademicYearRepository;
 import com.example.comp1640.repository.CategoryRepository;
 import com.example.comp1640.repository.IdeaRepository;
 import com.example.comp1640.repository.UserRepository;
+import com.example.comp1640.repository.VoteRepository;
 import com.example.comp1640.service.IdeaService;
 import lombok.RequiredArgsConstructor;
 
@@ -38,6 +39,7 @@ public class IdeaServiceImpl implements IdeaService {
     private final UserRepository userRepo;
     private final AcademicYearRepository academicYearRepo;
     private final CategoryRepository categoryRepo;
+    private final VoteRepository voteRepo;
 
     @Override
     @Transactional
@@ -234,6 +236,9 @@ public class IdeaServiceImpl implements IdeaService {
                 .map(Category::getCategoryName)
                 .collect(Collectors.toSet());
 
+        long upvotes   = voteRepo.countUpvotes(idea.getIdeaId());
+        long downvotes = voteRepo.countDownvotes(idea.getIdeaId());
+
         return new IdeaResponse(
                 idea.getIdeaId(),
                 idea.getTitle(),
@@ -246,6 +251,8 @@ public class IdeaServiceImpl implements IdeaService {
                 idea.getIsAnonymous(),
                 idea.getIsDisabled(),
                 idea.getViewCount(),
+                upvotes,
+                downvotes,
                 idea.getTermsAccepted(),
                 idea.getSubmittedAt(),
                 idea.getUpdatedAt()

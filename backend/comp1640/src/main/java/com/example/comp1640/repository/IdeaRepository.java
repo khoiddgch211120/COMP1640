@@ -24,8 +24,8 @@ public interface IdeaRepository extends JpaRepository<Idea, Integer> {
     @Query("SELECT i FROM Idea i ORDER BY i.submittedAt DESC")
     Page<Idea> findLatest(Pageable pageable);
 
-    // Ý tưởng phổ biến nhất theo view_count (sẽ thay bằng vote khi có module Vote)
-    @Query("SELECT i FROM Idea i ORDER BY i.viewCount DESC")
+    // Ý tưởng phổ biến nhất theo số upvote
+    @Query("SELECT i FROM Idea i ORDER BY (SELECT COUNT(v) FROM Vote v WHERE v.idea = i AND v.voteType = 'UPVOTE') DESC")
     Page<Idea> findMostPopular(Pageable pageable);
 
     // Most viewed theo năm học (không phân trang, dùng cho specific yearId)

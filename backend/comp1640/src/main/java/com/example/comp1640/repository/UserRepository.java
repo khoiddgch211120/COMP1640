@@ -1,5 +1,6 @@
 package com.example.comp1640.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -14,4 +15,6 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     Optional<User> findByEmail(@Param("email") String email);
 
     boolean existsByEmail(String email);
+
+    List<User> findByDepartment_DeptId(Integer deptId);
 }

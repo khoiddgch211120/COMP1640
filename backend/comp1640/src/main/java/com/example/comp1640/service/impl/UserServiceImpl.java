@@ -66,11 +66,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserResponse> getAll() {
-        return userRepo.findAll()
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    public List<UserResponse> getAll(Integer deptId) {
+        List<User> users = deptId != null
+                ? userRepo.findByDepartment_DeptId(deptId)
+                : userRepo.findAll();
+        return users.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     @Override

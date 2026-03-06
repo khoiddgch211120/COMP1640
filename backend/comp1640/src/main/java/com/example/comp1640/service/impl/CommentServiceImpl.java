@@ -22,6 +22,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 @Service
 @RequiredArgsConstructor
@@ -54,6 +57,7 @@ public class CommentServiceImpl implements CommentService {
         comment.setContent(request.getContent());
         comment.setIsAnonymous(request.getIsAnonymous() != null && request.getIsAnonymous());
         comment.setCreatedAt(LocalDateTime.now());
+        comment.setUpdatedAt(LocalDateTime.now());
 
         return toResponse(commentRepository.save(comment), currentUser);
     }
@@ -67,11 +71,11 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public List<CommentResponse> getLatest() {
-        // Cho phép guest xem (không cần đăng nhập)
+    public Page<CommentResponse> getLatest(int page, int size) {
         User currentUser = getCurrentUserOptional().orElse(null);
-        return commentRepository.findTop20ByOrderByCreatedAtDesc()
-                .stream().map(c -> toResponse(c, currentUser)).collect(Collectors.toList());
+        PageRequest pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        return commentRepository.findAllByOrderByCreatedAtDesc(pageable)
+                .map(c -> toResponse(c, currentUser));
     }
 
     @Override

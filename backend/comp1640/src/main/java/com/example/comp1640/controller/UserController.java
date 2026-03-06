@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.comp1640.dto.request.UserRequest;
@@ -39,8 +40,9 @@ public class UserController {
     // Chỉ ADMIN mới xem được tất cả user
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
-    public ResponseEntity<List<UserResponse>> getAll() {
-        return ResponseEntity.ok(userService.getAll());
+    public ResponseEntity<List<UserResponse>> getAll(
+            @RequestParam(required = false) Integer deptId) {
+        return ResponseEntity.ok(userService.getAll(deptId));
     }
 
     @GetMapping("/{id}")

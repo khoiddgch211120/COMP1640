@@ -9,7 +9,7 @@ public interface UserService {
 
     UserResponse create(UserRequest request);
 
-    List<UserResponse> getAll();
+    List<UserResponse> getAll(Integer deptId);
 
     UserResponse getById(Integer id);
 

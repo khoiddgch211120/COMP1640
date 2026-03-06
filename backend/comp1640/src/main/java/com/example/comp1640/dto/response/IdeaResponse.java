@@ -29,6 +29,8 @@ public class IdeaResponse {
     private Boolean isAnonymous;
     private Boolean isDisabled;
     private Integer viewCount;
+    private long upvotes;
+    private long downvotes;
     private Boolean termsAccepted;
 
     private LocalDateTime submittedAt;

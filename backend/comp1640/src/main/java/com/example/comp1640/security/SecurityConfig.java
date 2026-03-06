@@ -41,6 +41,7 @@ public class SecurityConfig {
                                 "/ideas/*",
                                 "/ideas/*/comments", "/comments/latest",
                                 "/ideas/*/documents",
+                                "/ideas/*/vote",
                                 "/categories",
                                 "/departments",
                                 "/terms"

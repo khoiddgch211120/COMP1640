@@ -4,6 +4,7 @@ import com.example.comp1640.dto.response.DocumentResponse;
 import com.example.comp1640.service.DocumentService;
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +25,7 @@ public class DocumentController {
     public ResponseEntity<DocumentResponse> upload(
             @PathVariable Integer ideaId,
             @RequestParam("file") MultipartFile file) {
-        return ResponseEntity.ok(documentService.upload(ideaId, file));
+        return ResponseEntity.status(HttpStatus.CREATED).body(documentService.upload(ideaId, file));
     }
 
     // Lấy danh sách file đính kèm của một ý tưởng
@@ -39,6 +40,6 @@ public class DocumentController {
             @PathVariable Integer ideaId,
             @PathVariable Integer documentId) {
         documentService.delete(documentId);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 }

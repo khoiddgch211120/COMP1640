@@ -86,7 +86,7 @@ public class AuthServiceImpl implements AuthService {
                         throw new BadRequestException("Sai mật khẩu");
                 }
 
-                String token = jwtUtil.generateToken(user.getEmail());
+                String token = jwtUtil.generateToken(user);
                 String role = user.getRole() != null ? user.getRole().getRoleName() : null;
 
                 return new LoginResponse(token, user.getEmail(), role);
