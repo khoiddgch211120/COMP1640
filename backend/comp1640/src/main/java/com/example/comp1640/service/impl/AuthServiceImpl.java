@@ -50,12 +50,12 @@ public class AuthServiceImpl implements AuthService {
                 }
 
                 Role defaultRole = roleRepo.findByRoleName("ACADEMIC")
-                        .orElseGet(() -> {
-                                Role r = new Role();
-                                r.setRoleName("ACADEMIC");
-                                r.setDescription("Default role for registered users");
-                                return roleRepo.save(r);
-                        });
+                                .orElseGet(() -> {
+                                        Role r = new Role();
+                                        r.setRoleName("ACADEMIC");
+                                        r.setDescription("Default role for registered users");
+                                        return roleRepo.save(r);
+                                });
 
                 User user = new User();
                 user.setFullName(request.getFullName());
@@ -64,6 +64,7 @@ public class AuthServiceImpl implements AuthService {
                                 passwordEncoder.encode(request.getPassword()));
                 user.setRole(defaultRole);
                 user.setIsActive(true);
+                user.setStaffType(request.getStaffType() != null ? request.getStaffType() : "ACADEMIC");
                 user.setCreatedAt(LocalDateTime.now());
                 user.setUpdatedAt(LocalDateTime.now());
 
