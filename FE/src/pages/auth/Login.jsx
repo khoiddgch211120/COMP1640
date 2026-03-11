@@ -12,6 +12,49 @@ import "./../../styles/login.css";
 import { loginSuccess } from "../../redux/slices/authSlice";
 import { ROLES } from "../../constants/roles";
 
+// ─── Mock accounts ────────────────────────────────────────────────────────────
+const MOCK_ACCOUNTS = [
+  {
+    email: "admin@university.edu",
+    password: "admin123",
+    role: ROLES.ADMIN,
+    fullName: "Admin System",
+  },
+  {
+    email: "manager@university.edu",
+    password: "manager123",
+    role: ROLES.QA_MANAGER,
+    fullName: "Nguyễn QA Manager",
+  },
+  {
+    email: "coordinator@university.edu",
+    password: "coord123",
+    role: ROLES.QA_COORDINATOR,
+    fullName: "Trần QA Coordinator",
+  },
+  {
+    email: "staff@university.edu",
+    password: "staff123",
+    role: ROLES.STAFF,
+    fullName: "Lê Staff User",
+  },
+];
+
+const ROLE_ROUTE = {
+  [ROLES.ADMIN]: "/admin",
+  [ROLES.QA_MANAGER]: "/manager",
+  [ROLES.QA_COORDINATOR]: "/coordinator",
+  [ROLES.STAFF]: "/",
+};
+
+const ROLE_LABEL = {
+  [ROLES.ADMIN]: "Admin",
+  [ROLES.QA_MANAGER]: "QA Manager",
+  [ROLES.QA_COORDINATOR]: "QA Coordinator",
+  [ROLES.STAFF]: "Staff",
+};
+// ──────────────────────────────────────────────────────────────────────────────
+
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -20,6 +63,12 @@ const Login = () => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  // Quick-fill a mock account
+  const fillMock = (account) => {
+    setEmail(account.email);
+    setPassword(account.password);
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -35,48 +84,39 @@ const Login = () => {
     try {
       setLoading(true);
 
-      // Mock role-based login
-      let role = ROLES.STAFF;
+      // Match mock account
+      const found = MOCK_ACCOUNTS.find(
+        (acc) => acc.email === email && acc.password === password
+      );
 
-      if (email.includes("admin")) role = ROLES.ADMIN;
-      if (email.includes("manager")) role = ROLES.QA_MANAGER;
-      if (email.includes("coordinator")) role = ROLES.QA_COORDINATOR;
-
-      const userData = {
-        name: "Test User",
-        email,
-        role,
-      };
+      if (!found) {
+        notification.error({
+          message: "Login failed",
+          description: "Email or password is incorrect",
+        });
+        setLoading(false);
+        return;
+      }
 
       dispatch(
         loginSuccess({
-          user: userData,
-          token: "fake-token",
+          user: {
+            fullName: found.fullName,
+            email: found.email,
+            role: found.role,
+          },
+          token: "mock-token-" + found.role.toLowerCase(),
         })
       );
 
       notification.success({
         message: "Login successful",
+        description: `Welcome, ${found.fullName}!`,
       });
 
-      // Role-based navigation
-      switch (role) {
-        case ROLES.ADMIN:
-          navigate("/admin");
-          break;
-        case ROLES.QA_MANAGER:
-          navigate("/manager");
-          break;
-        case ROLES.QA_COORDINATOR:
-          navigate("/coordinator");
-          break;
-        default:
-          navigate("/");
-      }
+      navigate(ROLE_ROUTE[found.role]);
     } catch (error) {
-      notification.error({
-        message: "Login failed",
-      });
+      notification.error({ message: "Login failed" });
     } finally {
       setLoading(false);
     }
@@ -90,6 +130,31 @@ const Login = () => {
           <img src={logo} alt="University Logo" className="login-logo" />
 
           <h1 className="login-title">University Idea Management System</h1>
+
+          {/* ── Mock credentials panel ── */}
+          <div className="mock-credentials">
+            <div className="mock-credentials-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="13" height="13">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              Mock accounts — click to auto-fill
+            </div>
+            <div className="mock-credentials-grid">
+              {MOCK_ACCOUNTS.map((acc) => (
+                <button
+                  key={acc.role}
+                  type="button"
+                  className={`mock-chip mock-chip--${acc.role.toLowerCase().replace("_", "-")}`}
+                  onClick={() => fillMock(acc)}
+                >
+                  <span className="mock-chip-role">{ROLE_LABEL[acc.role]}</span>
+                  <span className="mock-chip-email">{acc.email}</span>
+                </button>
+              ))}
+            </div>
+          </div>
 
           <form className="login-form" onSubmit={handleLogin}>
             {/* Email Field */}
@@ -127,11 +192,7 @@ const Login = () => {
             </div>
 
             {/* Login Button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="login-button"
-            >
+            <button type="submit" disabled={loading} className="login-button">
               {loading ? "Logging in..." : "Login"}
             </button>
 

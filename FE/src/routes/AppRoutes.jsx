@@ -1,9 +1,19 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
+import ForgotPassword from "../pages/auth/ForgotPassword";
 import ProtectedRoute from "./ProtectedRoute";
 import { ROLES } from "../constants/roles";
-import ForgotPassword from "../pages/auth/ForgotPassword";
+
+// Admin
+import AdminLayout from "../components/admin/AdminLayout";
+import AdminDashboard from "../pages/admin/AdminDashboard";
+import UserManagement from "../pages/admin/UserManagement";
+import DepartmentManagement from "../pages/admin/DepartmentManagement";
+import AcademicYearManagement from "../pages/admin/AcademicYearManagement";
+import TermsConditions from "../pages/admin/TermsConditions";
+import AttachmentManagement from "../pages/admin/AttachmentManagement";
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -13,44 +23,31 @@ const AppRoutes = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
       {/* STAFF */}
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute allowedRoles={[ROLES.STAFF]}>
-            <h1>Staff Dashboard</h1>
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/" element={<ProtectedRoute allowedRoles={[ROLES.STAFF]}><h1>Staff Dashboard</h1></ProtectedRoute>} />
 
       {/* QA MANAGER */}
-      <Route
-        path="/manager"
-        element={
-          <ProtectedRoute allowedRoles={[ROLES.QA_MANAGER]}>
-            <h1>QA Manager Dashboard</h1>
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/manager" element={<ProtectedRoute allowedRoles={[ROLES.QA_MANAGER]}><h1>QA Manager Dashboard</h1></ProtectedRoute>} />
 
       {/* QA COORDINATOR */}
-      <Route
-        path="/coordinator"
-        element={
-          <ProtectedRoute allowedRoles={[ROLES.QA_COORDINATOR]}>
-            <h1>QA Coordinator Dashboard</h1>
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/coordinator" element={<ProtectedRoute allowedRoles={[ROLES.QA_COORDINATOR]}><h1>QA Coordinator Dashboard</h1></ProtectedRoute>} />
 
-      {/* ADMIN */}
+      {/* ADMIN — nested routes */}
       <Route
         path="/admin"
         element={
           <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
-            <h1>Admin Panel</h1>
+            <AdminLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="dashboard"      element={<AdminDashboard />} />
+        <Route path="users"          element={<UserManagement />} />
+        <Route path="departments"    element={<DepartmentManagement />} />
+        <Route path="academic-years" element={<AcademicYearManagement />} />
+        <Route path="terms"          element={<TermsConditions />} />
+        <Route path="attachments"    element={<AttachmentManagement />} />
+      </Route>
     </Routes>
   );
 };

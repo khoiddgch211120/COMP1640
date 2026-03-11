@@ -275,3 +275,106 @@
     height: 52px;
   }
 }
+
+/* ============================================================
+   login.mock-credentials.css
+   Append these rules into your existing styles/login.css
+   (or @import this file at the bottom of login.css)
+   ============================================================ */
+
+/* Mock credentials panel */
+.mock-credentials {
+  background: #f8faff;
+  border: 1px solid #e0e7ff;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+}
+
+.mock-credentials-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #6366f1;
+  letter-spacing: 0.3px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.mock-credentials-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+
+/* Each mock chip */
+.mock-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.18s ease;
+  background: #fff;
+}
+
+.mock-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.mock-chip-role {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  line-height: 1.3;
+}
+
+.mock-chip-email {
+  font-size: 10.5px;
+  opacity: 0.72;
+  margin-top: 1px;
+  word-break: break-all;
+}
+
+/* Role colour variants */
+.mock-chip--admin {
+  border-color: #c7d2fe;
+  color: #4338ca;
+}
+.mock-chip--admin:hover {
+  border-color: #6366f1;
+  background: #eef2ff;
+}
+
+.mock-chip--qa-manager {
+  border-color: #fde68a;
+  color: #92400e;
+}
+.mock-chip--qa-manager:hover {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.mock-chip--qa-coordinator {
+  border-color: #d8b4fe;
+  color: #6d28d9;
+}
+.mock-chip--qa-coordinator:hover {
+  border-color: #8b5cf6;
+  background: #f5f3ff;
+}
+
+.mock-chip--staff {
+  border-color: #a7f3d0;
+  color: #065f46;
+}
+.mock-chip--staff:hover {
+  border-color: #10b981;
+  background: #f0fdf4;
+}
