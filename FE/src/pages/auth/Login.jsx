@@ -41,7 +41,7 @@ const MOCK_ACCOUNTS = [
 ];
 
 const ROLE_ROUTE = {
-  [ROLES.ADMIN]: "/admin",
+  [ROLES.ADMIN]: "/admin/dashboard",
   [ROLES.QA_MANAGER]: "/manager",
   [ROLES.QA_COORDINATOR]: "/coordinator",
   [ROLES.STAFF]: "/",
