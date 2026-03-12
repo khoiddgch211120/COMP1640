@@ -44,7 +44,7 @@ const ROLE_ROUTE = {
   [ROLES.ADMIN]: "/admin/dashboard",
   [ROLES.QA_MANAGER]: "/manager",
   [ROLES.QA_COORDINATOR]: "/coordinator",
-  [ROLES.STAFF]: "/",
+  [ROLES.STAFF]: "/ideas",
 };
 
 const ROLE_LABEL = {

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { addIdea } from "../../redux/slices/ideaSlice";
@@ -54,6 +55,15 @@ const SubmitIdea = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    /* ---------- CHECK TERMS ---------- */
+    const acceptedTerms = localStorage.getItem("acceptedTerms");
+
+    if (!acceptedTerms) {
+      alert("You must accept Terms & Conditions before submitting an idea.");
+      navigate("/terms");
+      return;
+    }
 
     if (!form.title || !form.description) {
       alert("Title and Description are required!");
@@ -133,7 +143,7 @@ const SubmitIdea = () => {
               <input
                 type="text"
                 placeholder="Enter idea title"
-                className="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                className="w-full border rounded-lg px-4 py-3"
                 value={form.title}
                 onChange={(e) =>
                   setForm({ ...form, title: e.target.value })
@@ -149,7 +159,7 @@ const SubmitIdea = () => {
               <textarea
                 rows="5"
                 placeholder="Describe your idea in detail..."
-                className="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                className="w-full border rounded-lg px-4 py-3"
                 value={form.description}
                 onChange={(e) =>
                   setForm({
@@ -166,7 +176,7 @@ const SubmitIdea = () => {
                 Category
               </label>
               <select
-                className="w-full border rounded-lg px-4 py-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                className="w-full border rounded-lg px-4 py-3"
                 value={form.category}
                 onChange={(e) =>
                   setForm({ ...form, category: e.target.value })
@@ -190,7 +200,6 @@ const SubmitIdea = () => {
                     isAnonymous: e.target.checked
                   })
                 }
-                className="w-4 h-4 accent-indigo-600"
               />
               <span className="text-sm text-slate-600">
                 Submit as Anonymous
@@ -202,14 +211,14 @@ const SubmitIdea = () => {
               <button
                 type="button"
                 onClick={() => navigate("/ideas")}
-                className="px-5 py-2.5 rounded-lg border text-slate-600 hover:bg-slate-50 transition"
+                className="px-5 py-2.5 rounded-lg border"
               >
                 Cancel
               </button>
 
               <button
                 type="submit"
-                className="px-6 py-2.5 rounded-lg bg-indigo-600 text-white font-medium shadow-sm hover:bg-indigo-700 transition"
+                className="px-6 py-2.5 rounded-lg bg-indigo-600 text-white"
               >
                 Submit Idea
               </button>
@@ -217,19 +226,6 @@ const SubmitIdea = () => {
 
           </form>
 
-        </div>
-
-        {/* GUIDELINES PANEL */}
-        <div className="bg-white border rounded-2xl p-6 shadow-sm">
-          <h3 className="font-semibold text-slate-700 mb-4">
-            Submission Guidelines
-          </h3>
-          <ul className="text-sm text-slate-500 space-y-3">
-            <li>• Provide a clear and concise title</li>
-            <li>• Describe benefits and impact</li>
-            <li>• Select the correct category</li>
-            <li>• Submit before closure date</li>
-          </ul>
         </div>
 
       </div>

@@ -8,6 +8,7 @@ import {
   TeamOutlined,
   ApartmentOutlined,
   CalendarOutlined,
+  DashboardOutlined,
 } from "@ant-design/icons";
 
 const Sidebar = () => {
@@ -16,16 +17,17 @@ const Sidebar = () => {
   const baseClass =
     "flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all";
 
-  const activeClass =
-    "bg-indigo-100 text-indigo-700";
+  const activeClass = "bg-indigo-100 text-indigo-700";
 
-  const normalClass =
-    "text-slate-600 hover:bg-slate-100";
+  const normalClass = "text-slate-600 hover:bg-slate-100";
+
+  const navClass = ({ isActive }) =>
+    `${baseClass} ${isActive ? activeClass : normalClass}`;
 
   return (
     <div className="w-64 bg-white border-r min-h-screen flex flex-col">
 
-      {/* LOGO / TITLE */}
+      {/* LOGO */}
       <div className="h-16 flex items-center px-6 border-b">
         <h2 className="text-lg font-semibold text-indigo-600">
           Idea System
@@ -43,26 +45,12 @@ const Sidebar = () => {
               Staff
             </p>
 
-            <NavLink
-              to="/ideas"
-              className={({ isActive }) =>
-                `${baseClass} ${
-                  isActive ? activeClass : normalClass
-                }`
-              }
-            >
+            <NavLink to="/ideas" className={navClass}>
               <BulbOutlined />
               Idea List
             </NavLink>
 
-            <NavLink
-              to="/submit-idea"
-              className={({ isActive }) =>
-                `${baseClass} ${
-                  isActive ? activeClass : normalClass
-                }`
-              }
-            >
+            <NavLink to="/submit-idea" className={navClass}>
               <PlusOutlined />
               Submit Idea
             </NavLink>
@@ -70,7 +58,7 @@ const Sidebar = () => {
           </div>
         )}
 
-        {/* QA_COORDINATOR */}
+        {/* QA COORDINATOR */}
         {user?.role === ROLES.QA_COORDINATOR && (
           <div className="space-y-1">
 
@@ -78,22 +66,20 @@ const Sidebar = () => {
               QA Coordinator
             </p>
 
-            <NavLink
-              to="/ideas"
-              className={({ isActive }) =>
-                `${baseClass} ${
-                  isActive ? activeClass : normalClass
-                }`
-              }
-            >
+            <NavLink to="/ideas" className={navClass}>
               <BulbOutlined />
               Department Ideas
+            </NavLink>
+
+            <NavLink to="/coordinator/dashboard" className={navClass}>
+              <DashboardOutlined />
+              Department Dashboard
             </NavLink>
 
           </div>
         )}
 
-        {/* QA_MANAGER */}
+        {/* QA MANAGER */}
         {user?.role === ROLES.QA_MANAGER && (
           <div className="space-y-1">
 
@@ -101,26 +87,12 @@ const Sidebar = () => {
               QA Manager
             </p>
 
-            <NavLink
-              to="/ideas"
-              className={({ isActive }) =>
-                `${baseClass} ${
-                  isActive ? activeClass : normalClass
-                }`
-              }
-            >
+            <NavLink to="/ideas" className={navClass}>
               <BulbOutlined />
               All Ideas
             </NavLink>
 
-            <NavLink
-              to="/statistics"
-              className={({ isActive }) =>
-                `${baseClass} ${
-                  isActive ? activeClass : normalClass
-                }`
-              }
-            >
+            <NavLink to="/statistics" className={navClass}>
               <BarChartOutlined />
               Statistics
             </NavLink>
@@ -136,38 +108,22 @@ const Sidebar = () => {
               Admin
             </p>
 
-            <NavLink
-              to="/admin/users"
-              className={({ isActive }) =>
-                `${baseClass} ${
-                  isActive ? activeClass : normalClass
-                }`
-              }
-            >
+            <NavLink to="/admin" className={navClass}>
+              <DashboardOutlined />
+              Admin Dashboard
+            </NavLink>
+
+            <NavLink to="/admin/users" className={navClass}>
               <TeamOutlined />
               User Management
             </NavLink>
 
-            <NavLink
-              to="/admin/departments"
-              className={({ isActive }) =>
-                `${baseClass} ${
-                  isActive ? activeClass : normalClass
-                }`
-              }
-            >
+            <NavLink to="/admin/departments" className={navClass}>
               <ApartmentOutlined />
               Departments
             </NavLink>
 
-            <NavLink
-              to="/admin/academic-years"
-              className={({ isActive }) =>
-                `${baseClass} ${
-                  isActive ? activeClass : normalClass
-                }`
-              }
-            >
+            <NavLink to="/admin/academic-years" className={navClass}>
               <CalendarOutlined />
               Academic Years
             </NavLink>

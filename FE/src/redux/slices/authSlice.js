@@ -45,14 +45,20 @@ const fakeUsers = [
 ];
 
 /* ========================
+   LOAD AUTH FROM STORAGE
+======================== */
+
+const savedAuth = JSON.parse(localStorage.getItem("auth"));
+
+/* ========================
    INITIAL STATE
 ======================== */
 
 const initialState = {
-  user: null,
-  token: null,
-  isAuthenticated: false,
-  users: fakeUsers, // 🔥 QUAN TRỌNG cho User Management
+  user: savedAuth?.user || null,
+  token: savedAuth?.token || null,
+  isAuthenticated: !!savedAuth,
+  users: fakeUsers,
 };
 
 /* ========================
@@ -63,7 +69,9 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
+
     /* ================= LOGIN (FAKE) ================= */
+
     login: (state, action) => {
       const { email, password } = action.payload;
 
@@ -75,24 +83,49 @@ const authSlice = createSlice({
       );
 
       if (user) {
+
         state.user = user;
         state.token = "fake-jwt-token";
         state.isAuthenticated = true;
+
+        /* SAVE LOGIN */
+        localStorage.setItem(
+          "auth",
+          JSON.stringify({
+            user: user,
+            token: "fake-jwt-token"
+          })
+        );
+
       } else {
         alert("Invalid credentials or account disabled");
       }
     },
 
     loginSuccess: (state, action) => {
+
       state.user = action.payload.user;
       state.token = action.payload.token;
       state.isAuthenticated = true;
+
+      localStorage.setItem(
+        "auth",
+        JSON.stringify({
+          user: action.payload.user,
+          token: action.payload.token
+        })
+      );
+
     },
 
     logout: (state) => {
+
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+
+      localStorage.removeItem("auth");
+
     },
 
     /* ================= USER MANAGEMENT ================= */
@@ -102,56 +135,75 @@ const authSlice = createSlice({
     },
 
     updateUser: (state, action) => {
+
       const index = state.users.findIndex(
         (u) => u.id === action.payload.id
       );
+
       if (index !== -1) {
+
         state.users[index] = action.payload;
 
-        // Nếu đang update chính user đang login
         if (state.user?.id === action.payload.id) {
           state.user = action.payload;
+
+          localStorage.setItem(
+            "auth",
+            JSON.stringify({
+              user: action.payload,
+              token: state.token
+            })
+          );
         }
+
       }
     },
 
     deleteUser: (state, action) => {
+
       state.users = state.users.filter(
         (u) => u.id !== action.payload
       );
 
-      // Nếu xóa chính mình → logout
       if (state.user?.id === action.payload) {
+
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
+
+        localStorage.removeItem("auth");
+
       }
     },
 
     toggleUserStatus: (state, action) => {
+
       const user = state.users.find(
         (u) => u.id === action.payload
       );
+
       if (user) {
+
         user.status = !user.status;
 
-        // Nếu khóa chính mình → logout
         if (
           state.user?.id === user.id &&
           user.status === false
         ) {
+
           state.user = null;
           state.token = null;
           state.isAuthenticated = false;
+
+          localStorage.removeItem("auth");
+
         }
+
       }
     },
+
   },
 });
-
-/* ========================
-   EXPORT ACTIONS
-======================== */
 
 export const {
   login,
