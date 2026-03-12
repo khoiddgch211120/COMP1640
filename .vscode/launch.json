@@ -1,0 +1,14 @@
+{
+   "configurations": [
+      {
+         "type": "java",
+         "name": "Spring Boot-Comp1640Application<comp1640>",
+         "request": "launch",
+         "cwd": "${workspaceFolder}",
+         "mainClass": "com.example.comp1640.Comp1640Application",
+         "projectName": "comp1640",
+         "args": "",
+         "envFile": "${workspaceFolder}/.env"
+      }
+   ]
+}
