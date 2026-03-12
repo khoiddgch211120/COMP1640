@@ -33,7 +33,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
         Department dept = new Department();
         dept.setDeptName(request.getDeptName());
-        dept.setDeptType(request.getDeptType() != null ? DeptType.valueOf(request.getDeptType()) : DeptType.ACADEMIC);
+        dept.setDeptType(request.getDeptType() != null && !request.getDeptType().isBlank() ? request.getDeptType() : "ACADEMIC");
         dept.setCreatedAt(LocalDateTime.now());
 
         return toResponse(departmentRepo.save(dept));
@@ -63,8 +63,8 @@ public class DepartmentServiceImpl implements DepartmentService {
             dept.setDeptName(request.getDeptName());
         }
 
-        if (request.getDeptType() != null) {
-            dept.setDeptType(DeptType.valueOf(request.getDeptType()));
+        if (request.getDeptType() != null && !request.getDeptType().isBlank()) {
+            dept.setDeptType(request.getDeptType());
         }
 
         return toResponse(departmentRepo.save(dept));
@@ -79,7 +79,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     // Helper: convert entity -> response
-    private DepartmentResponse toResponse(Department dept) {
+private DepartmentResponse toResponse(Department dept) {
         return new DepartmentResponse(
                 dept.getDeptId(),
                 dept.getDeptName(),

@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 import com.example.comp1640.entity.Role;
 import com.example.comp1640.entity.User;
 import com.example.comp1640.enums.RoleName;
-import com.example.comp1640.enums.StaffType;
+
 import com.example.comp1640.repository.RoleRepository;
 import com.example.comp1640.repository.UserRepository;
 
@@ -41,19 +41,19 @@ public class DataSeeder implements CommandLineRunner {
     private void seedRoles() {
         Map<String, String> roles = Map.of(
                 "ADMIN", "Quản trị hệ thống toàn diện",
-                "QA_MGR", "Quản lý chất lượng - tạo category, xem báo cáo toàn trường",
-                "QA_COORD", "Điều phối QA - xuất CSV/ZIP, xem báo cáo",
-                "DEPT_MGR", "Quản lý phòng ban - xem thống kê dept",
-                "HR_MGR", "Quản lý nhân sự - quản lý tài khoản",
+                "QA_MANAGER", "Quản lý chất lượng - tạo category, xem báo cáo toàn trường",
+                "QA_COORDINATOR", "Điều phối QA - xuất CSV/ZIP, xem báo cáo",
+                "DEPT_MANAGER", "Quản lý phòng ban - xem thống kê dept",
+                "HR_MANAGER", "Quản lý nhân sự - quản lý tài khoản",
                 "HEAD", "Trưởng khoa - xem thống kê faculty",
-                "ACADEMIC", "Nhân viên học thuật - submit ý tưởng",
-                "SUPPORT", "Nhân viên hỗ trợ - submit ý tưởng");
+                "ACADEMIC_STAFF", "Nhân viên học thuật - submit ý tưởng",
+                "SUPPORT_STAFF", "Nhân viên hỗ trợ - submit ý tưởng");
 
         List<Role> toSave = new ArrayList<>();
         roles.forEach((name, desc) -> {
             if (!roleRepo.existsByRoleName(RoleName.valueOf(name))) {
                 Role r = new Role();
-r.setRoleName(RoleName.valueOf(name));
+                r.setRoleName(RoleName.valueOf(name));
                 r.setDescription(desc);
                 toSave.add(r);
             }
@@ -69,7 +69,7 @@ r.setRoleName(RoleName.valueOf(name));
         if (userRepo.existsByEmail(adminEmail))
             return;
 
-Role adminRole = roleRepo.findByRoleName(RoleName.ADMIN)
+        Role adminRole = roleRepo.findByRoleName(RoleName.ADMIN)
                 .orElseThrow(() -> new RuntimeException("ADMIN role not found"));
 
         User admin = new User();
@@ -77,7 +77,7 @@ Role adminRole = roleRepo.findByRoleName(RoleName.ADMIN)
         admin.setEmail(adminEmail);
         admin.setPasswordHash(passwordEncoder.encode("admin123"));
         admin.setRole(adminRole);
-        admin.setStaffType(StaffType.MANAGEMENT);
+        admin.setStaffType("MANAGEMENT");
         admin.setIsActive(true);
         admin.setCreatedAt(LocalDateTime.now());
         admin.setUpdatedAt(LocalDateTime.now());

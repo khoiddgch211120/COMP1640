@@ -1,10 +1,6 @@
-# Task: Fix errors in serviceImpl files
+# Backend Startup TODO
 
-## Steps:
-- [x] Create TODO.md
-- [x] Fix NPE in IdeaServiceImpl.java (delete() and canViewIdentity())
-- [x] Verify compilation with mvn clean compile (fixed import and enum name)
-- [ ] Check and fix other ServiceImpl files (VoteServiceImpl, UserServiceImpl, etc.)
-- [ ] Test functionality
-- [ ] Complete task
-
+- [x] Fix DataSeeder enum mismatch
+- [x] Rerun mvn spring-boot:run
+- [ ] Rerun mvn spring-boot:run
+- [ ] Confirm server running on 8080

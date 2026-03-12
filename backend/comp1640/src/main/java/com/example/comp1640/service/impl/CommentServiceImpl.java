@@ -7,7 +7,6 @@ import com.example.comp1640.exception.ResourceNotFoundException;
 import com.example.comp1640.entity.Comment;
 import com.example.comp1640.entity.Idea;
 import com.example.comp1640.entity.User;
-import com.example.comp1640.enums.RoleName;
 import com.example.comp1640.repository.CommentRepository;
 import com.example.comp1640.repository.IdeaRepository;
 import com.example.comp1640.repository.UserRepository;

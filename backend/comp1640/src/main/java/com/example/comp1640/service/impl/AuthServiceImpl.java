@@ -1,7 +1,5 @@
 package com.example.comp1640.service.impl;
 
-import java.time.LocalDateTime;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +13,6 @@ import com.example.comp1640.exception.UnauthorizedException;
 import com.example.comp1640.entity.Role;
 import com.example.comp1640.entity.User;
 import com.example.comp1640.enums.RoleName;
-import com.example.comp1640.enums.StaffType;
 import com.example.comp1640.repository.RoleRepository;
 import com.example.comp1640.repository.UserRepository;
 import com.example.comp1640.security.JwtTokenUtil;
@@ -66,7 +63,7 @@ public class AuthServiceImpl implements AuthService {
                                 .passwordHash(passwordEncoder.encode(request.getPassword()))
                                 .role(defaultRole)
                                 .isActive(true)
-                                .staffType(request.getStaffType() != null ? request.getStaffType() : StaffType.ACADEMIC)
+                                .staffType(request.getStaffType() != null ? request.getStaffType().name() : "ACADEMIC")
                                 .build();
 
                 userRepo.save(user);

@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.comp1640.dto.request.UserRequest;
 import com.example.comp1640.dto.response.UserResponse;
@@ -13,7 +14,6 @@ import com.example.comp1640.exception.BadRequestException;
 import com.example.comp1640.exception.ResourceNotFoundException;
 import com.example.comp1640.entity.Department;
 import com.example.comp1640.entity.Role;
-import com.example.comp1640.enums.StaffType;
 import com.example.comp1640.entity.User;
 import com.example.comp1640.repository.DepartmentRepository;
 import com.example.comp1640.repository.RoleRepository;
@@ -21,6 +21,10 @@ import com.example.comp1640.repository.UserRepository;
 import com.example.comp1640.service.UserService;
 
 @Service
+// make all public methods transactional so that lazy associations can be
+// accessed
+// (also prevents LazyInitializationException when converting entities to DTOs)
+@Transactional
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepo;
@@ -57,9 +61,7 @@ public class UserServiceImpl implements UserService {
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        if (request.getStaffType() != null && !request.getStaffType().isBlank()) {
-            user.setStaffType(StaffType.valueOf(request.getStaffType().toUpperCase()));
-        }
+        user.setStaffType(request.getStaffType());
         user.setRole(role);
         user.setDepartment(dept);
         user.setIsActive(true);
@@ -89,12 +91,21 @@ public class UserServiceImpl implements UserService {
         User user = userRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user với id: " + id));
 
+        // allow changing email but check uniqueness
+        if (request.getEmail() != null && !request.getEmail().isBlank()
+                && !request.getEmail().equals(user.getEmail())) {
+            if (userRepo.existsByEmail(request.getEmail())) {
+                throw new BadRequestException("Email đã tồn tại");
+            }
+            user.setEmail(request.getEmail());
+        }
+
         if (request.getFullName() != null && !request.getFullName().isBlank()) {
             user.setFullName(request.getFullName());
         }
 
         if (request.getStaffType() != null && !request.getStaffType().isBlank()) {
-            user.setStaffType(StaffType.valueOf(request.getStaffType().toUpperCase()));
+            user.setStaffType(request.getStaffType());
         }
 
         if (request.getRoleId() != null) {
@@ -128,7 +139,9 @@ public class UserServiceImpl implements UserService {
     public void toggleActive(Integer id) {
         User user = userRepo.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user với id: " + id));
-        user.setIsActive(!user.getIsActive());
+        // guard against null booleans
+        boolean current = Boolean.TRUE.equals(user.getIsActive());
+        user.setIsActive(!current);
         user.setUpdatedAt(LocalDateTime.now());
         userRepo.save(user);
     }
@@ -139,9 +152,10 @@ public class UserServiceImpl implements UserService {
                 user.getUserId(),
                 user.getFullName(),
                 user.getEmail(),
-                user.getStaffType() != null ? user.getStaffType().name() : null,
+                user.getStaffType(),
                 user.getIsActive(),
-                user.getRole() != null ? user.getRole().getRoleName() : null,
+                // roleName is an enum, convert to String (use name())
+                user.getRole() != null ? user.getRole().getRoleName().name() : null,
                 user.getDepartment() != null ? user.getDepartment().getDeptName() : null,
                 user.getCreatedAt());
     }

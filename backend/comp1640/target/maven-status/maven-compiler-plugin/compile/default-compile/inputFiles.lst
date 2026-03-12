@@ -52,14 +52,6 @@ D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\exception\
 D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\exception\GlobalExceptionHandler.java
 D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\exception\ResourceNotFoundException.java
 D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\exception\UnauthorizedException.java
-D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\model\Category.java
-D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\model\Comment.java
-D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\model\Department.java
-D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\model\Document.java
-D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\model\Idea.java
-D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\model\Role.java
-D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\model\User.java
-D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\model\Vote.java
 D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\repository\AcademicYearRepository.java
 D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\repository\CategoryRepository.java
 D:\Topup\COMP1640\backend\comp1640\src\main\java\com\example\comp1640\repository\CommentRepository.java

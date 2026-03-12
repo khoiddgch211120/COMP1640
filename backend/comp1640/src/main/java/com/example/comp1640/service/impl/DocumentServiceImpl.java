@@ -49,13 +49,12 @@ public class DocumentServiceImpl implements DocumentService {
             Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
                     ObjectUtils.asMap(
                             "folder", "comp1640/ideas/" + ideaId,
-                            "resource_type", "auto"
-                    ));
+                            "resource_type", "auto"));
 
             Document document = new Document();
             document.setIdea(idea);
             document.setFileName(file.getOriginalFilename());
-            document.setFilePath((String) uploadResult.get("secure_url"));
+            document.setFileUrl((String) uploadResult.get("secure_url"));
             document.setPublicId((String) uploadResult.get("public_id"));
             document.setFileType(file.getContentType());
             document.setUploadedAt(LocalDateTime.now());
@@ -79,7 +78,7 @@ public class DocumentServiceImpl implements DocumentService {
 
         User currentUser = getCurrentUser();
         boolean isAdmin = currentUser.getRole() != null &&
-                "ADMIN".equals(currentUser.getRole().getRoleName().name());
+                "ADMIN".equals(currentUser.getRole().getRoleName());
 
         // ADMIN hoặc chủ idea mới được xóa file
         if (!document.getIdea().getUser().getUserId().equals(currentUser.getUserId()) && !isAdmin) {
@@ -105,12 +104,11 @@ public class DocumentServiceImpl implements DocumentService {
 
     private DocumentResponse toResponse(Document doc) {
         return new DocumentResponse(
-                doc.getDocId(),
+                doc.getDocumentId(),
                 doc.getIdea().getIdeaId(),
                 doc.getFileName(),
-                doc.getFilePath(),
+                doc.getFileUrl(),
                 doc.getFileType(),
-                doc.getUploadedAt()
-        );
+                doc.getUploadedAt());
     }
 }
