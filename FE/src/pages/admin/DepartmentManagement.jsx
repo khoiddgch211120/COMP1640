@@ -25,9 +25,7 @@ const { confirm } = Modal;
 
 const DepartmentManagement = () => {
   const dispatch = useDispatch();
-  const departments = useSelector(
-    (state) => state.department.departments
-  );
+  const departments = useSelector((state) => state.department.departments);
   const users = useSelector((state) => state.auth.users);
 
   const [modalVisible, setModalVisible] = useState(false);
@@ -47,14 +45,10 @@ const DepartmentManagement = () => {
   };
 
   const handleDelete = (dept) => {
-    const hasUsers = users.some(
-      (u) => u.department === dept.name
-    );
+    const hasUsers = users.some((u) => u.department === dept.name);
 
     if (hasUsers) {
-      message.warning(
-        "Không thể xóa phòng ban đang có người dùng."
-      );
+      message.warning("Không thể xóa phòng ban đang có người dùng.");
       return;
     }
 
@@ -107,8 +101,7 @@ const DepartmentManagement = () => {
     {
       title: "Số lượng nhân sự",
       render: (_, dept) =>
-        users.filter((u) => u.department === dept.name)
-          .length,
+        users.filter((u) => u.department === dept.name).length,
       align: "center",
     },
     {
@@ -140,9 +133,7 @@ const DepartmentManagement = () => {
   return (
     <div className="p-6 bg-white min-h-screen">
       <div className="flex justify-between mb-6">
-        <h2 className="text-xl font-semibold">
-          Department Management
-        </h2>
+        <h2 className="text-xl font-semibold">Department Management</h2>
 
         <Button type="primary" onClick={handleAdd}>
           + Add Department
@@ -157,11 +148,7 @@ const DepartmentManagement = () => {
       />
 
       <Modal
-        title={
-          editingDept
-            ? "Edit Department"
-            : "Add Department"
-        }
+        title={editingDept ? "Edit Department" : "Add Department"}
         open={modalVisible}
         onCancel={() => {
           setModalVisible(false);
@@ -179,9 +166,7 @@ const DepartmentManagement = () => {
           </Form.Item>
 
           <div className="flex justify-end gap-3 mt-4">
-            <Button onClick={() => form.resetFields()}>
-              Reset
-            </Button>
+            <Button onClick={() => form.resetFields()}>Reset</Button>
 
             <Button type="primary" htmlType="submit">
               {editingDept ? "Update" : "Create"}

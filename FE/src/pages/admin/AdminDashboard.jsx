@@ -11,9 +11,6 @@ const AdminDashboard = () => {
   const totalIdeas = ideas.length;
   const totalAcademicYears = items.length;
 
-  /* ========================
-     IDEAS PER DEPARTMENT
-  ======================== */
   const departmentStats = {};
 
   ideas.forEach((idea) => {
@@ -22,9 +19,6 @@ const AdminDashboard = () => {
       (departmentStats[dept] || 0) + 1;
   });
 
-  /* ========================
-     TOP 5 MOST POPULAR
-  ======================== */
   const topIdeas = [...ideas]
     .sort(
       (a, b) =>
@@ -33,9 +27,6 @@ const AdminDashboard = () => {
     )
     .slice(0, 5);
 
-  /* ========================
-     ACADEMIC YEAR STATUS
-  ======================== */
   const isClosed =
     currentAcademicYear &&
     new Date() >
@@ -53,9 +44,7 @@ const AdminDashboard = () => {
         </p>
       </div>
 
-      {/* ================= CARDS ================= */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-
         <Card title="Total Users" value={totalUsers} />
         <Card title="Total Ideas" value={totalIdeas} />
         <Card title="Academic Years" value={totalAcademicYears} />
@@ -64,10 +53,8 @@ const AdminDashboard = () => {
           value={isClosed ? "Closed" : "Open"}
           highlight={isClosed ? "red" : "green"}
         />
-
       </div>
 
-      {/* ================= CHART ================= */}
       <div className="bg-white p-6 rounded-xl shadow-sm border">
         <h3 className="font-semibold mb-6 text-gray-700">
           Ideas per Department
@@ -98,7 +85,6 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* ================= TOP IDEAS ================= */}
       <div className="bg-white p-6 rounded-xl shadow-sm border">
         <h3 className="font-semibold mb-6 text-gray-700">
           Top 5 Most Popular Ideas
@@ -135,9 +121,6 @@ const AdminDashboard = () => {
   );
 };
 
-/* ========================
-   CARD COMPONENT
-======================== */
 const Card = ({ title, value, highlight }) => {
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border">

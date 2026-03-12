@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { notification } from "antd";
 import illustration from "../../assets/Investment data-rafiki 1.png";
 import logo from "../../assets/Logo.png";
+import "./../../styles/forgot-password.css";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -20,100 +21,99 @@ const ForgotPassword = () => {
       return;
     }
 
-    // 🚀 Sau này thay bằng API call
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      notification.error({
+        message: "Invalid email",
+        description: "Please enter a valid email address",
+      });
+      return;
+    }
+
     setLoading(true);
 
+    // Simulate API call
     setTimeout(() => {
       notification.success({
         message: "Reset link sent",
         description:
-          "If this email exists, a password reset link has been sent.",
+          "If this email exists, a password reset link has been sent to your inbox.",
       });
       setLoading(false);
-      navigate("/login");
+      
+      // Redirect after 1.5 seconds
+      setTimeout(() => {
+        navigate("/login");
+      }, 1500);
     }, 1500);
   };
 
   return (
-    <div className="w-screen h-screen flex flex-col md:flex-row items-center justify-center bg-white font-[Cabin] overflow-hidden">
-
-      {/* LEFT SIDE */}
-      <div className="w-full md:w-1/2 flex flex-col items-start px-8 sm:px-12 md:px-20">
-        <div className="w-full max-w-[486px]">
-
+    <div className="forgot-password-container">
+      {/* Left Side - Form */}
+      <div className="forgot-password-form-section">
+        <div className="forgot-password-form-wrapper">
           <img
             src={logo}
-            alt="Logo"
-            className="w-[180px] h-auto mb-6"
+            alt="University Logo"
+            className="forgot-password-logo"
           />
 
-          <h2 className="text-[26px] font-bold text-black mb-4">
-            Reset Your Password
-          </h2>
+          <h1 className="forgot-password-title">Reset Your Password</h1>
 
-          <p className="text-sm text-gray-500 mb-8">
-            Enter your university email address and we will send you a password reset link.
+          <p className="forgot-password-description">
+            Enter your university email address and we will send you a password
+            reset link.
           </p>
 
-          <form onSubmit={handleSubmit}>
-
-            <div className="mb-6">
-              <label className="block text-[14px] font-medium mb-2">
-                University Email
-              </label>
+          <form onSubmit={handleSubmit} className="forgot-password-form">
+            {/* Email Field */}
+            <div className="form-group">
+              <label className="form-label">University Email</label>
               <input
                 type="email"
                 placeholder="abc@university.edu"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full h-[55px] border border-[#DEDDE4] rounded-md px-4 text-sm focus:ring-1 focus:ring-red-500 outline-none"
+                className="form-input"
               />
             </div>
 
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className={`w-full h-[55px] ${
-                loading
-                  ? "bg-gray-400"
-                  : "bg-[#DC2626] hover:bg-[#b91c1c]"
-              } text-white rounded-md font-semibold text-[16px]`}
+              className="forgot-password-button"
             >
               {loading ? "Sending..." : "Send Reset Link"}
             </button>
 
-            <div className="text-center mt-6">
+            {/* Back to Login Link */}
+            <div className="back-to-login">
               <button
                 type="button"
                 onClick={() => navigate("/login")}
-                className="text-sm text-gray-600 hover:text-black"
+                className="link-button secondary"
               >
                 ← Back to Login
               </button>
             </div>
-
           </form>
         </div>
       </div>
 
-      {/* LINE */}
-      <div
-        className="hidden md:block h-[70%] w-[1.5px] mx-10"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(10, 3, 60, 0) 0%, #0A033C 51.56%, rgba(10, 3, 60, 0) 100%)",
-        }}
-      ></div>
+      {/* Separator Line */}
+      <div className="vertical-separator"></div>
 
-      {/* RIGHT SIDE */}
-      <div className="hidden md:flex w-1/2 items-center justify-center">
+      {/* Right Side - Illustration */}
+      <div className="forgot-password-illustration-section">
         <img
           src={illustration}
-          alt="Illustration"
-          className="object-contain w-[70%]"
+          alt="Password Reset Illustration"
+          className="illustration-image"
         />
       </div>
-
     </div>
   );
 };

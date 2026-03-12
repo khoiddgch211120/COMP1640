@@ -7,9 +7,53 @@ import "antd/dist/reset.css";
 
 import illustration from "../../assets/Investment data-rafiki 1.png";
 import logo from "../../assets/Logo.png";
+import "./../../styles/login.css";
 
 import { loginSuccess } from "../../redux/slices/authSlice";
 import { ROLES } from "../../constants/roles";
+
+// ─── Mock accounts ────────────────────────────────────────────────────────────
+const MOCK_ACCOUNTS = [
+  {
+    email: "admin@university.edu",
+    password: "admin123",
+    role: ROLES.ADMIN,
+    fullName: "Admin System",
+  },
+  {
+    email: "manager@university.edu",
+    password: "manager123",
+    role: ROLES.QA_MANAGER,
+    fullName: "Nguyễn QA Manager",
+  },
+  {
+    email: "coordinator@university.edu",
+    password: "coord123",
+    role: ROLES.QA_COORDINATOR,
+    fullName: "Trần QA Coordinator",
+  },
+  {
+    email: "staff@university.edu",
+    password: "staff123",
+    role: ROLES.STAFF,
+    fullName: "Lê Staff User",
+  },
+];
+
+const ROLE_ROUTE = {
+  [ROLES.ADMIN]: "/admin",
+  [ROLES.QA_MANAGER]: "/manager",
+  [ROLES.QA_COORDINATOR]: "/coordinator",
+  [ROLES.STAFF]: "/",
+};
+
+const ROLE_LABEL = {
+  [ROLES.ADMIN]: "Admin",
+  [ROLES.QA_MANAGER]: "QA Manager",
+  [ROLES.QA_COORDINATOR]: "QA Coordinator",
+  [ROLES.STAFF]: "Staff",
+};
+// ──────────────────────────────────────────────────────────────────────────────
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,6 +63,12 @@ const Login = () => {
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  // Quick-fill a mock account
+  const fillMock = (account) => {
+    setEmail(account.email);
+    setPassword(account.password);
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -34,153 +84,153 @@ const Login = () => {
     try {
       setLoading(true);
 
-      // 🔥 MOCK ROLE (Backend sau thay)
-      let role = ROLES.STAFF;
+      // Match mock account
+      const found = MOCK_ACCOUNTS.find(
+        (acc) => acc.email === email && acc.password === password
+      );
 
-      if (email.includes("admin")) role = ROLES.ADMIN;
-      if (email.includes("manager")) role = ROLES.QA_MANAGER;
-      if (email.includes("coordinator")) role = ROLES.QA_COORDINATOR;
-
-      const userData = {
-        name: "Test User",
-        email,
-        role,
-      };
+      if (!found) {
+        notification.error({
+          message: "Login failed",
+          description: "Email or password is incorrect",
+        });
+        setLoading(false);
+        return;
+      }
 
       dispatch(
         loginSuccess({
-          user: userData,
-          token: "fake-token",
+          user: {
+            fullName: found.fullName,
+            email: found.email,
+            role: found.role,
+          },
+          token: "mock-token-" + found.role.toLowerCase(),
         })
       );
 
       notification.success({
         message: "Login successful",
+        description: `Welcome, ${found.fullName}!`,
       });
 
-      // 🔥 Redirect theo role
-      switch (role) {
-        case ROLES.ADMIN:
-          navigate("/admin");
-          break;
-        case ROLES.QA_MANAGER:
-          navigate("/manager");
-          break;
-        case ROLES.QA_COORDINATOR:
-          navigate("/coordinator");
-          break;
-        default:
-          navigate("/");
-      }
+      navigate(ROLE_ROUTE[found.role]);
     } catch (error) {
-      notification.error({
-        message: "Login failed",
-      });
+      notification.error({ message: "Login failed" });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="w-screen h-screen flex flex-col md:flex-row items-center justify-center bg-white font-[Cabin] overflow-hidden relative">
-      {/* LEFT SIDE */}
-      <div className="w-full md:w-1/2 flex flex-col items-start px-8 sm:px-12 md:px-20">
-        <div className="w-full max-w-[486px]">
-          <img
-            src={logo}
-            alt="Logo"
-            className="w-[180px] h-auto mb-6 md:mb-8"
-          />
+    <div className="login-container">
+      {/* Left Side - Form */}
+      <div className="login-form-section">
+        <div className="login-form-wrapper">
+          <img src={logo} alt="University Logo" className="login-logo" />
 
-          <h2 className="text-[22px] sm:text-[26px] md:text-[30px] font-bold text-black mb-10 leading-snug">
-            University Idea Management System
-          </h2>
+          <h1 className="login-title">University Idea Management System</h1>
 
-          <form className="w-full" onSubmit={handleLogin}>
-            {/* Email */}
-            <div className="mb-5">
-              <label className="block text-[16px] font-medium mb-2">
-                Email
-              </label>
+          {/* ── Mock credentials panel ── */}
+          <div className="mock-credentials">
+            <div className="mock-credentials-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="13" height="13">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              Mock accounts — click to auto-fill
+            </div>
+            <div className="mock-credentials-grid">
+              {MOCK_ACCOUNTS.map((acc) => (
+                <button
+                  key={acc.role}
+                  type="button"
+                  className={`mock-chip mock-chip--${acc.role.toLowerCase().replace("_", "-")}`}
+                  onClick={() => fillMock(acc)}
+                >
+                  <span className="mock-chip-role">{ROLE_LABEL[acc.role]}</span>
+                  <span className="mock-chip-email">{acc.email}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <form className="login-form" onSubmit={handleLogin}>
+            {/* Email Field */}
+            <div className="form-group">
+              <label className="form-label">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="abc@gmail.com"
-                className="w-full h-[60px] border border-[#DEDDE4] rounded-md px-4 text-sm focus:ring-1 focus:ring-red-500 outline-none"
+                placeholder="abc@university.edu"
+                className="form-input"
               />
             </div>
 
-            {/* Password */}
-            <div className="mb-6 relative">
-              <label className="block text-[16px] font-medium mb-2">
-                Password
-              </label>
-              <div className="relative">
+            {/* Password Field */}
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <div className="password-input-wrapper">
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="********"
-                  className="w-full h-[60px] border border-[#DEDDE4] rounded-md px-4 pr-12 text-sm focus:ring-1 focus:ring-red-500 outline-none"
+                  className="form-input password-input"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
+                  className="password-toggle"
+                  aria-label="Toggle password visibility"
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
               </div>
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-[60px] bg-[#DC2626] hover:bg-[#b91c1c] text-white rounded-md font-semibold text-[16px] transition"
-            >
+            {/* Login Button */}
+            <button type="submit" disabled={loading} className="login-button">
               {loading ? "Logging in..." : "Login"}
             </button>
-            {/* Forgot password */}
-            <div className="text-center mt-4">
-  <button
-    type="button"
-    onClick={() => navigate("/forgot-password")}
-    className="text-[#5D5A6F] text-[14px] hover:text-gray-700"
-  >
-    Forgot Password?
-  </button>
-</div>
 
-<div className="text-center text-[14px] text-[#5D5A6F] mt-2">
-Don't have an account? {" "}
-  <button
-    type="button"
-    onClick={() => navigate("/register")}
-    className="text-[#DC2626] font-medium hover:underline"
-  >
-    Creat one
-  </button>
-</div>
+            {/* Forgot Password Link */}
+            <div className="forgot-password-link">
+              <button
+                type="button"
+                onClick={() => navigate("/forgot-password")}
+                className="link-button secondary"
+              >
+                Forgot Password?
+              </button>
+            </div>
+
+            {/* Register Link */}
+            <div className="register-link">
+              Don't have an account?{" "}
+              <button
+                type="button"
+                onClick={() => navigate("/register")}
+                className="link-button primary"
+              >
+                Create one
+              </button>
+            </div>
           </form>
         </div>
       </div>
 
-      {/* LINE */}
-      <div
-        className="hidden md:block h-[70%] w-[1.5px] mx-10"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(10, 3, 60, 0) 0%, #0A033C 51.56%, rgba(10, 3, 60, 0) 100%)",
-        }}
-      ></div>
+      {/* Separator Line */}
+      <div className="vertical-separator"></div>
 
-      {/* RIGHT SIDE */}
-      <div className="hidden md:flex w-1/2 items-center justify-center">
+      {/* Right Side - Illustration */}
+      <div className="login-illustration-section">
         <img
           src={illustration}
-          alt="Login Illustration"
-          className="object-contain w-[70%]"
+          alt="Idea Management Illustration"
+          className="illustration-image"
         />
       </div>
     </div>

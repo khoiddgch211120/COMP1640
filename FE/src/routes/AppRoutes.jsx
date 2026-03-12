@@ -3,18 +3,24 @@ import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import ProtectedRoute from "./ProtectedRoute";
+
 import MainLayout from "../layouts/MainLayout";
 import AdminLayout from "../layouts/AdminLayout";
 import { ROLES } from "../constants/roles";
 
+// Idea system
 import IdeaList from "../pages/ideas/IdeaList";
 import SubmitIdea from "../pages/ideas/SubmitIdea";
 import IdeaDetail from "../pages/ideas/IdeaDetail";
 import Statistics from "../pages/statistics/Statistics";
-import AdminAcademicYear from "../pages/admin/AdminAcademicYear";
+
+// Admin
 import AdminDashboard from "../pages/admin/AdminDashboard";
-import UsersManagement from "../pages/admin/UsersManagement"; // 🔥 thêm dòng này
+import UsersManagement from "../pages/admin/UsersManagement";
 import DepartmentManagement from "../pages/admin/DepartmentManagement";
+import AcademicYearManagement from "../pages/admin/AcademicYearManagement";
+import TermsConditions from "../pages/admin/TermsConditions";
+import AttachmentManagement from "../pages/admin/AttachmentManagement";
 
 // Optional dashboards
 const StaffDashboard = () => <h1>Staff Dashboard</h1>;
@@ -121,21 +127,13 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
-        <Route path="/admin" element={<AdminDashboard />} />
-
-        <Route
-          path="/admin/academic-years"
-          element={<AdminAcademicYear />}
-        />
-      <Route
-        path="/admin/departments"
-        element={<DepartmentManagement />}
-      />
-        {/* 🔥 NEW ROUTE */}
-        <Route
-          path="/admin/users"
-          element={<UsersManagement />}
-        />
+        <Route index element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/users" element={<UsersManagement />} />
+        <Route path="/admin/departments" element={<DepartmentManagement />} />
+        <Route path="/admin/academic-years" element={<AcademicYearManagement />} />
+        <Route path="/admin/terms" element={<TermsConditions />} />
+        <Route path="/admin/attachments" element={<AttachmentManagement />} />
       </Route>
 
       {/* FALLBACK */}

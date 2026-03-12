@@ -4,6 +4,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 import illustration from "../../assets/Investment data-rafiki 1.png";
 import logo from "../../assets/Logo.png";
 import { notification } from "antd";
+import "./../../styles/register.css";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ const Register = () => {
     if (!formData.fullName || !formData.email || !formData.password) {
       notification.warning({
         message: "Missing information",
+        description: "Please fill in all required fields",
       });
       return;
     }
@@ -61,169 +63,153 @@ const Register = () => {
 
     notification.success({
       message: "Registration successful",
+      description: "You can now login to your account",
     });
 
     navigate("/login");
   };
 
   return (
-    <div className="w-screen h-screen flex flex-col md:flex-row items-center justify-center bg-white font-[Cabin] overflow-hidden">
-      
-      {/* LEFT SIDE */}
-      <div className="w-full md:w-1/2 flex flex-col items-start px-8 sm:px-12 md:px-20">
-        <div className="w-full max-w-[486px]">
+    <div className="register-container">
+      {/* Left Side - Form */}
+      <div className="register-form-section">
+        <div className="register-form-wrapper">
+          <img src={logo} alt="University Logo" className="register-logo" />
 
-          <img
-            src={logo}
-            alt="Logo"
-            className="w-[180px] h-auto mb-6"
-          />
+          <h1 className="register-title">University Idea Management System</h1>
 
-          <h2 className="text-[26px] font-bold text-black mb-8">
-            University Idea Management System
-          </h2>
-
-          <form onSubmit={handleRegister}>
-
+          <form onSubmit={handleRegister} className="register-form">
             {/* Full Name */}
-            <div className="mb-4">
-              <label className="block text-[14px] font-medium mb-2">
-                Full Name
-              </label>
+            <div className="form-group">
+              <label className="form-label">Full Name</label>
               <input
                 type="text"
                 name="fullName"
                 placeholder="Enter your full name"
-                className="w-full h-[55px] border border-[#DEDDE4] rounded-md px-4 text-sm focus:ring-1 focus:ring-red-500 outline-none"
+                className="form-input"
                 onChange={handleChange}
               />
             </div>
 
             {/* Email */}
-            <div className="mb-4">
-              <label className="block text-[14px] font-medium mb-2">
-                Email
-              </label>
+            <div className="form-group">
+              <label className="form-label">Email</label>
               <input
                 type="email"
                 name="email"
                 placeholder="abc@university.edu"
-                className="w-full h-[55px] border border-[#DEDDE4] rounded-md px-4 text-sm focus:ring-1 focus:ring-red-500 outline-none"
+                className="form-input"
                 onChange={handleChange}
               />
             </div>
 
             {/* Department */}
-            <div className="mb-4">
-              <label className="block text-[14px] font-medium mb-2">
-                Department
-              </label>
+            <div className="form-group">
+              <label className="form-label">Department</label>
               <select
                 name="department"
-                className="w-full h-[55px] border border-[#DEDDE4] rounded-md px-4 text-sm focus:ring-1 focus:ring-red-500 outline-none"
+                className="form-input form-select"
                 onChange={handleChange}
+                defaultValue=""
               >
-                <option value="">Select department</option>
-                <option value="IT">IT</option>
-                <option value="Business">Business</option>
-                <option value="Design">Design</option>
-                <option value="HR">HR</option>
+                <option value="" disabled>
+                  Select department
+                </option>
+                <option value="IT">Information Technology</option>
+                <option value="Business">Business Administration</option>
+                <option value="Design">Design & Arts</option>
+                <option value="Engineering">Engineering</option>
+                <option value="HR">Human Resources</option>
               </select>
             </div>
 
             {/* Password */}
-            <div className="mb-4 relative">
-              <label className="block text-[14px] font-medium mb-2">
-                Password
-              </label>
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="********"
-                className="w-full h-[55px] border border-[#DEDDE4] rounded-md px-4 pr-12 text-sm focus:ring-1 focus:ring-red-500 outline-none"
-                onChange={handleChange}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-[42px] text-gray-500"
-              >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
+            <div className="form-group">
+              <label className="form-label">Password</label>
+              <div className="password-input-wrapper">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="********"
+                  className="form-input password-input"
+                  onChange={handleChange}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="password-toggle"
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
             </div>
 
             {/* Confirm Password */}
-            <div className="mb-4 relative">
-              <label className="block text-[14px] font-medium mb-2">
-                Confirm Password
-              </label>
-              <input
-                type={showConfirm ? "text" : "password"}
-                name="confirmPassword"
-                placeholder="********"
-                className="w-full h-[55px] border border-[#DEDDE4] rounded-md px-4 pr-12 text-sm focus:ring-1 focus:ring-red-500 outline-none"
-                onChange={handleChange}
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirm(!showConfirm)}
-                className="absolute right-4 top-[42px] text-gray-500"
-              >
-                {showConfirm ? <FaEyeSlash /> : <FaEye />}
-              </button>
+            <div className="form-group">
+              <label className="form-label">Confirm Password</label>
+              <div className="password-input-wrapper">
+                <input
+                  type={showConfirm ? "text" : "password"}
+                  name="confirmPassword"
+                  placeholder="********"
+                  className="form-input password-input"
+                  onChange={handleChange}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm(!showConfirm)}
+                  className="password-toggle"
+                  aria-label="Toggle password visibility"
+                >
+                  {showConfirm ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
             </div>
 
-            {/* Terms */}
-            <div className="mb-6 flex items-start gap-2">
+            {/* Terms Checkbox */}
+            <div className="terms-group">
               <input
                 type="checkbox"
                 name="agree"
+                id="terms"
                 onChange={handleChange}
-                className="mt-1"
+                className="terms-checkbox"
               />
-              <span className="text-sm text-gray-600">
+              <label htmlFor="terms" className="terms-label">
                 I agree to the Terms & Conditions
-              </span>
+              </label>
             </div>
 
-            {/* Button */}
-            <button
-              type="submit"
-              className="w-full h-[55px] bg-[#DC2626] hover:bg-[#b91c1c] text-white rounded-md font-semibold text-[16px]"
-            >
+            {/* Register Button */}
+            <button type="submit" className="register-button">
               Register
             </button>
 
-            <div className="text-center mt-4 text-sm">
+            {/* Login Link */}
+            <div className="login-link">
               Already have an account?{" "}
               <button
                 type="button"
                 onClick={() => navigate("/login")}
-                className="text-[#DC2626] font-medium hover:underline"
+                className="link-button primary"
               >
                 Login
               </button>
             </div>
-
           </form>
         </div>
       </div>
 
-      {/* LINE */}
-      <div
-        className="hidden md:block h-[70%] w-[1.5px] mx-10"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(10, 3, 60, 0) 0%, #0A033C 51.56%, rgba(10, 3, 60, 0) 100%)",
-        }}
-      ></div>
+      {/* Separator Line */}
+      <div className="vertical-separator"></div>
 
-      {/* RIGHT SIDE */}
-      <div className="hidden md:flex w-1/2 items-center justify-center">
+      {/* Right Side - Illustration */}
+      <div className="register-illustration-section">
         <img
           src={illustration}
-          alt="Illustration"
-          className="object-contain w-[70%]"
+          alt="Idea Management Illustration"
+          className="illustration-image"
         />
       </div>
     </div>
