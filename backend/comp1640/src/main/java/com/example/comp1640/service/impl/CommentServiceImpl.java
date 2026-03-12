@@ -4,9 +4,10 @@ import com.example.comp1640.dto.request.CommentRequest;
 import com.example.comp1640.dto.response.CommentResponse;
 import com.example.comp1640.exception.BadRequestException;
 import com.example.comp1640.exception.ResourceNotFoundException;
-import com.example.comp1640.model.Comment;
-import com.example.comp1640.model.Idea;
-import com.example.comp1640.model.User;
+import com.example.comp1640.entity.Comment;
+import com.example.comp1640.entity.Idea;
+import com.example.comp1640.entity.User;
+import com.example.comp1640.enums.RoleName;
 import com.example.comp1640.repository.CommentRepository;
 import com.example.comp1640.repository.IdeaRepository;
 import com.example.comp1640.repository.UserRepository;
@@ -112,7 +113,7 @@ public class CommentServiceImpl implements CommentService {
         User currentUser = getCurrentUser();
 
         // ADMIN hoặc chủ comment mới được xóa
-        String role = currentUser.getRole() != null ? currentUser.getRole().getRoleName() : "";
+        String role = currentUser.getRole() != null ? currentUser.getRole().getRoleName().name() : "";
         if (!role.equals("ADMIN") && !comment.getUser().getUserId().equals(currentUser.getUserId())) {
             throw new AccessDeniedException("Bạn không có quyền xóa bình luận này");
         }
@@ -145,11 +146,12 @@ public class CommentServiceImpl implements CommentService {
 
     /**
      * Chuyển Comment entity sang DTO.
-     * Nếu comment ẩn danh và người xem không phải ADMIN/QA_MGR → ẩn tên và id tác giả.
+     * Nếu comment ẩn danh và người xem không phải ADMIN/QA_MGR → ẩn tên và id tác
+     * giả.
      * Guest (viewer = null) luôn thấy "Ẩn danh".
      */
     private CommentResponse toResponse(Comment comment, User viewer) {
-        String role = (viewer != null && viewer.getRole() != null) ? viewer.getRole().getRoleName() : "";
+        String role = (viewer != null && viewer.getRole() != null) ? viewer.getRole().getRoleName().name() : "";
         boolean canSeeIdentity = role.equals("ADMIN") || role.equals("QA_MGR");
         boolean anonymous = Boolean.TRUE.equals(comment.getIsAnonymous());
 
@@ -164,7 +166,6 @@ public class CommentServiceImpl implements CommentService {
                 comment.getContent(),
                 comment.getIsAnonymous(),
                 comment.getCreatedAt(),
-                comment.getUpdatedAt()
-        );
+                comment.getUpdatedAt());
     }
 }

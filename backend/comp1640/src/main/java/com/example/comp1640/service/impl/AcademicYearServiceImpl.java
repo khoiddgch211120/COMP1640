@@ -12,8 +12,8 @@ import com.example.comp1640.dto.request.AcademicYearRequest;
 import com.example.comp1640.dto.response.AcademicYearResponse;
 import com.example.comp1640.exception.BadRequestException;
 import com.example.comp1640.exception.ResourceNotFoundException;
-import com.example.comp1640.model.AcademicYear;
-import com.example.comp1640.model.User;
+import com.example.comp1640.entity.AcademicYear;
+import com.example.comp1640.entity.User;
 import com.example.comp1640.repository.AcademicYearRepository;
 import com.example.comp1640.repository.UserRepository;
 import com.example.comp1640.service.AcademicYearService;
@@ -81,8 +81,10 @@ public class AcademicYearServiceImpl implements AcademicYearService {
             year.setYearLabel(request.getYearLabel());
         }
 
-        LocalDate newIdeaDate  = request.getIdeaClosureDate()  != null ? request.getIdeaClosureDate()  : year.getIdeaClosureDate();
-        LocalDate newFinalDate = request.getFinalClosureDate() != null ? request.getFinalClosureDate() : year.getFinalClosureDate();
+        LocalDate newIdeaDate = request.getIdeaClosureDate() != null ? request.getIdeaClosureDate()
+                : year.getIdeaClosureDate();
+        LocalDate newFinalDate = request.getFinalClosureDate() != null ? request.getFinalClosureDate()
+                : year.getFinalClosureDate();
 
         if (!newIdeaDate.isBefore(newFinalDate)) {
             throw new BadRequestException("Ngày đóng ý tưởng phải trước ngày đóng bình luận");
@@ -137,7 +139,6 @@ public class AcademicYearServiceImpl implements AcademicYearService {
                 a.getCreatedBy() != null ? a.getCreatedBy().getFullName() : null,
                 a.getCreatedAt(),
                 today.isBefore(a.getIdeaClosureDate()) || today.isEqual(a.getIdeaClosureDate()),
-                today.isBefore(a.getFinalClosureDate()) || today.isEqual(a.getFinalClosureDate())
-        );
+                today.isBefore(a.getFinalClosureDate()) || today.isEqual(a.getFinalClosureDate()));
     }
 }

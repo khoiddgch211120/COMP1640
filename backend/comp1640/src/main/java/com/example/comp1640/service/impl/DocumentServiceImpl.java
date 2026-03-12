@@ -5,9 +5,9 @@ import com.cloudinary.utils.ObjectUtils;
 import com.example.comp1640.dto.response.DocumentResponse;
 import com.example.comp1640.exception.BadRequestException;
 import com.example.comp1640.exception.ResourceNotFoundException;
-import com.example.comp1640.model.Document;
-import com.example.comp1640.model.Idea;
-import com.example.comp1640.model.User;
+import com.example.comp1640.entity.Document;
+import com.example.comp1640.entity.Idea;
+import com.example.comp1640.entity.User;
 import com.example.comp1640.repository.DocumentRepository;
 import com.example.comp1640.repository.IdeaRepository;
 import com.example.comp1640.repository.UserRepository;
@@ -55,7 +55,7 @@ public class DocumentServiceImpl implements DocumentService {
             Document document = new Document();
             document.setIdea(idea);
             document.setFileName(file.getOriginalFilename());
-            document.setFileUrl((String) uploadResult.get("secure_url"));
+            document.setFilePath((String) uploadResult.get("secure_url"));
             document.setPublicId((String) uploadResult.get("public_id"));
             document.setFileType(file.getContentType());
             document.setUploadedAt(LocalDateTime.now());
@@ -79,7 +79,7 @@ public class DocumentServiceImpl implements DocumentService {
 
         User currentUser = getCurrentUser();
         boolean isAdmin = currentUser.getRole() != null &&
-                "ADMIN".equals(currentUser.getRole().getRoleName());
+                "ADMIN".equals(currentUser.getRole().getRoleName().name());
 
         // ADMIN hoặc chủ idea mới được xóa file
         if (!document.getIdea().getUser().getUserId().equals(currentUser.getUserId()) && !isAdmin) {
@@ -105,10 +105,10 @@ public class DocumentServiceImpl implements DocumentService {
 
     private DocumentResponse toResponse(Document doc) {
         return new DocumentResponse(
-                doc.getDocumentId(),
+                doc.getDocId(),
                 doc.getIdea().getIdeaId(),
                 doc.getFileName(),
-                doc.getFileUrl(),
+                doc.getFilePath(),
                 doc.getFileType(),
                 doc.getUploadedAt()
         );

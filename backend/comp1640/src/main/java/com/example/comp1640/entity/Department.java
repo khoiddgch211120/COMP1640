@@ -1,28 +1,30 @@
 package com.example.comp1640.entity;
 
-import com.example.comp1640.enums.DeptType;
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "department")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
 public class Department {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "dept_id")
     private Integer deptId;
 
-    @Column(nullable = false, length = 255)
+    @Column(name = "dept_name")
     private String deptName;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private DeptType deptType;
+    @Column(name = "dept_type")
+    private String deptType;
 
-    @CreationTimestamp
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 }

@@ -1,34 +1,38 @@
 package com.example.comp1640.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 @Entity
 @Table(name = "academic_year")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
 public class AcademicYear {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "year_id")
     private Integer yearId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by", nullable = false)
+    @JoinColumn(name = "created_by")
     private User createdBy;
 
-    @Column(nullable = false, length = 20)
-    private String yearLabel;          // e.g. "2024-2025"
+    @Column(name = "year_label", nullable = false, length = 20)
+    private String yearLabel;
 
-    @Column(nullable = false)
+    @Column(name = "idea_closure_date", nullable = false)
     private LocalDate ideaClosureDate;
 
-    @Column(nullable = false)
+    @Column(name = "final_closure_date", nullable = false)
     private LocalDate finalClosureDate;
 
-    @CreationTimestamp
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
 }

@@ -11,9 +11,10 @@ import com.example.comp1640.dto.request.UserRequest;
 import com.example.comp1640.dto.response.UserResponse;
 import com.example.comp1640.exception.BadRequestException;
 import com.example.comp1640.exception.ResourceNotFoundException;
-import com.example.comp1640.model.Department;
-import com.example.comp1640.model.Role;
-import com.example.comp1640.model.User;
+import com.example.comp1640.entity.Department;
+import com.example.comp1640.entity.Role;
+import com.example.comp1640.enums.StaffType;
+import com.example.comp1640.entity.User;
 import com.example.comp1640.repository.DepartmentRepository;
 import com.example.comp1640.repository.RoleRepository;
 import com.example.comp1640.repository.UserRepository;
@@ -49,13 +50,16 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy role với id: " + request.getRoleId()));
 
         Department dept = deptRepo.findById(request.getDeptId())
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy department với id: " + request.getDeptId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy department với id: " + request.getDeptId()));
 
         User user = new User();
         user.setFullName(request.getFullName());
         user.setEmail(request.getEmail());
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setStaffType(request.getStaffType());
+        if (request.getStaffType() != null && !request.getStaffType().isBlank()) {
+            user.setStaffType(StaffType.valueOf(request.getStaffType().toUpperCase()));
+        }
         user.setRole(role);
         user.setDepartment(dept);
         user.setIsActive(true);
@@ -90,18 +94,20 @@ public class UserServiceImpl implements UserService {
         }
 
         if (request.getStaffType() != null && !request.getStaffType().isBlank()) {
-            user.setStaffType(request.getStaffType());
+            user.setStaffType(StaffType.valueOf(request.getStaffType().toUpperCase()));
         }
 
         if (request.getRoleId() != null) {
             Role role = roleRepo.findById(request.getRoleId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy role với id: " + request.getRoleId()));
+                    .orElseThrow(
+                            () -> new ResourceNotFoundException("Không tìm thấy role với id: " + request.getRoleId()));
             user.setRole(role);
         }
 
         if (request.getDeptId() != null) {
             Department dept = deptRepo.findById(request.getDeptId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy department với id: " + request.getDeptId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Không tìm thấy department với id: " + request.getDeptId()));
             user.setDepartment(dept);
         }
 
@@ -133,11 +139,10 @@ public class UserServiceImpl implements UserService {
                 user.getUserId(),
                 user.getFullName(),
                 user.getEmail(),
-                user.getStaffType(),
+                user.getStaffType() != null ? user.getStaffType().name() : null,
                 user.getIsActive(),
                 user.getRole() != null ? user.getRole().getRoleName() : null,
                 user.getDepartment() != null ? user.getDepartment().getDeptName() : null,
-                user.getCreatedAt()
-        );
+                user.getCreatedAt());
     }
 }

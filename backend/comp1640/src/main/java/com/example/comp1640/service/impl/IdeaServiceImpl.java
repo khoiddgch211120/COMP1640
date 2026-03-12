@@ -19,15 +19,16 @@ import com.example.comp1640.dto.response.IdeaResponse;
 import com.example.comp1640.exception.BadRequestException;
 import com.example.comp1640.exception.ResourceNotFoundException;
 import com.example.comp1640.exception.UnauthorizedException;
-import com.example.comp1640.model.AcademicYear;
-import com.example.comp1640.model.Category;
-import com.example.comp1640.model.Idea;
-import com.example.comp1640.model.User;
+import com.example.comp1640.entity.AcademicYear;
+import com.example.comp1640.entity.Category;
+import com.example.comp1640.entity.Idea;
+import com.example.comp1640.entity.User;
 import com.example.comp1640.repository.AcademicYearRepository;
 import com.example.comp1640.repository.CategoryRepository;
 import com.example.comp1640.repository.IdeaRepository;
 import com.example.comp1640.repository.UserRepository;
 import com.example.comp1640.repository.VoteRepository;
+import com.example.comp1640.enums.RoleName;
 import com.example.comp1640.service.IdeaService;
 import lombok.RequiredArgsConstructor;
 
@@ -178,10 +179,10 @@ public class IdeaServiceImpl implements IdeaService {
     public void delete(Integer id) {
         Idea idea = findOrThrow(id);
         User currentUser = getCurrentUser();
-        String role = currentUser.getRole() != null ? currentUser.getRole().getRoleName() : "";
 
         // ADMIN hoặc chủ idea mới được xóa
-        if (!role.equals("ADMIN") && !idea.getUser().getUserId().equals(currentUser.getUserId())) {
+        boolean isAdmin = currentUser.getRole() != null && RoleName.ADMIN.equals(currentUser.getRole().getRoleName());
+        if (!isAdmin && !idea.getUser().getUserId().equals(currentUser.getUserId())) {
             throw new UnauthorizedException("Bạn không có quyền xóa ý tưởng này");
         }
         ideaRepo.deleteById(id);
@@ -224,9 +225,11 @@ public class IdeaServiceImpl implements IdeaService {
      * Guest (viewer = null) không được xem.
      */
     private boolean canViewIdentity(User viewer) {
-        if (viewer == null) return false;
-        String role = viewer.getRole() != null ? viewer.getRole().getRoleName() : "";
-        return role.equals("ADMIN") || role.equals("QA_MGR");
+        if (viewer == null || viewer.getRole() == null) {
+            return false;
+        }
+        RoleName role = viewer.getRole().getRoleName();
+        return role == RoleName.ADMIN || role == RoleName.QA_MANAGER;
     }
 
     private IdeaResponse toResponse(Idea idea, User viewer) {
@@ -236,7 +239,7 @@ public class IdeaServiceImpl implements IdeaService {
                 .map(Category::getCategoryName)
                 .collect(Collectors.toSet());
 
-        long upvotes   = voteRepo.countUpvotes(idea.getIdeaId());
+        long upvotes = voteRepo.countUpvotes(idea.getIdeaId());
         long downvotes = voteRepo.countDownvotes(idea.getIdeaId());
 
         return new IdeaResponse(
@@ -255,7 +258,6 @@ public class IdeaServiceImpl implements IdeaService {
                 downvotes,
                 idea.getTermsAccepted(),
                 idea.getSubmittedAt(),
-                idea.getUpdatedAt()
-        );
+                idea.getUpdatedAt());
     }
 }

@@ -1,6 +1,6 @@
 package com.example.comp1640.dto.request;
 
-import com.example.comp1640.model.Vote.VoteType;
+import com.example.comp1640.entity.Vote.VoteType;
 
 import lombok.Getter;
 import lombok.Setter;

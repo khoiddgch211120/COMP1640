@@ -2,6 +2,7 @@ package com.example.comp1640.dto.response;
 
 import java.time.LocalDateTime;
 
+import com.example.comp1640.enums.DeptType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,6 @@ public class DepartmentResponse {
 
     private Integer deptId;
     private String deptName;
-    private String deptType;
+    private DeptType deptType;
     private LocalDateTime createdAt;
 }

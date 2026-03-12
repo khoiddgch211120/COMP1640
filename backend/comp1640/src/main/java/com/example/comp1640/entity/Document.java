@@ -1,35 +1,41 @@
 package com.example.comp1640.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
+
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "document")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
 public class Document {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer docId;
+    @Column(name = "document_id")
+    private Integer documentId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idea_id", nullable = false)
     private Idea idea;
 
-    @Column(nullable = false, length = 255)
+    @Column(name = "file_name", nullable = false)
     private String fileName;
 
-    @Column(nullable = false, length = 500)
-    private String filePath;
+    @Column(name = "file_url", nullable = false, length = 1000)
+    private String fileUrl;
 
-    @Column(length = 50)
+    @Column(name = "public_id", nullable = false)
+    private String publicId;
+
+    @Column(name = "file_type")
     private String fileType;
 
-    private Integer fileSizeKb;
-
-    @CreationTimestamp
+    @Column(name = "uploaded_at")
     private LocalDateTime uploadedAt;
 }
+

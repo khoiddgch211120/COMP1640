@@ -13,7 +13,7 @@ public class DocumentResponse {
     private Integer documentId;
     private Integer ideaId;
     private String fileName;
-    private String fileUrl;
+    private String filePath;
     private String fileType;
     private LocalDateTime uploadedAt;
 }

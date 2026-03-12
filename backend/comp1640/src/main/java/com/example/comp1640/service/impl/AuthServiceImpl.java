@@ -12,8 +12,10 @@ import com.example.comp1640.dto.response.RegisterResponse;
 import com.example.comp1640.exception.BadRequestException;
 import com.example.comp1640.exception.ResourceNotFoundException;
 import com.example.comp1640.exception.UnauthorizedException;
-import com.example.comp1640.model.Role;
-import com.example.comp1640.model.User;
+import com.example.comp1640.entity.Role;
+import com.example.comp1640.entity.User;
+import com.example.comp1640.enums.RoleName;
+import com.example.comp1640.enums.StaffType;
 import com.example.comp1640.repository.RoleRepository;
 import com.example.comp1640.repository.UserRepository;
 import com.example.comp1640.security.JwtTokenUtil;
@@ -49,24 +51,23 @@ public class AuthServiceImpl implements AuthService {
                         throw new BadRequestException("Email đã tồn tại");
                 }
 
-                Role defaultRole = roleRepo.findByRoleName("ACADEMIC")
+                Role defaultRole = roleRepo.findByRoleName(RoleName.ACADEMIC_STAFF)
                                 .orElseGet(() -> {
-                                        Role r = new Role();
-                                        r.setRoleName("ACADEMIC");
-                                        r.setDescription("Default role for registered users");
+                                        Role r = Role.builder()
+                                                        .roleName(RoleName.ACADEMIC_STAFF)
+                                                        .description("Default role for registered users")
+                                                        .build();
                                         return roleRepo.save(r);
                                 });
 
-                User user = new User();
-                user.setFullName(request.getFullName());
-                user.setEmail(request.getEmail());
-                user.setPasswordHash(
-                                passwordEncoder.encode(request.getPassword()));
-                user.setRole(defaultRole);
-                user.setIsActive(true);
-                user.setStaffType(request.getStaffType() != null ? request.getStaffType() : "ACADEMIC");
-                user.setCreatedAt(LocalDateTime.now());
-                user.setUpdatedAt(LocalDateTime.now());
+                User user = User.builder()
+                                .fullName(request.getFullName())
+                                .email(request.getEmail())
+                                .passwordHash(passwordEncoder.encode(request.getPassword()))
+                                .role(defaultRole)
+                                .isActive(true)
+                                .staffType(request.getStaffType() != null ? request.getStaffType() : StaffType.ACADEMIC)
+                                .build();
 
                 userRepo.save(user);
 
@@ -88,7 +89,7 @@ public class AuthServiceImpl implements AuthService {
                 }
 
                 String token = jwtUtil.generateToken(user);
-                String role = user.getRole() != null ? user.getRole().getRoleName() : null;
+                String role = user.getRole() != null ? user.getRole().getRoleName().name() : null;
 
                 return new LoginResponse(token, user.getEmail(), role);
         }

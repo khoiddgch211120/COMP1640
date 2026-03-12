@@ -11,8 +11,8 @@ import com.example.comp1640.dto.request.CategoryRequest;
 import com.example.comp1640.dto.response.CategoryResponse;
 import com.example.comp1640.exception.BadRequestException;
 import com.example.comp1640.exception.ResourceNotFoundException;
-import com.example.comp1640.model.Category;
-import com.example.comp1640.model.User;
+import com.example.comp1640.entity.Category;
+import com.example.comp1640.entity.User;
 import com.example.comp1640.repository.CategoryRepository;
 import com.example.comp1640.repository.UserRepository;
 import com.example.comp1640.service.CategoryService;
@@ -109,7 +109,6 @@ public class CategoryServiceImpl implements CategoryService {
                 c.getDescription(),
                 c.getIsUsed(),
                 c.getCreatedBy() != null ? c.getCreatedBy().getFullName() : null,
-                c.getCreatedAt()
-        );
+                c.getCreatedAt());
     }
 }

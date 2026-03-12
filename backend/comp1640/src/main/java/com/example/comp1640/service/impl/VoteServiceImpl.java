@@ -12,10 +12,10 @@ import com.example.comp1640.dto.request.VoteRequest;
 import com.example.comp1640.dto.response.VoteResponse;
 import com.example.comp1640.exception.BadRequestException;
 import com.example.comp1640.exception.ResourceNotFoundException;
-import com.example.comp1640.model.Idea;
-import com.example.comp1640.model.User;
-import com.example.comp1640.model.Vote;
-import com.example.comp1640.model.Vote.VoteType;
+import com.example.comp1640.entity.Idea;
+import com.example.comp1640.entity.User;
+import com.example.comp1640.entity.Vote;
+import com.example.comp1640.entity.Vote.VoteType;
 import com.example.comp1640.repository.IdeaRepository;
 import com.example.comp1640.repository.UserRepository;
 import com.example.comp1640.repository.VoteRepository;
@@ -94,7 +94,7 @@ public class VoteServiceImpl implements VoteService {
     // --- helpers ---
 
     private VoteResponse buildResponse(Integer ideaId, Integer userId) {
-        long upvotes   = voteRepo.countUpvotes(ideaId);
+        long upvotes = voteRepo.countUpvotes(ideaId);
         long downvotes = voteRepo.countDownvotes(ideaId);
         VoteType userVote = null;
         if (userId != null) {

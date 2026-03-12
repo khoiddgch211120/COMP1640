@@ -8,7 +8,7 @@ import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.example.comp1640.model.User;
+import com.example.comp1640.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -26,10 +26,10 @@ public class JwtTokenUtil {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    //  Tạo token
+    // Tạo token
     public String generateToken(User user) {
         Integer deptId = user.getDepartment() != null ? user.getDepartment().getDeptId() : null;
-        String role = user.getRole() != null ? user.getRole().getRoleName() : null;
+        String role = user.getRole() != null ? user.getRole().getRoleName().name() : null;
         return Jwts.builder()
                 .setSubject(user.getEmail())
                 .claim("userId", user.getUserId())
@@ -41,7 +41,7 @@ public class JwtTokenUtil {
                 .compact();
     }
 
-    //  Lấy email từ token
+    // Lấy email từ token
     public String getEmailFromToken(String token) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -52,7 +52,7 @@ public class JwtTokenUtil {
         return claims.getSubject();
     }
 
-    //  Validate token
+    // Validate token
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder()

@@ -1,22 +1,26 @@
 package com.example.comp1640.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 @Entity
-@Table(
-    name = "vote",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "idea_id"})
-)
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Table(name = "vote", uniqueConstraints = {
+    @UniqueConstraint(columnNames = {"idea_id", "user_id"})
+})
+@Getter
+@Setter
+@NoArgsConstructor
 public class Vote {
+
+    public enum VoteType { UPVOTE, DOWNVOTE }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "vote_id")
     private Integer voteId;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -27,13 +31,10 @@ public class Vote {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    /**
-     * +1 = Thumbs Up
-     * -1 = Thumbs Down
-     */
-    @Column(nullable = false)
-    private Integer voteType;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "vote_type", nullable = false, length = 10)
+    private VoteType voteType;
 
-    @CreationTimestamp
-    private LocalDateTime votedAt;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 }

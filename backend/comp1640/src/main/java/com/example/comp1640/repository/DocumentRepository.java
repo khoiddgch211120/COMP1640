@@ -1,6 +1,6 @@
 package com.example.comp1640.repository;
 
-import com.example.comp1640.model.Document;
+import com.example.comp1640.entity.Document;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

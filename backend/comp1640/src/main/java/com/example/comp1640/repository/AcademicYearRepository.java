@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import com.example.comp1640.model.AcademicYear;
+import com.example.comp1640.entity.AcademicYear;
 
 public interface AcademicYearRepository extends JpaRepository<AcademicYear, Integer> {
 

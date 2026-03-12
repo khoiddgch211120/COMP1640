@@ -1,6 +1,6 @@
 package com.example.comp1640.security;
 
-import com.example.comp1640.model.User;
+import com.example.comp1640.entity.User;
 import com.example.comp1640.repository.UserRepository;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.GrantedAuthority;
@@ -28,7 +28,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new DisabledException("User is inactive");
         }
 
-        String roleName = user.getRole() != null ? user.getRole().getRoleName() : null;
+        String roleName = user.getRole() != null ? user.getRole().getRoleName().name() : null;
 
         if (roleName == null || roleName.isBlank()) {
             return org.springframework.security.core.userdetails.User

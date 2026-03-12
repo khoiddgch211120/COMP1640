@@ -10,7 +10,8 @@ import com.example.comp1640.dto.request.DepartmentRequest;
 import com.example.comp1640.dto.response.DepartmentResponse;
 import com.example.comp1640.exception.BadRequestException;
 import com.example.comp1640.exception.ResourceNotFoundException;
-import com.example.comp1640.model.Department;
+import com.example.comp1640.entity.Department;
+import com.example.comp1640.enums.DeptType;
 import com.example.comp1640.repository.DepartmentRepository;
 import com.example.comp1640.service.DepartmentService;
 
@@ -32,7 +33,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
         Department dept = new Department();
         dept.setDeptName(request.getDeptName());
-        dept.setDeptType(request.getDeptType());
+        dept.setDeptType(request.getDeptType() != null ? DeptType.valueOf(request.getDeptType()) : DeptType.ACADEMIC);
         dept.setCreatedAt(LocalDateTime.now());
 
         return toResponse(departmentRepo.save(dept));
@@ -62,8 +63,8 @@ public class DepartmentServiceImpl implements DepartmentService {
             dept.setDeptName(request.getDeptName());
         }
 
-        if (request.getDeptType() != null && !request.getDeptType().isBlank()) {
-            dept.setDeptType(request.getDeptType());
+        if (request.getDeptType() != null) {
+            dept.setDeptType(DeptType.valueOf(request.getDeptType()));
         }
 
         return toResponse(departmentRepo.save(dept));
@@ -83,7 +84,6 @@ public class DepartmentServiceImpl implements DepartmentService {
                 dept.getDeptId(),
                 dept.getDeptName(),
                 dept.getDeptType(),
-                dept.getCreatedAt()
-        );
+                dept.getCreatedAt());
     }
 }
