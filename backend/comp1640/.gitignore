@@ -1,5 +1,4 @@
-target/ 
-echo **/target/ >> .gitignore
+
 target/ 
 echo **/target/ >> .gitignore
 # Maven
