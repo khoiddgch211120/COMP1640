@@ -36,6 +36,7 @@ public class DataSeeder implements CommandLineRunner {
     public void run(String... args) {
         seedRoles();
         seedAdmin();
+        System.out.println("\\n=== Data Seeding completed. Check logs for individual seeders. ===");
     }
 
     private void seedRoles() {
