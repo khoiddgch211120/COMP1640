@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { ROLES } from "../constants/roles";
+import "../styles/main-layout.css";
 import {
   BulbOutlined,
   PlusOutlined,
@@ -14,45 +15,36 @@ import {
 const Sidebar = () => {
   const user = useSelector((state) => state.auth.user);
 
-  const baseClass =
-    "flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all";
-
-  const activeClass = "bg-indigo-100 text-indigo-700";
-
-  const normalClass = "text-slate-600 hover:bg-slate-100";
-
   const navClass = ({ isActive }) =>
-    `${baseClass} ${isActive ? activeClass : normalClass}`;
+    `nav-item ${isActive ? "active" : ""}`;
 
   return (
-    <div className="w-64 bg-white border-r min-h-screen flex flex-col">
+    <aside className="main-sidebar">
 
       {/* LOGO */}
-      <div className="h-16 flex items-center px-6 border-b">
-        <h2 className="text-lg font-semibold text-indigo-600">
-          Idea System
-        </h2>
+      <div className="sidebar-logo">
+        <h2>Idea System</h2>
       </div>
 
       {/* MENU */}
-      <div className="flex-1 p-4 space-y-6">
+      <nav className="sidebar-menu">
 
         {/* STAFF */}
         {user?.role === ROLES.STAFF && (
-          <div className="space-y-1">
+          <div className="menu-section">
 
-            <p className="text-xs uppercase text-slate-400 px-2 mb-2">
+            <p className="menu-section-title">
               Staff
             </p>
 
             <NavLink to="/ideas" className={navClass}>
               <BulbOutlined />
-              Idea List
+              <span>Idea List</span>
             </NavLink>
 
             <NavLink to="/submit-idea" className={navClass}>
               <PlusOutlined />
-              Submit Idea
+              <span>Submit Idea</span>
             </NavLink>
 
           </div>
@@ -60,20 +52,20 @@ const Sidebar = () => {
 
         {/* QA COORDINATOR */}
         {user?.role === ROLES.QA_COORDINATOR && (
-          <div className="space-y-1">
+          <div className="menu-section">
 
-            <p className="text-xs uppercase text-slate-400 px-2 mb-2">
+            <p className="menu-section-title">
               QA Coordinator
             </p>
 
             <NavLink to="/ideas" className={navClass}>
               <BulbOutlined />
-              Department Ideas
+              <span>Department Ideas</span>
             </NavLink>
 
             <NavLink to="/coordinator/dashboard" className={navClass}>
               <DashboardOutlined />
-              Department Dashboard
+              <span>Department Dashboard</span>
             </NavLink>
 
           </div>
@@ -81,20 +73,20 @@ const Sidebar = () => {
 
         {/* QA MANAGER */}
         {user?.role === ROLES.QA_MANAGER && (
-          <div className="space-y-1">
+          <div className="menu-section">
 
-            <p className="text-xs uppercase text-slate-400 px-2 mb-2">
+            <p className="menu-section-title">
               QA Manager
             </p>
 
             <NavLink to="/ideas" className={navClass}>
               <BulbOutlined />
-              All Ideas
+              <span>All Ideas</span>
             </NavLink>
 
             <NavLink to="/statistics" className={navClass}>
               <BarChartOutlined />
-              Statistics
+              <span>Statistics</span>
             </NavLink>
 
           </div>
@@ -102,43 +94,45 @@ const Sidebar = () => {
 
         {/* ADMIN */}
         {user?.role === ROLES.ADMIN && (
-          <div className="space-y-1">
+          <div className="menu-section">
 
-            <p className="text-xs uppercase text-slate-400 px-2 mb-2">
+            <p className="menu-section-title">
               Admin
             </p>
 
             <NavLink to="/admin" className={navClass}>
               <DashboardOutlined />
-              Admin Dashboard
+              <span>Admin Dashboard</span>
             </NavLink>
 
             <NavLink to="/admin/users" className={navClass}>
               <TeamOutlined />
-              User Management
+              <span>User Management</span>
             </NavLink>
 
             <NavLink to="/admin/departments" className={navClass}>
               <ApartmentOutlined />
-              Departments
+              <span>Departments</span>
             </NavLink>
 
             <NavLink to="/admin/academic-years" className={navClass}>
               <CalendarOutlined />
-              Academic Years
+              <span>Academic Years</span>
             </NavLink>
 
           </div>
         )}
 
-      </div>
+      </nav>
 
       {/* FOOTER */}
-      <div className="p-4 border-t text-xs text-slate-400 text-center">
-        Enterprise Idea System v1.0
+      <div className="sidebar-footer">
+        <p className="sidebar-footer-text">
+          Enterprise Idea System v1.0
+        </p>
       </div>
 
-    </div>
+    </aside>
   );
 };
 

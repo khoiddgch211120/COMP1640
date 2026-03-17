@@ -1,7 +1,7 @@
 import { useSelector } from "react-redux";
 import { Navigate, Outlet } from "react-router-dom";
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
+const ProtectedRoute = ({ children, roles }) => {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
   // ❌ Chưa login
@@ -10,7 +10,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   // ❌ Sai role
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
+  if (roles && !roles.includes(user.role)) {
     return <Navigate to="/login" replace />;
   }
 

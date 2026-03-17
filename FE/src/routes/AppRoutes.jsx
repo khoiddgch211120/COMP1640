@@ -1,7 +1,7 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
 /* =========================
-   AUTH PAGES
+   AUTH PAGES (modal)
 ========================= */
 
 import Login from "../pages/auth/Login";
@@ -48,6 +48,14 @@ import TermsAccept from "../pages/terms/TermsAccept";
 import Statistics from "../pages/statistics/Statistics";
 
 /* =========================
+   QA MANAGER PAGES
+========================= */
+
+import CategoryManagement from "../pages/manager/CategoryManagement";
+import ExceptionReports from "../pages/manager/ExceptionReports";
+import ExportData from "../pages/manager/ExportData";
+
+/* =========================
    ADMIN PAGES
 ========================= */
 
@@ -65,116 +73,122 @@ import AttachmentManagement from "../pages/admin/AttachmentManagement";
 import CoordinatorDashboard from "../pages/coordinator/CoordinatorDashboard";
 
 const AppRoutes = () => {
+  const location  = useLocation();
+  const background = location.state?.background;
+
   return (
-    <Routes>
+    <>
+      <Routes location={background || location}>
 
-      {/* =========================
-         PUBLIC ROUTES
-      ========================= */}
+        {/* MAIN LAYOUT */}
+        <Route element={<MainLayout />}>
 
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/"         element={<IdeaList />} />
+          <Route path="/ideas"    element={<IdeaList />} />
+          <Route path="/ideas/:id" element={<IdeaDetail />} />
 
+          <Route
+            path="/submit-idea"
+            element={
+              <ProtectedRoute roles={[ROLES.STAFF]}>
+                <SubmitIdea />
+              </ProtectedRoute>
+            }
+          />
 
-      {/* =========================
-         MAIN LAYOUT
-      ========================= */}
+          <Route
+            path="/terms"
+            element={
+              <ProtectedRoute roles={[ROLES.STAFF]}>
+                <TermsAccept />
+              </ProtectedRoute>
+            }
+          />
 
-      <Route element={<MainLayout />}>
+          <Route
+            path="/coordinator/dashboard"
+            element={
+              <ProtectedRoute roles={[ROLES.QA_COORDINATOR]}>
+                <CoordinatorDashboard />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route path="/" element={<IdeaList />} />
+          {/* ── QA Manager routes ── */}
+          <Route
+            path="/statistics"
+            element={
+              <ProtectedRoute roles={[ROLES.QA_MANAGER]}>
+                <Statistics />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route path="/ideas" element={<IdeaList />} />
+          <Route
+            path="/manager/categories"
+            element={
+              <ProtectedRoute roles={[ROLES.QA_MANAGER]}>
+                <CategoryManagement />
+              </ProtectedRoute>
+            }
+          />
 
-        <Route path="/ideas/:id" element={<IdeaDetail />} />
+          <Route
+            path="/manager/exceptions"
+            element={
+              <ProtectedRoute roles={[ROLES.QA_MANAGER]}>
+                <ExceptionReports />
+              </ProtectedRoute>
+            }
+          />
 
+          <Route
+            path="/manager/export"
+            element={
+              <ProtectedRoute roles={[ROLES.QA_MANAGER]}>
+                <ExportData />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* STAFF SUBMIT IDEA */}
+          {/* Auth fallback */}
+          <Route path="/login"           element={<Login />} />
+          <Route path="/register"        element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
 
+        </Route>
+
+        {/* ADMIN LAYOUT */}
         <Route
-          path="/submit-idea"
+          path="/admin"
           element={
-            <ProtectedRoute roles={[ROLES.STAFF]}>
-              <SubmitIdea />
+            <ProtectedRoute roles={[ROLES.ADMIN]}>
+              <AdminLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index                 element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard"      element={<AdminDashboard />} />
+          <Route path="users"          element={<UsersManagement />} />
+          <Route path="departments"    element={<DepartmentManagement />} />
+          <Route path="academic-years" element={<AcademicYearManagement />} />
+          <Route path="terms"          element={<TermsConditions />} />
+          <Route path="attachments"    element={<AttachmentManagement />} />
+        </Route>
 
+        {/* FALLBACK */}
+        <Route path="*" element={<Navigate to="/" />} />
 
-        {/* TERMS */}
+      </Routes>
 
-        <Route
-          path="/terms"
-          element={
-            <ProtectedRoute roles={[ROLES.STAFF]}>
-              <TermsAccept />
-            </ProtectedRoute>
-          }
-        />
-
-
-        {/* COORDINATOR DASHBOARD */}
-
-        <Route
-          path="/coordinator/dashboard"
-          element={
-            <ProtectedRoute roles={[ROLES.QA_COORDINATOR]}>
-              <CoordinatorDashboard />
-            </ProtectedRoute>
-          }
-        />
-
-
-        {/* QA MANAGER STATISTICS */}
-
-        <Route
-          path="/statistics"
-          element={
-            <ProtectedRoute roles={[ROLES.QA_MANAGER]}>
-              <Statistics />
-            </ProtectedRoute>
-          }
-        />
-
-      </Route>
-
-
-      {/* =========================
-         ADMIN LAYOUT
-      ========================= */}
-
-      <Route
-        path="/admin"
-        element={
-          <ProtectedRoute roles={[ROLES.ADMIN]}>
-            <AdminLayout />
-          </ProtectedRoute>
-        }
-      >
-
-        <Route index element={<AdminDashboard />} />
-
-        <Route path="users" element={<UsersManagement />} />
-
-        <Route path="departments" element={<DepartmentManagement />} />
-
-        <Route path="academic-years" element={<AcademicYearManagement />} />
-
-        <Route path="terms" element={<TermsConditions />} />
-
-        <Route path="attachments" element={<AttachmentManagement />} />
-
-      </Route>
-
-
-      {/* =========================
-         FALLBACK
-      ========================= */}
-
-      <Route path="*" element={<Navigate to="/" />} />
-
-    </Routes>
+      {background && (
+        <Routes>
+          <Route path="/login"           element={<Login />} />
+          <Route path="/register"        element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+        </Routes>
+      )}
+    </>
   );
 };
 
