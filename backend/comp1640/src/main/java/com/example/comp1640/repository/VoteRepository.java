@@ -20,4 +20,7 @@ public interface VoteRepository extends JpaRepository<Vote, Integer> {
 
     @Query("SELECT COUNT(v) FROM Vote v WHERE v.idea.ideaId = :ideaId AND v.voteType = 'DOWNVOTE'")
     long countDownvotes(@Param("ideaId") Integer ideaId);
+
+    @Query("SELECT COUNT(v) FROM Vote v WHERE (:yearId IS NULL OR v.idea.academicYear.yearId = :yearId) AND (:deptId IS NULL OR v.idea.department.deptId = :deptId)")
+    long countFiltered(@Param("yearId") Integer yearId, @Param("deptId") Integer deptId);
 }
