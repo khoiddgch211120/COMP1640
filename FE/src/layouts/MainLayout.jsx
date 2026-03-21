@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../redux/slices/authSlice";
 import { Avatar, Dropdown } from "antd";
@@ -69,6 +69,17 @@ const NAV_ITEMS_COORDINATOR = [
       </svg>
     ),
   },
+  {
+    key: "coordinator-notifications",
+    label: "Thông báo",
+    path: "/coordinator/notifications",
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+    ),
+  },
 ];
 
 const NAV_ITEMS_QA_MANAGER = [
@@ -132,35 +143,37 @@ const NAV_ITEMS_QA_MANAGER = [
   },
 ];
 
-// Lấy nav items theo role
 function getNavItems(role) {
   switch (role) {
-    case ROLES.QA_COORDINATOR:
-      return NAV_ITEMS_COORDINATOR;
-    case ROLES.QA_MANAGER:
-      return NAV_ITEMS_QA_MANAGER;
+    case ROLES.QA_COORDINATOR: return NAV_ITEMS_COORDINATOR;
+    case ROLES.QA_MANAGER:     return NAV_ITEMS_QA_MANAGER;
     case ROLES.STAFF:
-    default:
-      return NAV_ITEMS_STAFF;
+    default:                   return NAV_ITEMS_STAFF;
   }
 }
 
 // ── Component ────────────────────────────────────────────────────────────────
 const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
-  const { user } = useSelector((state) => state.auth);
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation(); // ← dùng để truyền background state
 
   const handleLogout = () => {
     dispatch(logout());
-    navigate("/login");
+    navigate("/");
   };
 
-  const displayName = user?.fullName || user?.full_name || "User";
+  // ── Mở auth page dạng MODAL (truyền current location làm background) ──
+  const openModal = (path) => {
+    navigate(path, { state: { background: location } });
+  };
+
+  const displayName    = user?.fullName || user?.full_name || "User";
   const displayInitial = displayName[0]?.toUpperCase() || "U";
-  const displayRole = user?.role || user?.role_name || "";
-  const navItems = getNavItems(displayRole);
+  const displayRole    = user?.role || user?.role_name || "";
+  const navItems       = getNavItems(displayRole);
 
   const dropdownItems = [
     {
@@ -177,7 +190,6 @@ const MainLayout = () => {
 
       {/* ── SIDEBAR ── */}
       <aside className="main-sidebar">
-
         <div className="main-sidebar-brand">
           <div className="main-brand-icon">
             <svg viewBox="0 0 32 32" fill="none">
@@ -199,10 +211,7 @@ const MainLayout = () => {
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            {collapsed
-              ? <path d="M9 18l6-6-6-6"/>
-              : <path d="M15 18l-6-6 6-6"/>
-            }
+            {collapsed ? <path d="M9 18l6-6-6-6"/> : <path d="M15 18l-6-6 6-6"/>}
           </svg>
         </button>
 
@@ -224,16 +233,21 @@ const MainLayout = () => {
 
         <div className="main-sidebar-footer">
           <div className="main-user-chip">
-            <div className="main-user-avatar">{displayInitial}</div>
+            <div className="main-user-avatar">
+              {isAuthenticated ? displayInitial : "?"}
+            </div>
             {!collapsed && (
               <div className="main-user-info">
-                <span className="main-user-name">{displayName}</span>
-                <span className="main-user-role">{displayRole}</span>
+                <span className="main-user-name">
+                  {isAuthenticated ? displayName : "Guest"}
+                </span>
+                <span className="main-user-role">
+                  {isAuthenticated ? displayRole : "Not logged in"}
+                </span>
               </div>
             )}
           </div>
         </div>
-
       </aside>
 
       {/* ── MAIN CONTENT ── */}
@@ -247,19 +261,39 @@ const MainLayout = () => {
           </div>
 
           <div className="header-right">
-            <div className="user-info">
-              <p className="user-name">{displayName}</p>
-              <p className="user-role">{displayRole}</p>
-            </div>
-
-            <Dropdown menu={{ items: dropdownItems }} trigger={["click"]}>
-              <Avatar
-                size={44}
-                className="user-avatar"
-                icon={<UserOutlined />}
-                style={{ cursor: "pointer" }}
-              />
-            </Dropdown>
+            {isAuthenticated ? (
+              /* ── Đã đăng nhập: hiển thị tên + avatar dropdown ── */
+              <>
+                <div className="user-info">
+                  <p className="user-name">{displayName}</p>
+                  <p className="user-role">{displayRole}</p>
+                </div>
+                <Dropdown menu={{ items: dropdownItems }} trigger={["click"]}>
+                  <Avatar
+                    size={44}
+                    className="user-avatar"
+                    icon={<UserOutlined />}
+                    style={{ cursor: "pointer" }}
+                  />
+                </Dropdown>
+              </>
+            ) : (
+              /* ── Chưa đăng nhập: hiển thị nút Login / Register → mở modal ── */
+              <div className="header-auth-btns">
+                <button
+                  className="header-btn-ghost"
+                  onClick={() => openModal("/login")}
+                >
+                  Đăng nhập
+                </button>
+                <button
+                  className="header-btn-primary"
+                  onClick={() => openModal("/register")}
+                >
+                  Đăng ký
+                </button>
+              </div>
+            )}
           </div>
         </header>
 

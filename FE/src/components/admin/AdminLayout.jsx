@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import "../styles/AdminLayout.css";
-import { logout } from "../redux/slices/authSlice";
+import "../../styles/AdminLayout.css";
 
-const NAV_ITEMS = [
+// ── Schema: user { user_id, full_name, email, role_id, dept_id, staff_type, is_active }
+// ── Reads auth state: state.auth.{ user: { full_name, email, role_name }, token }
+
+var NAV_ITEMS = [
   {
     key: "dashboard",
     label: "Dashboard",
@@ -78,38 +80,33 @@ const NAV_ITEMS = [
   },
 ];
 
-const AdminLayout = () => {
-  const [collapsed, setCollapsed] = useState(false);
+var AdminLayout = function() {
+  var collapsedState = useState(false);
+  var collapsed = collapsedState[0];
+  var setCollapsed = collapsedState[1];
 
-  const navigate = useNavigate();
-  const location = useLocation();
-  const dispatch = useDispatch();
+  var navigate = useNavigate();
+  var dispatch = useDispatch();
 
-  const { user } = useSelector((state) => state.auth);
+  var authState = useSelector(function(state) { return state.auth; });
+  var user = authState.user;
 
-  // Hỗ trợ cả schema mới (full_name, role_name) lẫn mock cũ (fullName, role)
-  const displayName    = user?.full_name    || user?.fullName    || "Admin";
-  const displayEmail   = user?.email                             || "administrator";
-  const displayRole    = user?.role_name    || user?.role        || "ADMIN";
-  const displayInitial = displayName[0]?.toUpperCase()          || "A";
+  // Schema: user.full_name — fallback to legacy fullName or "Admin"
+  var displayName = (user && (user.full_name || user.fullName)) || "Admin";
+  var displayInitial = displayName[0] ? displayName[0].toUpperCase() : "A";
+  var displayEmail = (user && user.email) || "administrator";
+  var displayRole = (user && user.role_name) || "ADMIN";
 
-  const handleLogout = () => {
-    dispatch(logout());
-    // Sau khi logout → về trang chủ và mở modal Login ngay lập tức
-    navigate("/", { state: { background: { pathname: "/" } } });
-    // Delay nhỏ để navigate hoàn thành rồi mới push modal route
-    setTimeout(() => {
-      navigate("/login", { state: { background: { pathname: "/" } } });
-    }, 50);
-  };
+  function handleLogout() {
+    // dispatch(logout()); — uncomment when Redux logout action is wired
+    navigate("/login");
+  }
 
   return (
-    <div className={collapsed ? "admin-shell sidebar-collapsed" : "admin-shell"}>
+    <div className={(collapsed ? "admin-shell sidebar-collapsed" : "admin-shell")}>
 
       {/* ── SIDEBAR ── */}
       <aside className="admin-sidebar">
-
-        {/* Brand */}
         <div className="sidebar-brand">
           <div className="brand-icon">
             <svg viewBox="0 0 32 32" fill="none">
@@ -125,38 +122,28 @@ const AdminLayout = () => {
           )}
         </div>
 
-        {/* Collapse toggle */}
-        <button
-          className="collapse-btn"
-          onClick={() => setCollapsed((c) => !c)}
-          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
+        <button className="collapse-btn" onClick={function() { setCollapsed(function(c) { return !c; }); }}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            {collapsed
-              ? <path d="M9 18l6-6-6-6"/>
-              : <path d="M15 18l-6-6 6-6"/>
-            }
+            {collapsed ? <path d="M9 18l6-6-6-6"/> : <path d="M15 18l-6-6 6-6"/>}
           </svg>
         </button>
 
-        {/* Nav */}
         <nav className="sidebar-nav">
           {!collapsed && <span className="nav-section-label">MANAGEMENT</span>}
-          {NAV_ITEMS.map((item) => (
-            <NavLink
-              key={item.key}
-              to={item.path}
-              className={({ isActive }) =>
-                `nav-item${isActive ? " nav-item--active" : ""}`
-              }
-            >
-              <span className="nav-icon">{item.icon}</span>
-              {!collapsed && <span className="nav-label">{item.label}</span>}
-            </NavLink>
-          ))}
+          {NAV_ITEMS.map(function(item) {
+            return (
+              <NavLink
+                key={item.key}
+                to={item.path}
+                className={function(p) { return "nav-item" + (p.isActive ? " nav-item--active" : ""); }}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                {!collapsed && <span className="nav-label">{item.label}</span>}
+              </NavLink>
+            );
+          })}
         </nav>
 
-        {/* Footer */}
         <div className="sidebar-footer">
           <div className="user-chip">
             <div className="user-avatar">{displayInitial}</div>
@@ -168,34 +155,25 @@ const AdminLayout = () => {
             )}
           </div>
         </div>
-
       </aside>
 
       {/* ── MAIN ── */}
       <main className="admin-main">
-
-        {/* Topbar */}
         <div className="admin-topbar">
           <div className="topbar-breadcrumb">
             <span className="topbar-title">Admin Panel</span>
           </div>
-
           <div className="topbar-actions">
-            {/* Badge role + tên */}
             <div className="topbar-user-badge">
               <span className="topbar-role-chip">{displayRole}</span>
               <span className="topbar-username">{displayName}</span>
             </div>
-
-            {/* Notification */}
             <button className="topbar-notif" title="Notifications">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="20" height="20">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                 <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
               </svg>
             </button>
-
-            {/* Sign Out */}
             <button className="topbar-logout" onClick={handleLogout} title="Sign out">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="16" height="16">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -207,11 +185,9 @@ const AdminLayout = () => {
           </div>
         </div>
 
-        {/* Page content */}
         <div className="admin-content">
-          <Outlet />
+          <Outlet/>
         </div>
-
       </main>
     </div>
   );

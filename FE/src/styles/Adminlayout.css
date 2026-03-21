@@ -355,3 +355,39 @@ body {
 .admin-content::-webkit-scrollbar { width: 5px; }
 .admin-content::-webkit-scrollbar-track { background: transparent; }
 .admin-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+/* ── Topbar user badge ─────────────────────────────────── */
+.topbar-user-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  background: var(--bg-page);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.topbar-role-chip {
+  font-family: 'Sora', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: var(--accent-muted);
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.topbar-username {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+/* ── Topbar breadcrumb ─────────────────────────────────── */
+.topbar-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
