@@ -1,6 +1,13 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "../../styles/admin.shared.css";
 import "../../styles/UserManagement.css";
+import {
+  createUser,
+  getUsers,
+  toggleUserActive,
+  updateUser,
+} from "../../services/userService";
+import { getDepartments } from "../../services/departmentService";
 
 // ── Schema: user { user_id, dept_id, role_id, full_name, email,
 //                  password_hash, staff_type, is_active, created_at, updated_at }
@@ -30,38 +37,64 @@ var ROLE_BADGE = {
 
 var STAFF_TYPES = ["Full-time", "Part-time", "Intern", "Contractor"];
 
-var MOCK_DEPARTMENTS = [
-  { dept_id: 1, dept_name: "Engineering" },
-  { dept_id: 2, dept_name: "Marketing" },
-  { dept_id: 3, dept_name: "HR" },
-  { dept_id: 4, dept_name: "Finance" },
-  { dept_id: 5, dept_name: "Operations" },
-  { dept_id: 6, dept_name: "Design" },
-];
-
-// Mock users matching schema fields
-var MOCK_USERS = [
-  { user_id: 1, full_name: "Nguyen Van An",   email: "an@company.com",      role_name: "STAFF",          staff_type: "Full-time",  dept_id: 1, dept_name: "Engineering", is_active: true,  created_at: "2024-01-10" },
-  { user_id: 2, full_name: "Tran Thi Binh",   email: "binh@company.com",    role_name: "QA_MANAGER",     staff_type: "Full-time",  dept_id: 5, dept_name: "Operations",  is_active: true,  created_at: "2024-01-12" },
-  { user_id: 3, full_name: "Le Van Cuong",    email: "cuong@company.com",   role_name: "QA_COORDINATOR", staff_type: "Part-time",  dept_id: 3, dept_name: "HR",          is_active: true,  created_at: "2024-02-01" },
-  { user_id: 4, full_name: "Pham Thi Dung",   email: "dung@company.com",    role_name: "STAFF",          staff_type: "Intern",     dept_id: 2, dept_name: "Marketing",   is_active: false, created_at: "2024-02-15" },
-  { user_id: 5, full_name: "Hoang Minh Duc",  email: "duc@company.com",     role_name: "ADMIN",          staff_type: "Full-time",  dept_id: 1, dept_name: "Engineering", is_active: true,  created_at: "2024-01-05" },
-  { user_id: 6, full_name: "Vu Thi Huong",    email: "huong@company.com",   role_name: "STAFF",          staff_type: "Contractor", dept_id: 6, dept_name: "Design",      is_active: true,  created_at: "2024-03-01" },
-  { user_id: 7, full_name: "Dang Quoc Khai",  email: "khai@company.com",    role_name: "STAFF",          staff_type: "Full-time",  dept_id: 4, dept_name: "Finance",     is_active: true,  created_at: "2024-03-10" },
-  { user_id: 8, full_name: "Bui Thi Lan",     email: "lan@company.com",     role_name: "QA_COORDINATOR", staff_type: "Full-time",  dept_id: 5, dept_name: "Operations",  is_active: false, created_at: "2024-03-20" },
-];
-
 var PAGE_SIZE = 5;
 
 // POST /api/users body shape
 var EMPTY_FORM = {
   full_name: "",
   email: "",
-  password_hash: "",   // sent as plain password, hashed on backend
+  password_hash: "",
   role_name: "STAFF",
   staff_type: "Full-time",
   dept_id: "",
 };
+
+function normalizeDepartment(department) {
+  return {
+    dept_id: department.deptId,
+    dept_name: department.deptName,
+    dept_type: department.deptType,
+    created_at: department.createdAt,
+  };
+}
+
+function normalizeUser(user, departments, existingUser) {
+  var matchedDepartment = departments.find(function(department) {
+    return department.dept_name === user.deptName;
+  });
+
+  return {
+    user_id: user.userId,
+    full_name: user.fullName,
+    email: user.email,
+    role_name: user.roleName,
+    staff_type: user.staffType,
+    dept_id: existingUser && existingUser.dept_id ? existingUser.dept_id : matchedDepartment ? matchedDepartment.dept_id : "",
+    dept_name: user.deptName || (matchedDepartment ? matchedDepartment.dept_name : ""),
+    is_active: Boolean(user.isActive),
+    created_at: user.createdAt ? String(user.createdAt).split("T")[0] : "",
+  };
+}
+
+function buildUserPayload(form, isEdit) {
+  var role = ROLE_OPTIONS.find(function(option) {
+    return option.role_name === form.role_name;
+  });
+
+  var payload = {
+    fullName: form.full_name.trim(),
+    email: form.email.trim(),
+    staffType: form.staff_type,
+    roleId: role ? role.role_id : 1,
+    deptId: Number(form.dept_id),
+  };
+
+  if (!isEdit || form.password_hash.trim()) {
+    payload.password = form.password_hash.trim();
+  }
+
+  return payload;
+}
 
 var IconEdit = function() {
   return (
@@ -101,6 +134,7 @@ function UserForm(props) {
   var setForm = props.setForm;
   var errors = props.errors;
   var isEdit = props.isEdit;
+  var departments = props.departments;
 
   function set(field) {
     return function(e) {
@@ -128,7 +162,6 @@ function UserForm(props) {
         <label className="form-label">
           {isEdit ? "New Password (leave blank to keep current)" : "Password"} {!isEdit && <span>*</span>}
         </label>
-        {/* Sent as plain text; backend stores as password_hash */}
         <input className="form-control" type="password" placeholder="••••••••" value={form.password_hash} onChange={set("password_hash")}/>
         {errors.password_hash && <div className="form-error">{errors.password_hash}</div>}
       </div>
@@ -152,7 +185,7 @@ function UserForm(props) {
         <label className="form-label">Department <span>*</span></label>
         <select className="form-control" value={form.dept_id} onChange={set("dept_id")}>
           <option value="">-- Select Department --</option>
-          {MOCK_DEPARTMENTS.map(function(d) { return <option key={d.dept_id} value={d.dept_id}>{d.dept_name}</option>; })}
+          {departments.map(function(d) { return <option key={d.dept_id} value={d.dept_id}>{d.dept_name}</option>; })}
         </select>
         {errors.dept_id && <div className="form-error">{errors.dept_id}</div>}
       </div>
@@ -161,9 +194,13 @@ function UserForm(props) {
 }
 
 var UserManagement = function() {
-  var usersState = useState(MOCK_USERS);
+  var usersState = useState([]);
   var users = usersState[0];
   var setUsers = usersState[1];
+
+  var departmentsState = useState([]);
+  var departments = departmentsState[0];
+  var setDepartments = departmentsState[1];
 
   var searchState = useState("");
   var search = searchState[0];
@@ -181,7 +218,7 @@ var UserManagement = function() {
   var currentPage = pageState[0];
   var setCurrentPage = pageState[1];
 
-  var modalState = useState(null); // "add"|"edit"|"detail"|"disable"
+  var modalState = useState(null);
   var modalMode = modalState[0];
   var setModalMode = modalState[1];
 
@@ -197,6 +234,42 @@ var UserManagement = function() {
   var formErrors = errState[0];
   var setFormErrors = errState[1];
 
+  var loadingState = useState(true);
+  var loading = loadingState[0];
+  var setLoading = loadingState[1];
+
+  var actionLoadingState = useState(false);
+  var actionLoading = actionLoadingState[0];
+  var setActionLoading = actionLoadingState[1];
+
+  var errorState = useState("");
+  var error = errorState[0];
+  var setError = errorState[1];
+
+  useEffect(function() {
+    loadInitialData();
+  }, []);
+
+  async function loadInitialData() {
+    setLoading(true);
+    setError("");
+
+    try {
+      var results = await Promise.all([getDepartments(), getUsers()]);
+      var normalizedDepartments = (results[0] || []).map(normalizeDepartment);
+      var normalizedUsers = (results[1] || []).map(function(user) {
+        return normalizeUser(user, normalizedDepartments);
+      });
+
+      setDepartments(normalizedDepartments);
+      setUsers(normalizedUsers);
+    } catch (err) {
+      setError(err && err.response && err.response.data && err.response.data.message ? err.response.data.message : "Failed to load users and departments.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   var filtered = useMemo(function() {
     return users.filter(function(u) {
       var q = search.toLowerCase();
@@ -207,8 +280,14 @@ var UserManagement = function() {
     });
   }, [users, search, filterDept, filterRole]);
 
-  var totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  var totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   var paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  useEffect(function() {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   function validate(isEdit) {
     var errs = {};
@@ -217,54 +296,131 @@ var UserManagement = function() {
     else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = "Invalid email address";
     if (!isEdit && !form.password_hash.trim()) errs.password_hash = "Password is required";
     else if (!isEdit && form.password_hash.length < 6) errs.password_hash = "Minimum 6 characters";
+    else if (isEdit && form.password_hash.trim() && form.password_hash.length < 6) errs.password_hash = "Minimum 6 characters";
     if (!form.dept_id) errs.dept_id = "Please select a department";
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
   }
 
-  function getDeptName(dept_id) {
-    var found = MOCK_DEPARTMENTS.find(function(d) { return String(d.dept_id) === String(dept_id); });
-    return found ? found.dept_name : "";
+  function getDeptByName(deptName) {
+    return departments.find(function(department) {
+      return department.dept_name === deptName;
+    });
   }
 
-  function openAdd() { setForm(EMPTY_FORM); setFormErrors({}); setModalMode("add"); }
-  function openEdit(u) { setSelectedUser(u); setForm(Object.assign({}, u, { password_hash: "" })); setFormErrors({}); setModalMode("edit"); }
-  function openDetail(u) { setSelectedUser(u); setModalMode("detail"); }
-  function openDisable(u) { setSelectedUser(u); setModalMode("disable"); }
-  function closeModal() { setModalMode(null); }
+  function openAdd() {
+    setForm(EMPTY_FORM);
+    setFormErrors({});
+    setModalMode("add");
+  }
 
-  function handleAdd() {
+  function openEdit(u) {
+    var department = u.dept_id ? { dept_id: u.dept_id } : getDeptByName(u.dept_name);
+
+    setSelectedUser(u);
+    setForm({
+      full_name: u.full_name,
+      email: u.email,
+      password_hash: "",
+      role_name: u.role_name,
+      staff_type: u.staff_type,
+      dept_id: department && department.dept_id ? String(department.dept_id) : "",
+    });
+    setFormErrors({});
+    setModalMode("edit");
+  }
+
+  function openDetail(u) {
+    setSelectedUser(u);
+    setModalMode("detail");
+  }
+
+  function openDisable(u) {
+    setSelectedUser(u);
+    setModalMode("disable");
+  }
+
+  function closeModal() {
+    if (!actionLoading) {
+      setModalMode(null);
+    }
+  }
+
+  async function handleAdd() {
     if (!validate(false)) return;
-    var newUser = Object.assign({}, form, {
-      user_id: Date.now(),
-      is_active: true,
-      dept_name: getDeptName(form.dept_id),
-      created_at: new Date().toISOString().split("T")[0],
-    });
-    setUsers(function(prev) { return [newUser].concat(prev); });
-    closeModal();
+
+    setActionLoading(true);
+    setError("");
+
+    try {
+      var createdUser = await createUser(buildUserPayload(form, false));
+      var normalizedUser = normalizeUser(createdUser, departments);
+      setUsers(function(prev) { return [normalizedUser].concat(prev); });
+      closeModal();
+    } catch (err) {
+      setError(err && err.response && err.response.data && err.response.data.message ? err.response.data.message : "Failed to create account.");
+    } finally {
+      setActionLoading(false);
+    }
   }
 
-  function handleEdit() {
-    if (!validate(true)) return;
-    setUsers(function(prev) {
-      return prev.map(function(u) {
-        return u.user_id === selectedUser.user_id
-          ? Object.assign({}, u, form, { dept_name: getDeptName(form.dept_id) })
-          : u;
+  async function handleEdit() {
+    if (!validate(true) || !selectedUser) return;
+
+    setActionLoading(true);
+    setError("");
+
+    try {
+      var department = form.dept_id ? { dept_id: Number(form.dept_id) } : getDeptByName(selectedUser.dept_name);
+      var updatedUser = await updateUser(selectedUser.user_id, buildUserPayload({
+        full_name: form.full_name,
+        email: form.email,
+        password_hash: form.password_hash,
+        role_name: form.role_name,
+        staff_type: form.staff_type,
+        dept_id: department && department.dept_id ? department.dept_id : selectedUser.dept_id,
+      }, true));
+
+      var normalizedUser = normalizeUser(updatedUser, departments, {
+        dept_id: department && department.dept_id ? department.dept_id : selectedUser.dept_id,
       });
-    });
-    closeModal();
+
+      setUsers(function(prev) {
+        return prev.map(function(u) {
+          return u.user_id === selectedUser.user_id ? normalizedUser : u;
+        });
+      });
+      setSelectedUser(normalizedUser);
+      closeModal();
+    } catch (err) {
+      setError(err && err.response && err.response.data && err.response.data.message ? err.response.data.message : "Failed to update account.");
+    } finally {
+      setActionLoading(false);
+    }
   }
 
-  // PATCH /api/users/:user_id  { is_active: false }
-  function handleDisable() {
-    setUsers(function(prev) {
-      return prev.map(function(u) {
-        return u.user_id === selectedUser.user_id ? Object.assign({}, u, { is_active: false }) : u;
+  async function handleDisable() {
+    if (!selectedUser) return;
+
+    setActionLoading(true);
+    setError("");
+
+    try {
+      var toggledUser = await toggleUserActive(selectedUser.user_id);
+      var normalizedUser = normalizeUser(toggledUser, departments, selectedUser);
+
+      setUsers(function(prev) {
+        return prev.map(function(u) {
+          return u.user_id === selectedUser.user_id ? normalizedUser : u;
+        });
       });
-    });
-    closeModal();
+      setSelectedUser(normalizedUser);
+      closeModal();
+    } catch (err) {
+      setError(err && err.response && err.response.data && err.response.data.message ? err.response.data.message : "Failed to update account status.");
+    } finally {
+      setActionLoading(false);
+    }
   }
 
   var stats = {
@@ -286,6 +442,15 @@ var UserManagement = function() {
           Add Account
         </button>
       </div>
+
+      {error && (
+        <div className="admin-card" style={{ marginBottom: 20 }}>
+          <div className="empty-state">
+            <h3>Something went wrong</h3>
+            <p>{error}</p>
+          </div>
+        </div>
+      )}
 
       <div className="stats-row">
         <div className="stat-card">
@@ -325,7 +490,7 @@ var UserManagement = function() {
             </div>
             <select className="filter-select" value={filterDept} onChange={function(e) { setFilterDept(e.target.value); setCurrentPage(1); }}>
               <option value="">All Departments</option>
-              {MOCK_DEPARTMENTS.map(function(d) { return <option key={d.dept_id} value={String(d.dept_id)}>{d.dept_name}</option>; })}
+              {departments.map(function(d) { return <option key={d.dept_id} value={String(d.dept_id)}>{d.dept_name}</option>; })}
             </select>
             <select className="filter-select" value={filterRole} onChange={function(e) { setFilterRole(e.target.value); setCurrentPage(1); }}>
               <option value="">All Roles</option>
@@ -348,7 +513,14 @@ var UserManagement = function() {
               </tr>
             </thead>
             <tbody>
-              {paginated.length === 0 ? (
+              {loading ? (
+                <tr><td colSpan="7">
+                  <div className="empty-state">
+                    <h3>Loading accounts...</h3>
+                    <p>Please wait while user data is being fetched.</p>
+                  </div>
+                </td></tr>
+              ) : paginated.length === 0 ? (
                 <tr><td colSpan="7">
                   <div className="empty-state">
                     <h3>No accounts found</h3>
@@ -360,14 +532,14 @@ var UserManagement = function() {
                   <tr key={user.user_id}>
                     <td>
                       <div className="table-avatar">
-                        <div className="table-avatar-icon">{user.full_name[0].toUpperCase()}</div>
+                        <div className="table-avatar-icon">{user.full_name ? user.full_name[0].toUpperCase() : "U"}</div>
                         <div>
                           <div className="table-avatar-name">{user.full_name}</div>
                           <div className="table-avatar-email">{user.email}</div>
                         </div>
                       </div>
                     </td>
-                    <td><span className={"badge " + (ROLE_BADGE[user.role_name] || "badge--default")}>{ROLE_LABEL[user.role_name]}</span></td>
+                    <td><span className={"badge " + (ROLE_BADGE[user.role_name] || "badge--default")}>{ROLE_LABEL[user.role_name] || user.role_name}</span></td>
                     <td>{user.staff_type}</td>
                     <td>{user.dept_name}</td>
                     <td><span className={"badge " + (user.is_active ? "badge--active" : "badge--inactive")}>{user.is_active ? "Active" : "Disabled"}</span></td>
@@ -388,7 +560,7 @@ var UserManagement = function() {
           </table>
         </div>
 
-        {totalPages > 1 && (
+        {!loading && totalPages > 1 && (
           <div className="pagination">
             <span className="pagination-info">
               Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filtered.length)} of {filtered.length} accounts
@@ -406,42 +578,39 @@ var UserManagement = function() {
         )}
       </div>
 
-      {/* ADD */}
       {modalMode === "add" && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" onClick={function(e) { e.stopPropagation(); }}>
             <div className="modal-header"><h2>Add New Account</h2><button className="modal-close" onClick={closeModal}><IconClose/></button></div>
-            <div className="modal-body"><UserForm form={form} setForm={setForm} errors={formErrors} isEdit={false}/></div>
+            <div className="modal-body"><UserForm form={form} setForm={setForm} errors={formErrors} isEdit={false} departments={departments}/></div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={closeModal}>Cancel</button>
-              <button className="btn btn-primary" onClick={handleAdd}>Create Account</button>
+              <button className="btn btn-secondary" onClick={closeModal} disabled={actionLoading}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleAdd} disabled={actionLoading}>{actionLoading ? "Creating..." : "Create Account"}</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* EDIT */}
       {modalMode === "edit" && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" onClick={function(e) { e.stopPropagation(); }}>
             <div className="modal-header"><h2>Edit Account</h2><button className="modal-close" onClick={closeModal}><IconClose/></button></div>
-            <div className="modal-body"><UserForm form={form} setForm={setForm} errors={formErrors} isEdit={true}/></div>
+            <div className="modal-body"><UserForm form={form} setForm={setForm} errors={formErrors} isEdit={true} departments={departments}/></div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={closeModal}>Cancel</button>
-              <button className="btn btn-primary" onClick={handleEdit}>Save Changes</button>
+              <button className="btn btn-secondary" onClick={closeModal} disabled={actionLoading}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleEdit} disabled={actionLoading}>{actionLoading ? "Saving..." : "Save Changes"}</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* DETAIL */}
       {modalMode === "detail" && selectedUser && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" onClick={function(e) { e.stopPropagation(); }}>
             <div className="modal-header"><h2>Account Detail</h2><button className="modal-close" onClick={closeModal}><IconClose/></button></div>
             <div className="modal-body">
               <div className="detail-avatar-block">
-                <div className="detail-avatar">{selectedUser.full_name[0].toUpperCase()}</div>
+                <div className="detail-avatar">{selectedUser.full_name ? selectedUser.full_name[0].toUpperCase() : "U"}</div>
                 <div>
                   <div className="detail-name">{selectedUser.full_name}</div>
                   <div className="detail-email">{selectedUser.email}</div>
@@ -452,9 +621,9 @@ var UserManagement = function() {
               </div>
               <div className="detail-grid">
                 <div className="detail-field"><span className="detail-key">user_id</span><span className="detail-val">#{selectedUser.user_id}</span></div>
-                <div className="detail-field"><span className="detail-key">role</span><span className="detail-val">{ROLE_LABEL[selectedUser.role_name]}</span></div>
+                <div className="detail-field"><span className="detail-key">role</span><span className="detail-val">{ROLE_LABEL[selectedUser.role_name] || selectedUser.role_name}</span></div>
                 <div className="detail-field"><span className="detail-key">staff_type</span><span className="detail-val">{selectedUser.staff_type}</span></div>
-                <div className="detail-field"><span className="detail-key">dept_id</span><span className="detail-val">{selectedUser.dept_name} (#{selectedUser.dept_id})</span></div>
+                <div className="detail-field"><span className="detail-key">dept_id</span><span className="detail-val">{selectedUser.dept_name}{selectedUser.dept_id ? " (#" + selectedUser.dept_id + ")" : ""}</span></div>
                 <div className="detail-field"><span className="detail-key">created_at</span><span className="detail-val">{selectedUser.created_at}</span></div>
                 <div className="detail-field"><span className="detail-key">is_active</span><span className="detail-val">{String(selectedUser.is_active)}</span></div>
               </div>
@@ -467,7 +636,6 @@ var UserManagement = function() {
         </div>
       )}
 
-      {/* DISABLE — sets is_active = false, data preserved */}
       {modalMode === "disable" && selectedUser && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" style={{ maxWidth: 400 }} onClick={function(e) { e.stopPropagation(); }}>
@@ -477,8 +645,8 @@ var UserManagement = function() {
               <p><strong>{selectedUser.full_name}</strong> will no longer be able to log in. All idea history and comments are preserved (<code>is_active = false</code>).</p>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={closeModal}>Cancel</button>
-              <button className="btn btn-danger" onClick={handleDisable}>Disable</button>
+              <button className="btn btn-secondary" onClick={closeModal} disabled={actionLoading}>Cancel</button>
+              <button className="btn btn-danger" onClick={handleDisable} disabled={actionLoading}>{actionLoading ? "Disabling..." : "Disable"}</button>
             </div>
           </div>
         </div>

@@ -1,6 +1,8 @@
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "../../styles/admin.shared.css";
 import "../../styles/DepartmentManagement.css";
+import { getDepartments, createDepartment, updateDepartment } from "../../services/departmentService";
+import { getUsers } from "../../services/userService";
 
 // ── Schema: department { dept_id, dept_name, dept_type, created_at }
 
@@ -14,18 +16,27 @@ var TYPE_BADGE = {
   Management: "badge--active",
 };
 
-var INITIAL_DEPARTMENTS = [
-  { dept_id: 1, dept_name: "Engineering",    dept_type: "Technical",  member_count: 24, created_at: "2023-01-15" },
-  { dept_id: 2, dept_name: "Marketing",      dept_type: "Business",   member_count: 12, created_at: "2023-01-15" },
-  { dept_id: 3, dept_name: "Human Resources",dept_type: "Support",    member_count: 8,  created_at: "2023-02-01" },
-  { dept_id: 4, dept_name: "Finance",        dept_type: "Business",   member_count: 10, created_at: "2023-02-10" },
-  { dept_id: 5, dept_name: "Operations",     dept_type: "Support",    member_count: 18, created_at: "2023-03-05" },
-  { dept_id: 6, dept_name: "Design",         dept_type: "Creative",   member_count: 7,  created_at: "2023-04-20" },
-  { dept_id: 7, dept_name: "Data Science",   dept_type: "Technical",  member_count: 9,  created_at: "2023-06-01" },
-];
-
-// POST /api/departments body shape
 var EMPTY_FORM = { dept_name: "", dept_type: "" };
+
+function formatDate(value) {
+  if (!value) return "";
+  var date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return String(value).split("T")[0];
+  }
+  return date.toISOString().split("T")[0];
+}
+
+function normalizeDepartment(dept, memberCountMap) {
+  var count = memberCountMap && typeof memberCountMap[dept.deptId] === "number" ? memberCountMap[dept.deptId] : 0;
+  return {
+    dept_id: dept.deptId,
+    dept_name: dept.deptName || "",
+    dept_type: dept.deptType || "",
+    created_at: formatDate(dept.createdAt),
+    member_count: count,
+  };
+}
 
 var IconEye = function() {
   return (
@@ -55,7 +66,7 @@ var IconClose = function() {
 function StatsRow(props) {
   var depts = props.departments;
   var totalMembers = depts.reduce(function(s, d) { return s + d.member_count; }, 0);
-  var typeCount = new Set(depts.map(function(d) { return d.dept_type; })).size;
+  var typeCount = new Set(depts.map(function(d) { return d.dept_type; }).filter(Boolean)).size;
   return (
     <div className="stats-row">
       <div className="stat-card">
@@ -86,7 +97,7 @@ function DeptCard(props) {
   return (
     <div className="dept-card">
       <div className="dept-card-header">
-        <div className="dept-icon">{dept.dept_name[0].toUpperCase()}</div>
+        <div className="dept-icon">{dept.dept_name ? dept.dept_name[0].toUpperCase() : "D"}</div>
         <div className="dept-card-actions">
           <button className="btn-icon" title="View detail" onClick={function() { props.onView(dept); }}><IconEye/></button>
           <button className="btn-icon btn-icon--edit" title="Edit" onClick={function() { props.onEdit(dept); }}><IconEdit/></button>
@@ -102,7 +113,7 @@ function DeptCard(props) {
           </span>
           <span className="dept-meta-item">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="13" height="13"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-            created_at: {dept.created_at}
+            created_at: {dept.created_at || "-"}
           </span>
         </div>
       </div>
@@ -141,10 +152,11 @@ function DeptFormModal(props) {
             </select>
             {errors.dept_type && <div className="form-error">{errors.dept_type}</div>}
           </div>
+          {errors.submit && <div className="form-error">{errors.submit}</div>}
         </div>
         <div className="modal-footer">
-          <button className="btn btn-secondary" onClick={props.onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={props.onSave}>{props.isEditing ? "Save Changes" : "Create Department"}</button>
+          <button className="btn btn-secondary" onClick={props.onClose} disabled={props.saving}>Cancel</button>
+          <button className="btn btn-primary" onClick={props.onSave} disabled={props.saving}>{props.saving ? "Saving..." : props.isEditing ? "Save Changes" : "Create Department"}</button>
         </div>
       </div>
     </div>
@@ -160,7 +172,7 @@ function DeptDetailModal(props) {
         <div className="modal-header"><h2>Department Detail</h2><button className="modal-close" onClick={props.onClose}><IconClose/></button></div>
         <div className="modal-body">
           <div className="dept-detail-hero">
-            <div className="dept-detail-icon">{dept.dept_name[0].toUpperCase()}</div>
+            <div className="dept-detail-icon">{dept.dept_name ? dept.dept_name[0].toUpperCase() : "D"}</div>
             <div className="dept-detail-name">{dept.dept_name}</div>
             <span className={"badge " + badgeCls}>{dept.dept_type}</span>
           </div>
@@ -168,7 +180,7 @@ function DeptDetailModal(props) {
             <div className="detail-field"><span className="detail-key">dept_id</span><span className="detail-val">#{dept.dept_id}</span></div>
             <div className="detail-field"><span className="detail-key">dept_type</span><span className="detail-val">{dept.dept_type}</span></div>
             <div className="detail-field"><span className="detail-key">members</span><span className="detail-val">{dept.member_count}</span></div>
-            <div className="detail-field"><span className="detail-key">created_at</span><span className="detail-val">{dept.created_at}</span></div>
+            <div className="detail-field"><span className="detail-key">created_at</span><span className="detail-val">{dept.created_at || "-"}</span></div>
           </div>
         </div>
         <div className="modal-footer">
@@ -181,7 +193,7 @@ function DeptDetailModal(props) {
 }
 
 var DepartmentManagement = function() {
-  var deptsState = useState(INITIAL_DEPARTMENTS);
+  var deptsState = useState([]);
   var departments = deptsState[0];
   var setDepartments = deptsState[1];
 
@@ -209,10 +221,57 @@ var DepartmentManagement = function() {
   var errors = errState[0];
   var setErrors = errState[1];
 
+  var loadingState = useState(true);
+  var isLoading = loadingState[0];
+  var setIsLoading = loadingState[1];
+
+  var savingState = useState(false);
+  var isSaving = savingState[0];
+  var setIsSaving = savingState[1];
+
+  var pageErrorState = useState("");
+  var pageError = pageErrorState[0];
+  var setPageError = pageErrorState[1];
+
+  async function fetchDepartmentsData() {
+    setIsLoading(true);
+    setPageError("");
+    try {
+      var deptResponse = await getDepartments();
+      var memberCountMap = {};
+      try {
+        var users = await getUsers();
+        if (Array.isArray(users)) {
+          users.forEach(function(user) {
+            if (user && user.deptId != null) {
+              memberCountMap[user.deptId] = (memberCountMap[user.deptId] || 0) + 1;
+            }
+          });
+        }
+      } catch (memberError) {
+        memberCountMap = {};
+      }
+      var normalized = Array.isArray(deptResponse) ? deptResponse.map(function(dept) {
+        return normalizeDepartment(dept, memberCountMap);
+      }) : [];
+      setDepartments(normalized);
+    } catch (error) {
+      setPageError(error && error.response && error.response.data && error.response.data.message ? error.response.data.message : "Failed to load departments.");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  useEffect(function() {
+    fetchDepartmentsData();
+  }, []);
+
   var filtered = useMemo(function() {
     var q = search.toLowerCase();
     return departments.filter(function(d) {
-      var ms = d.dept_name.toLowerCase().includes(q) || d.dept_type.toLowerCase().includes(q);
+      var name = (d.dept_name || "").toLowerCase();
+      var type = (d.dept_type || "").toLowerCase();
+      var ms = name.includes(q) || type.includes(q);
       var mt = filterType ? d.dept_type === filterType : true;
       return ms && mt;
     });
@@ -226,23 +285,47 @@ var DepartmentManagement = function() {
     return Object.keys(errs).length === 0;
   }
 
-  function openAdd() { setForm(EMPTY_FORM); setErrors({}); setModalMode("add"); }
+  function openAdd() { setForm(EMPTY_FORM); setErrors({}); setSelected(null); setModalMode("add"); }
   function openEdit(d) { setSelected(d); setForm({ dept_name: d.dept_name, dept_type: d.dept_type }); setErrors({}); setModalMode("edit"); }
   function openDetail(d) { setSelected(d); setModalMode("detail"); }
-  function closeModal() { setModalMode(null); }
+  function closeModal() { setModalMode(null); setErrors({}); }
 
-  function handleSave() {
+  async function handleSave() {
     if (!validate()) return;
-    if (modalMode === "edit") {
-      setDepartments(function(prev) {
-        return prev.map(function(d) { return d.dept_id === selected.dept_id ? Object.assign({}, d, form) : d; });
+    setIsSaving(true);
+    setErrors({});
+    try {
+      var payload = {
+        deptName: form.dept_name.trim(),
+        deptType: form.dept_type,
+      };
+      if (modalMode === "edit" && selected) {
+        var updated = await updateDepartment(selected.dept_id, payload);
+        var normalizedUpdated = normalizeDepartment(updated, {});
+        setDepartments(function(prev) {
+          return prev.map(function(d) {
+            return d.dept_id === selected.dept_id ? Object.assign({}, normalizedUpdated, { member_count: d.member_count }) : d;
+          });
+        });
+        setSelected(function(prev) {
+          if (!prev || prev.dept_id !== selected.dept_id) return prev;
+          return Object.assign({}, normalizedUpdated, { member_count: prev.member_count });
+        });
+      } else {
+        var created = await createDepartment(payload);
+        var normalizedCreated = normalizeDepartment(created, {});
+        setDepartments(function(prev) {
+          return [normalizedCreated].concat(prev);
+        });
+      }
+      closeModal();
+    } catch (error) {
+      setErrors({
+        submit: error && error.response && error.response.data && error.response.data.message ? error.response.data.message : "Failed to save department.",
       });
-    } else {
-      setDepartments(function(prev) {
-        return [Object.assign({}, form, { dept_id: Date.now(), member_count: 0, created_at: new Date().toISOString().split("T")[0] })].concat(prev);
-      });
+    } finally {
+      setIsSaving(false);
     }
-    closeModal();
   }
 
   return (
@@ -275,21 +358,34 @@ var DepartmentManagement = function() {
           </div>
         </div>
 
-        {filtered.length === 0 ? (
+        {pageError && (
+          <div className="empty-state">
+            <h3>Unable to load departments</h3>
+            <p>{pageError}</p>
+            <button className="btn btn-secondary" onClick={fetchDepartmentsData}>Retry</button>
+          </div>
+        )}
+
+        {!pageError && isLoading ? (
+          <div className="empty-state">
+            <h3>Loading departments...</h3>
+            <p>Please wait while we fetch the latest department data.</p>
+          </div>
+        ) : !pageError && filtered.length === 0 ? (
           <div className="empty-state">
             <h3>No departments found</h3><p>Try adjusting your filters</p>
           </div>
-        ) : (
+        ) : !pageError ? (
           <div className="dept-grid">
             {filtered.map(function(dept) {
               return <DeptCard key={dept.dept_id} dept={dept} onView={openDetail} onEdit={openEdit}/>;
             })}
           </div>
-        )}
+        ) : null}
       </div>
 
       {(modalMode === "add" || modalMode === "edit") && (
-        <DeptFormModal isEditing={modalMode === "edit"} form={form} setForm={setForm} errors={errors} onSave={handleSave} onClose={closeModal}/>
+        <DeptFormModal isEditing={modalMode === "edit"} form={form} setForm={setForm} errors={errors} saving={isSaving} onSave={handleSave} onClose={closeModal}/>
       )}
       {modalMode === "detail" && selected && (
         <DeptDetailModal dept={selected} onClose={closeModal} onEdit={openEdit}/>
