@@ -1,245 +1,230 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { exportIdeasToCSV } from "../../utils/exportCSV";
+import { Spin, Table, Card, Statistic, Row, Col, Select, Button, message, Space } from "antd";
+import { BarChartOutlined, FileExcelOutlined } from "@ant-design/icons";
+import {
+  getStatisticsReport,
+  exportToCSV,
+  exportAttachmentsAsZip,
+} from "../../services/reportService";
+
+const { Option } = Select;
 
 const Statistics = () => {
-
-  const ideas = useSelector((state) => state.ideas?.ideas || []);
-
-  const academicYearState = useSelector(
-    (state) => state.academicYear
-  );
-
+  const academicYearState = useSelector((state) => state.academicYear);
   const academicYears = academicYearState?.items || [];
 
-  const [selectedYearId, setSelectedYearId] = useState("");
+  const [selectedYearId, setSelectedYearId] = useState(null);
+  const [selectedDeptId, setSelectedDeptId] = useState(null);
+  const [statistics, setStatistics] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  /* =========================
-     AUTO SELECT YEAR
-  ========================= */
-
+  // Auto-select first year
   useEffect(() => {
     if (academicYears.length > 0 && !selectedYearId) {
       setSelectedYearId(academicYears[0].id);
     }
-  }, [academicYears]);
+  }, [academicYears, selectedYearId]);
 
+  // Fetch statistics
+  useEffect(() => {
+    if (selectedYearId) {
+      fetchStatistics();
+    }
+  }, [selectedYearId, selectedDeptId]);
 
-  /* =========================
-     FILTER IDEAS
-  ========================= */
+  const fetchStatistics = async () => {
+    setLoading(true);
+    try {
+      const data = await getStatisticsReport(selectedYearId, selectedDeptId);
+      setStatistics(data || []);
+    } catch (error) {
+      console.error("Error fetching statistics:", error);
+message.error("Failed to load statistics");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const filteredIdeas = useMemo(() => {
-
-    if (!selectedYearId) return [];
-
-    return ideas.filter(
-      (idea) => idea.academicYearId === selectedYearId
-    );
-
-  }, [ideas, selectedYearId]);
-
-
-  const currentYear = academicYears.find(
-    (y) => y.id === selectedYearId
+  const currentYear = academicYears.find((y) => y.id === selectedYearId);
+  const totalIdeas = statistics.reduce((sum, stat) => sum + stat.ideaCount, 0);
+  const totalContributors = statistics.reduce(
+    (sum, stat) => sum + stat.contributorCount,
+    0
   );
+  const topDept = statistics.length > 0 ? statistics[0] : null;
 
-
-  /* =========================
-     TOTAL IDEAS
-  ========================= */
-
-  const totalIdeas = filteredIdeas.length;
-
-
-  /* =========================
-     DEPARTMENT STATS
-  ========================= */
-
-  const departmentStats = filteredIdeas.reduce(
-    (acc, idea) => {
-
-      const dept = idea.dept_id || "Unknown";
-
-      acc[dept] = (acc[dept] || 0) + 1;
-
-      return acc;
-
+  // Table columns
+  const columns = [
+    {
+      title: "Department",
+      dataIndex: "deptName",
+      key: "deptName",
+      sorter: (a, b) => a.deptName.localeCompare(b.deptName),
     },
-    {}
-  );
+    {
+      title: "Ideas",
+      dataIndex: "ideaCount",
+      key: "ideaCount",
+      sorter: (a, b) => a.ideaCount - b.ideaCount,
+      align: "center",
+      render: (count) => <strong>{count}</strong>,
+    },
+    {
+      title: "% of Total",
+      dataIndex: "percentageOfTotal",
+      key: "percentageOfTotal",
+      sorter: (a, b) => a.percentageOfTotal - b.percentageOfTotal,
+      align: "center",
+      render: (percentage) => `${percentage}%`,
+    },
+    {
+      title: "Contributors",
+      dataIndex: "contributorCount",
+      key: "contributorCount",
+      sorter: (a, b) => a.contributorCount - b.contributorCount,
+      align: "center",
+      render: (count) => <strong>{count}</strong>,
+    },
+  ];
 
+  const handleExportCSV = async () => {
+    try {
+      await exportToCSV(selectedYearId);
+      message.success("CSV exported successfully");
+    } catch (error) {
+      console.error("Export error:", error);
+      message.error("Failed to export CSV");
+    }
+  };
 
-  /* =========================
-     MOST VIEWED
-  ========================= */
-
-  const mostViewed = filteredIdeas.reduce(
-    (max, idea) => (idea.views > (max?.views || 0) ? idea : max),
-    null
-  );
-
-
-  /* =========================
-     MOST POPULAR
-  ========================= */
-
-  const mostPopular = filteredIdeas.reduce((max, idea) => {
-
-    const score =
-      idea.upvotes.length - idea.downvotes.length;
-
-    const maxScore =
-      max?.upvotes?.length - max?.downvotes?.length || 0;
-
-    return score > maxScore ? idea : max;
-
-  }, null);
-
-
-  /* =========================
-     RENDER
-  ========================= */
+  const handleExportZip = async () => {
+    try {
+      await exportAttachmentsAsZip(selectedYearId);
+      message.success("ZIP exported successfully");
+    } catch (error) {
+      console.error("Export error:", error);
+      message.error("Failed to export ZIP");
+    }
+  };
 
   return (
-    <div className="space-y-8 w-full">
-
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-800">
+    <Spin spinning={loading}>
+      <div style={{ padding: "24px" }}>
+        <h1 style={{ fontSize: "28px", fontWeight: "600", marginBottom: "8px" }}>
+          <BarChartOutlined style={{ marginRight: "8px" }} />
           System Statistics
         </h1>
-
-        <p className="text-sm text-slate-500 mt-1">
-          Overview of idea contributions
+        <p style={{ color: "#64748b", marginBottom: "24px" }}>
+          Overview of idea contributions by department
         </p>
-      </div>
 
+        {/* Year & Department Selection */}
+        <Card style={{ marginBottom: "24px" }}>
+          <Space size="large" wrap>
+            <div>
+              <label style={{ display: "block", marginBottom: "8px", fontSize: "14px" }}>
+                Academic Year
+              </label>
+              <Select
+                value={selectedYearId}
+                onChange={setSelectedYearId}
+                style={{ width: "200px" }}
+                placeholder="Select Year"
+              >
+                {academicYears.map((year) => (
+                  <Option key={year.id} value={year.id}>
+                    {year.yearLabel}
+                  </Option>
+                ))}
+              </Select>
+            </div>
+            <div>
+              <label style={{ display: "block", marginBottom: "8px", fontSize: "14px" }}>
+                Department Filter (Optional)
+              </label>
+              <Select
+                value={selectedDeptId}
+                onChange={setSelectedDeptId}
+                style={{ width: "200px" }}
+                placeholder="All Departments"
+                allowClear
+              >
+                {Array.from(
+                  new Set(statistics.map((s) => s.deptName))
+                ).map((dept) => (
+                  <Option key={dept} value={dept}>
+                    {dept}
+                  </Option>
+                ))}
+              </Select>
+            </div>
+          </Space>
+        </Card>
 
-      {/* SELECT YEAR */}
+        {/* Statistics Cards */}
+        <Row gutter={16} style={{ marginBottom: "24px" }}>
+          <Col xs={24} sm={12} md={8}>
+            <Card>
+              <Statistic
+                title="Total Ideas"
+                value={totalIdeas}
+                prefix={<BarChartOutlined />}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Card>
+              <Statistic
+                title="Departments Involved"
+                value={statistics.length}
+              />
+            </Card>
+          </Col>
+          <Col xs={24} sm={12} md={8}>
+            <Card>
+              <Statistic
+                title="Total Contributors"
+                value={totalContributors}
+              />
+            </Card>
+          </Col>
+        </Row>
 
-      <div className="bg-white p-6 rounded-xl border shadow-sm">
-
-        <label className="block text-sm font-medium mb-2">
-          Select Academic Year
-        </label>
-
-        <select
-          value={selectedYearId}
-          onChange={(e) =>
-            setSelectedYearId(e.target.value)
-          }
-          className="border rounded-lg px-3 py-2 w-full max-w-sm"
-        >
-
-          {academicYears.map((year) => (
-
-            <option key={year.id} value={year.id}>
-              {year.name}
-            </option>
-
-          ))}
-
-        </select>
-
-      </div>
-
-
-      {/* STAT CARDS */}
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
-          <p className="text-sm text-slate-500">
-            Total Ideas
-          </p>
-          <h3 className="text-2xl font-semibold mt-2">
-            {totalIdeas}
+        {/* Department Statistics Table */}
+        <Card style={{ marginBottom: "24px" }}>
+          <h3 style={{ marginBottom: "16px", fontSize: "16px", fontWeight: "600" }}>
+            Statistics by Department
           </h3>
-        </div>
+          <Table
+            columns={columns}
+            dataSource={statistics}
+            rowKey="deptId"
+            pagination={{ pageSize: 10 }}
+            loading={loading}
+          />
+        </Card>
 
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
-          <p className="text-sm text-slate-500">
-            Most Viewed Idea
-          </p>
-
-          <h3 className="text-lg font-semibold mt-2">
-            {mostViewed?.title || "N/A"}
-          </h3>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl border shadow-sm">
-          <p className="text-sm text-slate-500">
-            Most Popular Idea
-          </p>
-
-          <h3 className="text-lg font-semibold mt-2">
-            {mostPopular?.title || "N/A"}
-          </h3>
-        </div>
-
+        {/* Export Buttons */}
+        <Space>
+          <Button
+            type="primary"
+            icon={<FileExcelOutlined />}
+            onClick={handleExportCSV}
+            disabled={totalIdeas === 0}
+          >
+            Export Ideas & Comments CSV
+          </Button>
+          <Button
+            type="default"
+            onClick={handleExportZip}
+            disabled={totalIdeas === 0}
+          >
+            Export Attachments ZIP
+          </Button>
+        </Space>
       </div>
-
-
-      {/* IDEAS BY DEPARTMENT */}
-
-      <div className="bg-white p-6 rounded-xl border shadow-sm">
-
-        <h3 className="font-semibold mb-4">
-          Ideas by Department
-        </h3>
-
-        {Object.keys(departmentStats).length === 0 ? (
-
-          <p className="text-slate-500">
-            No ideas for this academic year.
-          </p>
-
-        ) : (
-
-          <div className="space-y-2">
-
-            {Object.entries(departmentStats).map(
-              ([dept, count]) => (
-
-                <div
-                  key={dept}
-                  className="flex justify-between border-b py-2 text-sm"
-                >
-                  <span>{dept}</span>
-                  <span className="font-medium">
-                    {count}
-                  </span>
-                </div>
-
-              )
-            )}
-
-          </div>
-
-        )}
-
-      </div>
-
-
-      {/* EXPORT CSV */}
-
-      {filteredIdeas.length > 0 && currentYear && (
-
-        <button
-          onClick={() =>
-            exportIdeasToCSV(
-              filteredIdeas,
-              currentYear.name
-            )
-          }
-          className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg"
-        >
-          Export CSV
-        </button>
-
-      )}
-
-    </div>
+    </Spin>
   );
 };
 
