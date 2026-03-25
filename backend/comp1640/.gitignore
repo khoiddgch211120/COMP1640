@@ -1,0 +1,16 @@
+
+target/ 
+echo **/target/ >> .gitignore
+# Maven
+target/
+# Compiled class files
+*.class
+# Logs
+*.log
+# IntelliJ
+.idea/
+*.iml
+# VSCode
+.vscode/
+# OS
+.DS_Store
