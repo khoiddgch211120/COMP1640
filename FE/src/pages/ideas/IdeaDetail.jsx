@@ -12,11 +12,11 @@ import "../../styles/ideas.css"; // ← điều chỉnh path nếu cần
 /* ── Mock fallback ──────────────────────────────────────── */
 const MOCK_IDEA = {
   id: "1",
-  title: "Cải thiện quy trình đánh giá học sinh",
-  description: "Đề xuất áp dụng hệ thống đánh giá liên tục thay vì chỉ dựa vào thi cuối kỳ, giúp phản ánh đúng năng lực học sinh. Hệ thống này bao gồm đánh giá theo quá trình, bài tập nhóm, thuyết trình và kiểm tra ngắn định kỳ. Điều này không chỉ giảm áp lực thi cử mà còn giúp giáo viên theo dõi tiến độ học tập của từng em một cách sát sao hơn.",
-  author: { id: "u1", name: "Nguyễn Văn A" },
+  title: "Improving the Student Assessment Process",
+  description: "Proposing a continuous assessment system instead of relying solely on final exams, to better reflect students' abilities. The system includes progress-based evaluation, group assignments, presentations, and periodic quizzes. This not only reduces exam pressure but also helps teachers closely monitor each student's learning progress.",
+  author: { id: "u1", name: "John Nguyen" },
   isAnonymous: false,
-  category: "Học thuật",
+  category: "Academic",
   views: 142,
   upvotes: ["u2", "u3", "u4"],
   downvotes: ["u5"],
@@ -25,9 +25,9 @@ const MOCK_IDEA = {
     { id: "a2", name: "research.docx",  url: "#" },
   ],
   comments: [
-    { id: "c1", name: "Trần Thị B",   content: "Ý tưởng rất hay! Tôi đã thấy mô hình này hiệu quả ở nhiều trường quốc tế.", isAnonymous: false, createdAt: "2026-01-16T10:00:00" },
-    { id: "c2", name: "Ẩn danh",       content: "Cần xem xét thêm về nguồn lực giáo viên và thời gian triển khai.", isAnonymous: true,  createdAt: "2026-01-17T14:30:00" },
-    { id: "c3", name: "Lê Văn C",      content: "Tôi ủng hộ! Có thể thí điểm ở một vài lớp trước không?", isAnonymous: false, createdAt: "2026-01-18T09:15:00" },
+    { id: "c1", name: "Jane Smith",   content: "Great idea! I've seen this model work effectively at many international schools.", isAnonymous: false, createdAt: "2026-01-16T10:00:00" },
+    { id: "c2", name: "Anonymous",       content: "We need to consider teacher resources and implementation timeline further.", isAnonymous: true,  createdAt: "2026-01-17T14:30:00" },
+    { id: "c3", name: "Robert Lee",      content: "I support this! Could we pilot it in a few classes first?", isAnonymous: false, createdAt: "2026-01-18T09:15:00" },
   ],
   createdAt: "2026-01-15",
 };
@@ -57,7 +57,7 @@ const IdeaDetail = () => {
   if (!idea) {
     return (
       <div className="id-page">
-        <div className="id-access-denied">Không tìm thấy ý tưởng này.</div>
+        <div className="id-access-denied">Idea not found.</div>
       </div>
     );
   }
@@ -67,7 +67,7 @@ const IdeaDetail = () => {
   const scoreSign    = score > 0 ? `+${score}` : `${score}`;
   const scoreCls     = score > 0 ? "id-score--pos" : score < 0 ? "id-score--neg" : "id-score--neu";
   const commentClosed = currentAcademicYear && new Date() > new Date(currentAcademicYear.finalClosureDate);
-  const authorName   = idea.isAnonymous ? "Ẩn danh" : (idea.author?.name ?? "—");
+  const authorName   = idea.isAnonymous ? "Anonymous" : (idea.author?.name ?? "—");
   const authorInitial = idea.isAnonymous ? "?" : (authorName[0] ?? "?").toUpperCase();
 
   const formatDate = (d) => {
@@ -77,24 +77,24 @@ const IdeaDetail = () => {
 
   const formatDateTime = (d) => {
     if (!d) return "";
-    return new Date(d).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+    return new Date(d).toLocaleString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
   };
 
   /* ── Handlers ───────────────────────────────────────────── */
   const handleVote = (type) => {
     if (!user || user.role !== ROLES.STAFF) return;
-    if (idea.author?.id === user.id) { alert("Bạn không thể vote ý tưởng của mình"); return; }
+    if (idea.author?.id === user.id) { alert("You cannot vote on your own idea"); return; }
     dispatch(toggleVote({ ideaId: id, userId: user.id, type }));
   };
 
   const handleComment = () => {
     if (!commentText.trim()) return;
-    if (commentClosed) { alert("Thời gian bình luận đã đóng"); return; }
+    if (commentClosed) { alert("Comment period has closed"); return; }
     dispatch(addComment({
       ideaId: id,
       comment: {
         userId:      user.id,
-        name:        isAnonymousCmt ? "Ẩn danh" : user.fullName,
+        name:        isAnonymousCmt ? "Anonymous" : user.fullName,
         content:     commentText,
         isAnonymous: isAnonymousCmt,
         createdAt:   new Date().toISOString(),
@@ -119,7 +119,7 @@ const IdeaDetail = () => {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
             <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
           </svg>
-          Quay lại
+          Back
         </button>
       </div>
 
@@ -134,7 +134,7 @@ const IdeaDetail = () => {
               <span className="id-detail-category">{idea.category}</span>
             )}
             {idea.isAnonymous && (
-              <span className="id-detail-anon">Ẩn danh</span>
+              <span className="id-detail-anon">Anonymous</span>
             )}
             <span className={`id-score ${scoreCls}`} style={{ marginLeft: "auto" }}>
               {score >= 0 ? "▲" : "▼"} {scoreSign}
@@ -164,7 +164,7 @@ const IdeaDetail = () => {
         {/* Attachments */}
         {idea.attachments?.length > 0 && (
           <div className="id-detail-attachments">
-            <div className="id-attachment-label">Tệp đính kèm</div>
+            <div className="id-attachment-label">Attachments</div>
             {idea.attachments.map((f) => (
               <a key={f.id} href={f.url} download className="id-attachment-item">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -184,13 +184,13 @@ const IdeaDetail = () => {
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                 <circle cx="12" cy="12" r="3"/>
               </svg>
-              {idea.views} lượt xem
+              {idea.views} views
             </span>
             <span className="id-detail-meta-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
-              {idea.comments.length} bình luận
+              {idea.comments.length} comments
             </span>
           </div>
 
@@ -218,7 +218,7 @@ const IdeaDetail = () => {
       <div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
           <h3 style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", margin: 0 }}>
-            Bình luận
+            Comments
             <span style={{
               marginLeft: 8, fontSize: 12, background: "#e2e8f0", color: "#475569",
               padding: "2px 8px", borderRadius: 20, fontWeight: 600,
@@ -233,7 +233,7 @@ const IdeaDetail = () => {
                 <line x1="12" y1="8" x2="12" y2="12"/>
                 <line x1="12" y1="16" x2="12.01" y2="16"/>
               </svg>
-              Thời gian bình luận đã đóng
+              Comment period has closed
             </div>
           )}
         </div>
@@ -241,13 +241,13 @@ const IdeaDetail = () => {
         {/* Comment box */}
         {canComment && !commentClosed && (
           <div className="id-composer" style={{ marginBottom: 16 }}>
-            <div className="id-composer-title">Thêm bình luận</div>
+            <div className="id-composer-title">Add a Comment</div>
             <textarea
               className="id-composer-textarea"
               rows="3"
               value={commentText}
               onChange={(e) => setCommentText(e.target.value)}
-              placeholder="Chia sẻ suy nghĩ của bạn..."
+              placeholder="Share your thoughts..."
             />
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10 }}>
               <label style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12.5, color: "#64748b", cursor: "pointer" }}>
@@ -257,7 +257,7 @@ const IdeaDetail = () => {
                   onChange={(e) => setAnonymousCmt(e.target.checked)}
                   style={{ accentColor: "#2563eb", width: 13, height: 13 }}
                 />
-                Bình luận ẩn danh
+                Comment anonymously
               </label>
               <button
                 className="id-btn id-btn--primary"
@@ -265,7 +265,7 @@ const IdeaDetail = () => {
                 disabled={!commentText.trim()}
                 style={{ opacity: commentText.trim() ? 1 : 0.5 }}
               >
-                Gửi bình luận
+                Post Comment
               </button>
             </div>
           </div>
@@ -277,12 +277,12 @@ const IdeaDetail = () => {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             </svg>
-            <p className="id-empty-sub">Chưa có bình luận nào.</p>
+            <p className="id-empty-sub">No comments yet.</p>
           </div>
         ) : (
           <div className="id-comments-section">
             {sortedComments.map((c) => {
-              const name    = c.isAnonymous ? "Ẩn danh" : c.name;
+              const name    = c.isAnonymous ? "Anonymous" : c.name;
               const initial = c.isAnonymous ? "?" : (name[0] ?? "?").toUpperCase();
               return (
                 <div key={c.id} className="id-comment-item">

@@ -6,18 +6,18 @@ import "../../styles/ideas.css"; // ← điều chỉnh path nếu cần
 
 /* ── Mock fallback data ─────────────────────────────────── */
 const MOCK_IDEAS = [
-  { id: "1", title: "Cải thiện quy trình đánh giá học sinh", description: "Đề xuất áp dụng hệ thống đánh giá liên tục thay vì chỉ dựa vào thi cuối kỳ, giúp phản ánh đúng năng lực học sinh.", author: { id: "u1", name: "Nguyễn Văn A" }, isAnonymous: false, category: "Học thuật", views: 142, upvotes: ["u2","u3","u4"], downvotes: ["u5"], comments: [{id:"c1"},{id:"c2"},{id:"c3"}], createdAt: "2026-01-15", dept_id: "IT" },
-  { id: "2", title: "Đề xuất phòng học thực hành mới", description: "Xây dựng thêm phòng lab hiện đại với thiết bị cập nhật để sinh viên có môi trường học tập tốt hơn.", author: { id: "u2", name: "Trần Thị B" }, isAnonymous: false, category: "Cơ sở vật chất", views: 98, upvotes: ["u1","u3"], downvotes: [], comments: [{id:"c4"},{id:"c5"}], createdAt: "2026-01-18", dept_id: "IT" },
-  { id: "3", title: "Chương trình trao đổi sinh viên quốc tế", description: "Ký kết hợp tác với các trường đại học ở Châu Âu và Châu Á để mở rộng cơ hội học tập cho sinh viên.", author: { id: "u3", name: "Lê Văn C" }, isAnonymous: true, category: "Học thuật", views: 211, upvotes: ["u1","u2","u4","u5"], downvotes: ["u6"], comments: [{id:"c6"},{id:"c7"},{id:"c8"},{id:"c9"},{id:"c10"},{id:"c11"}], createdAt: "2026-01-20", dept_id: "IT" },
-  { id: "4", title: "Hệ thống thông báo nội bộ tự động", description: "Triển khai app mobile để gửi thông báo real-time đến tất cả nhân viên thay vì dùng email truyền thống.", author: { id: "u4", name: "Phạm Thị D" }, isAnonymous: false, category: "Công nghệ", views: 77, upvotes: ["u2","u3"], downvotes: ["u1","u5"], comments: [{id:"c12"},{id:"c13"}], createdAt: "2026-01-22", dept_id: "IT" },
-  { id: "5", title: "Nâng cấp hệ thống WiFi toàn trường", description: "Đầu tư thiết bị WiFi 6 để đảm bảo kết nối ổn định cho hơn 5000 người dùng đồng thời.", author: { id: "u5", name: "Hoàng Văn E" }, isAnonymous: false, category: "Công nghệ", views: 63, upvotes: ["u1"], downvotes: ["u2","u3","u4"], comments: [{id:"c14"}], createdAt: "2026-01-24", dept_id: "IT" },
-  { id: "6", title: "Chương trình mentorship nội bộ", description: "Kết nối nhân viên senior với junior để chia sẻ kiến thức và kinh nghiệm, thúc đẩy văn hóa học tập.", author: { id: "u6", name: "Vũ Thị F" }, isAnonymous: false, category: "Nhân sự", views: 134, upvotes: ["u1","u2","u3","u4","u5"], downvotes: [], comments: [{id:"c15"},{id:"c16"},{id:"c17"}], createdAt: "2026-01-26", dept_id: "IT" },
+  { id: "1", title: "Improving the Student Assessment Process", description: "Proposing a continuous assessment system instead of relying solely on final exams.", author: { id: "u1", name: "John Nguyen" }, isAnonymous: false, category: "Academic", views: 142, upvotes: ["u2","u3","u4"], downvotes: ["u5"], comments: [{id:"c1"},{id:"c2"},{id:"c3"}], createdAt: "2026-01-15", dept_id: "IT" },
+  { id: "2", title: "New Practical Learning Room Proposal", description: "Building modern lab rooms with updated equipment for a better student learning environment.", author: { id: "u2", name: "Jane Smith" }, isAnonymous: false, category: "Facilities", views: 98, upvotes: ["u1","u3"], downvotes: [], comments: [{id:"c4"},{id:"c5"}], createdAt: "2026-01-18", dept_id: "IT" },
+  { id: "3", title: "International Student Exchange Program", description: "Partnering with universities in Europe and Asia to expand learning opportunities for students.", author: { id: "u3", name: "Robert Lee" }, isAnonymous: true, category: "Academic", views: 211, upvotes: ["u1","u2","u4","u5"], downvotes: ["u6"], comments: [{id:"c6"},{id:"c7"},{id:"c8"},{id:"c9"},{id:"c10"},{id:"c11"}], createdAt: "2026-01-20", dept_id: "IT" },
+  { id: "4", title: "Automated Internal Notification System", description: "Deploying a mobile app to send real-time notifications to all staff instead of traditional email.", author: { id: "u4", name: "Diana Pham" }, isAnonymous: false, category: "Technology", views: 77, upvotes: ["u2","u3"], downvotes: ["u1","u5"], comments: [{id:"c12"},{id:"c13"}], createdAt: "2026-01-22", dept_id: "IT" },
+  { id: "5", title: "Campus-Wide WiFi Upgrade", description: "Investing in WiFi 6 equipment to ensure stable connectivity for over 5,000 simultaneous users.", author: { id: "u5", name: "Edward Hoang" }, isAnonymous: false, category: "Technology", views: 63, upvotes: ["u1"], downvotes: ["u2","u3","u4"], comments: [{id:"c14"}], createdAt: "2026-01-24", dept_id: "IT" },
+  { id: "6", title: "Internal Mentorship Program", description: "Connecting senior staff with junior colleagues to share knowledge and experience, fostering a learning culture.", author: { id: "u6", name: "Fiona Vu" }, isAnonymous: false, category: "Human Resources", views: 134, upvotes: ["u1","u2","u3","u4","u5"], downvotes: [], comments: [{id:"c15"},{id:"c16"},{id:"c17"}], createdAt: "2026-01-26", dept_id: "IT" },
 ];
 
 const FILTERS = [
-  { key: "latest",  label: "Mới nhất"     },
-  { key: "popular", label: "Phổ biến nhất" },
-  { key: "views",   label: "Xem nhiều nhất"},
+  { key: "latest",  label: "Latest"     },
+  { key: "popular", label: "Most Popular" },
+  { key: "views",   label: "Most Viewed"},
 ];
 
 const EyeIcon = () => (
@@ -83,7 +83,7 @@ const IdeaList = () => {
     return "id-score--neu";
   };
 
-  const formatDate = (d) => d ? new Date(d).toLocaleDateString("vi-VN") : "";
+  const formatDate = (d) => d ? new Date(d).toLocaleDateString("en-GB") : "";
 
   return (
     <div className="id-page">
@@ -91,15 +91,15 @@ const IdeaList = () => {
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="id-page-header">
         <div>
-          <h1 className="id-page-title">Danh sách ý tưởng</h1>
-          <p className="id-page-sub">Khám phá và quản lý các ý tưởng được nộp</p>
+          <h1 className="id-page-title">Idea List</h1>
+          <p className="id-page-sub">Explore and manage submitted ideas</p>
         </div>
         {user?.role === ROLES.STAFF && (
           <Link to="/submit-idea" className="id-btn id-btn--primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" width="14" height="14">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
-            Nộp ý tưởng
+            Submit Idea
           </Link>
         )}
       </div>
@@ -114,7 +114,7 @@ const IdeaList = () => {
             </svg>
           </div>
           <div className="id-stat-body">
-            <div className="id-stat-label">Tổng ý tưởng</div>
+            <div className="id-stat-label">Total Ideas</div>
             <div className="id-stat-value">{deptIdeas.length}</div>
           </div>
         </div>
@@ -124,7 +124,7 @@ const IdeaList = () => {
             <EyeIcon />
           </div>
           <div className="id-stat-body">
-            <div className="id-stat-label">Lượt xem cao nhất</div>
+            <div className="id-stat-label">Most Viewed</div>
             <div className="id-stat-value">{maxViews}</div>
           </div>
         </div>
@@ -137,7 +137,7 @@ const IdeaList = () => {
             </svg>
           </div>
           <div className="id-stat-body">
-            <div className="id-stat-label">Điểm cao nhất</div>
+            <div className="id-stat-label">Highest Score</div>
             <div className="id-stat-value">{maxScore > 0 ? `+${maxScore}` : maxScore}</div>
           </div>
         </div>
@@ -155,7 +155,7 @@ const IdeaList = () => {
           </button>
         ))}
         <span style={{ marginLeft: "auto", fontSize: 12, color: "#94a3b8", alignSelf: "center" }}>
-          {deptIdeas.length} ý tưởng
+          {deptIdeas.length} ideas
         </span>
       </div>
 
@@ -165,8 +165,8 @@ const IdeaList = () => {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M12 2a7 7 0 0 1 7 7c0 3-1.5 5-3.5 6.5V17a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-1.5C6.5 14 5 12 5 9a7 7 0 0 1 7-7z"/>
           </svg>
-          <p className="id-empty-title">Chưa có ý tưởng nào</p>
-          <p className="id-empty-sub">Hãy là người đầu tiên nộp ý tưởng!</p>
+          <p className="id-empty-title">No ideas yet</p>
+          <p className="id-empty-sub">Be the first to submit an idea!</p>
         </div>
       )}
 
@@ -175,7 +175,7 @@ const IdeaList = () => {
         {currentIdeas.map((idea) => {
           const score     = idea.upvotes.length - idea.downvotes.length;
           const scoreSign = score > 0 ? `+${score}` : `${score}`;
-          const author    = idea.isAnonymous ? "Ẩn danh" : (idea.author?.name ?? idea.author ?? "—");
+          const author    = idea.isAnonymous ? "Anonymous" : (idea.author?.name ?? idea.author ?? "—");
           const initial   = idea.isAnonymous ? "?" : (author[0] ?? "?").toUpperCase();
 
           return (
@@ -228,7 +228,7 @@ const IdeaList = () => {
             onClick={() => setCurrentPage((p) => p - 1)}
             style={{ opacity: currentPage === 1 ? 0.4 : 1 }}
           >
-            ← Trước
+            ← Prev
           </button>
 
           {Array.from({ length: totalPages }, (_, i) => (
@@ -247,7 +247,7 @@ const IdeaList = () => {
             onClick={() => setCurrentPage((p) => p + 1)}
             style={{ opacity: currentPage === totalPages ? 0.4 : 1 }}
           >
-            Tiếp →
+            Next →
           </button>
         </div>
       )}
