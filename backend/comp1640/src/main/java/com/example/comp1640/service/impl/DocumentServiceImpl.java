@@ -58,6 +58,7 @@ public class DocumentServiceImpl implements DocumentService {
             document.setFileUrl((String) uploadResult.get("secure_url"));
             document.setPublicId((String) uploadResult.get("public_id"));
             document.setFileType(file.getContentType());
+            document.setFileSizeKb((int) (file.getSize() / 1024));
             document.setUploadedAt(LocalDateTime.now());
 
             return toResponse(documentRepository.save(document));
@@ -110,6 +111,7 @@ public class DocumentServiceImpl implements DocumentService {
                 doc.getFileName(),
                 doc.getFileUrl(),
                 doc.getFileType(),
+                doc.getFileSizeKb(),
                 doc.getUploadedAt()
         );
     }

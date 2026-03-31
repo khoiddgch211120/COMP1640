@@ -15,5 +15,6 @@ public class DocumentResponse {
     private String fileName;
     private String fileUrl;
     private String fileType;
+    private Integer fileSizeKb;
     private LocalDateTime uploadedAt;
 }

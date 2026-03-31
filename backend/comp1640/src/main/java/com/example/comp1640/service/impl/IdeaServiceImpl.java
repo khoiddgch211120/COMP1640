@@ -29,6 +29,7 @@ import com.example.comp1640.repository.IdeaRepository;
 import com.example.comp1640.repository.UserRepository;
 import com.example.comp1640.repository.VoteRepository;
 import com.example.comp1640.service.IdeaService;
+import com.example.comp1640.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -40,6 +41,7 @@ public class IdeaServiceImpl implements IdeaService {
     private final AcademicYearRepository academicYearRepo;
     private final CategoryRepository categoryRepo;
     private final VoteRepository voteRepo;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -89,7 +91,9 @@ public class IdeaServiceImpl implements IdeaService {
             categoryRepo.saveAll(categories);
         }
 
-        return toResponse(ideaRepo.save(idea), currentUser);
+        Idea saved = ideaRepo.save(idea);
+        notificationService.notifyNewIdea(saved);
+        return toResponse(saved, currentUser);
     }
 
     @Override

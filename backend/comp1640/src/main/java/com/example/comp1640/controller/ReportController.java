@@ -2,6 +2,9 @@ package com.example.comp1640.controller;
 
 import java.util.List;
 
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,8 +27,6 @@ public class ReportController {
         this.reportService = reportService;
     }
 
-    // Thống kê tổng hợp: số ideas, comments, votes, contributors, anonymous rate
-    // ?yearId=1&deptId=2 (cả hai optional)
     @GetMapping("/stats")
     public ResponseEntity<ReportStatsResponse> getStats(
             @RequestParam(required = false) Integer yearId,
@@ -33,11 +34,36 @@ public class ReportController {
         return ResponseEntity.ok(reportService.getStats(yearId, deptId));
     }
 
-    // Danh sách ý tưởng chưa có comment nào
     @GetMapping("/no-comment")
     public ResponseEntity<List<IdeaResponse>> getNoCommentIdeas(
             @RequestParam(required = false) Integer yearId,
             @RequestParam(required = false) Integer deptId) {
         return ResponseEntity.ok(reportService.getNoCommentIdeas(yearId, deptId));
+    }
+
+    /** Xuất CSV danh sách ý tưởng (chỉ sau final_closure_date) */
+    @GetMapping("/export/csv")
+    public ResponseEntity<byte[]> exportCsv(@RequestParam Integer yearId) {
+        byte[] csv = reportService.exportIdeasCsv(yearId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment()
+                                .filename("ideas_year_" + yearId + ".csv")
+                                .build().toString())
+                .body(csv);
+    }
+
+    /** Xuất ZIP tài liệu đính kèm (chỉ sau final_closure_date) */
+    @GetMapping("/export/zip")
+    public ResponseEntity<byte[]> exportZip(@RequestParam Integer yearId) {
+        byte[] zip = reportService.exportDocumentsZip(yearId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("application/zip"))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment()
+                                .filename("documents_year_" + yearId + ".zip")
+                                .build().toString())
+                .body(zip);
     }
 }

@@ -47,7 +47,7 @@ public class SecurityConfig {
                                 "/terms"
                         ).permitAll()
 
-                        // Reports chỉ dành cho ADMIN, QA_MGR, QA_COORD (xử lý bằng @PreAuthorize)
+                        // Reports và export chỉ dành cho ADMIN, QA_MGR, QA_COORD (xử lý bằng @PreAuthorize)
                         .requestMatchers("/reports/**").authenticated()
 
                         // Tất cả request còn lại phải xác thực
