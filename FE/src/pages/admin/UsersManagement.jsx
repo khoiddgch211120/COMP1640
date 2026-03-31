@@ -1,13 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useState, useMemo, useEffect } from "react";
 import "../../styles/admin.shared.css";
 import "../../styles/UserManagement.css";
-import {
-  createUser,
-  getUsers,
-  toggleUserActive,
-  updateUser,
-} from "../../services/userService";
-import { getDepartments } from "../../services/departmentService";
 
 // ── Schema: user { user_id, dept_id, role_id, full_name, email,
 //                  password_hash, staff_type, is_active, created_at, updated_at }
@@ -43,58 +36,11 @@ var PAGE_SIZE = 5;
 var EMPTY_FORM = {
   full_name: "",
   email: "",
-  password_hash: "",
+  password_hash: "",   // sent as plain password, hashed on backend
   role_name: "STAFF",
   staff_type: "Full-time",
   dept_id: "",
 };
-
-function normalizeDepartment(department) {
-  return {
-    dept_id: department.deptId,
-    dept_name: department.deptName,
-    dept_type: department.deptType,
-    created_at: department.createdAt,
-  };
-}
-
-function normalizeUser(user, departments, existingUser) {
-  var matchedDepartment = departments.find(function(department) {
-    return department.dept_name === user.deptName;
-  });
-
-  return {
-    user_id: user.userId,
-    full_name: user.fullName,
-    email: user.email,
-    role_name: user.roleName,
-    staff_type: user.staffType,
-    dept_id: existingUser && existingUser.dept_id ? existingUser.dept_id : matchedDepartment ? matchedDepartment.dept_id : "",
-    dept_name: user.deptName || (matchedDepartment ? matchedDepartment.dept_name : ""),
-    is_active: Boolean(user.isActive),
-    created_at: user.createdAt ? String(user.createdAt).split("T")[0] : "",
-  };
-}
-
-function buildUserPayload(form, isEdit) {
-  var role = ROLE_OPTIONS.find(function(option) {
-    return option.role_name === form.role_name;
-  });
-
-  var payload = {
-    fullName: form.full_name.trim(),
-    email: form.email.trim(),
-    staffType: form.staff_type,
-    roleId: role ? role.role_id : 1,
-    deptId: Number(form.dept_id),
-  };
-
-  if (!isEdit || form.password_hash.trim()) {
-    payload.password = form.password_hash.trim();
-  }
-
-  return payload;
-}
 
 var IconEdit = function() {
   return (
@@ -198,9 +144,17 @@ var UserManagement = function() {
   var users = usersState[0];
   var setUsers = usersState[1];
 
-  var departmentsState = useState([]);
-  var departments = departmentsState[0];
-  var setDepartments = departmentsState[1];
+  var deptsState = useState([]);
+  var departments = deptsState[0];
+  var setDepartments = deptsState[1];
+
+  var loadingState = useState(true);
+  var loading = loadingState[0];
+  var setLoading = loadingState[1];
+
+  var errorState = useState(null);
+  var error = errorState[0];
+  var setError = errorState[1];
 
   var searchState = useState("");
   var search = searchState[0];
@@ -218,7 +172,7 @@ var UserManagement = function() {
   var currentPage = pageState[0];
   var setCurrentPage = pageState[1];
 
-  var modalState = useState(null);
+  var modalState = useState(null); // "add"|"edit"|"detail"|"disable"
   var modalMode = modalState[0];
   var setModalMode = modalState[1];
 
@@ -234,41 +188,24 @@ var UserManagement = function() {
   var formErrors = errState[0];
   var setFormErrors = errState[1];
 
-  var loadingState = useState(true);
-  var loading = loadingState[0];
-  var setLoading = loadingState[1];
-
-  var actionLoadingState = useState(false);
-  var actionLoading = actionLoadingState[0];
-  var setActionLoading = actionLoadingState[1];
-
-  var errorState = useState("");
-  var error = errorState[0];
-  var setError = errorState[1];
-
+  // GET /api/users  +  GET /api/departments
   useEffect(function() {
-    loadInitialData();
-  }, []);
-
-  async function loadInitialData() {
     setLoading(true);
-    setError("");
-
-    try {
-      var results = await Promise.all([getDepartments(), getUsers()]);
-      var normalizedDepartments = (results[0] || []).map(normalizeDepartment);
-      var normalizedUsers = (results[1] || []).map(function(user) {
-        return normalizeUser(user, normalizedDepartments);
+    setError(null);
+    Promise.all([
+      fetch("/api/users").then(function(r) { if (!r.ok) throw new Error("Failed to fetch users"); return r.json(); }),
+      fetch("/api/departments").then(function(r) { return r.json(); }).catch(function() { return []; }),
+    ])
+      .then(function(results) {
+        setUsers(results[0]);
+        setDepartments(results[1]);
+        setLoading(false);
+      })
+      .catch(function(err) {
+        setError(err.message);
+        setLoading(false);
       });
-
-      setDepartments(normalizedDepartments);
-      setUsers(normalizedUsers);
-    } catch (err) {
-      setError(err && err.response && err.response.data && err.response.data.message ? err.response.data.message : "Failed to load users and departments.");
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, []);
 
   var filtered = useMemo(function() {
     return users.filter(function(u) {
@@ -280,14 +217,8 @@ var UserManagement = function() {
     });
   }, [users, search, filterDept, filterRole]);
 
-  var totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  var totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   var paginated = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-
-  useEffect(function() {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
 
   function validate(isEdit) {
     var errs = {};
@@ -296,131 +227,87 @@ var UserManagement = function() {
     else if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = "Invalid email address";
     if (!isEdit && !form.password_hash.trim()) errs.password_hash = "Password is required";
     else if (!isEdit && form.password_hash.length < 6) errs.password_hash = "Minimum 6 characters";
-    else if (isEdit && form.password_hash.trim() && form.password_hash.length < 6) errs.password_hash = "Minimum 6 characters";
     if (!form.dept_id) errs.dept_id = "Please select a department";
     setFormErrors(errs);
     return Object.keys(errs).length === 0;
   }
 
-  function getDeptByName(deptName) {
-    return departments.find(function(department) {
-      return department.dept_name === deptName;
-    });
+  function getDeptName(dept_id) {
+    var found = departments.find(function(d) { return String(d.dept_id) === String(dept_id); });
+    return found ? found.dept_name : "";
   }
 
-  function openAdd() {
-    setForm(EMPTY_FORM);
-    setFormErrors({});
-    setModalMode("add");
-  }
+  function openAdd() { setForm(EMPTY_FORM); setFormErrors({}); setModalMode("add"); }
+  function openEdit(u) { setSelectedUser(u); setForm(Object.assign({}, u, { password_hash: "" })); setFormErrors({}); setModalMode("edit"); }
+  function openDetail(u) { setSelectedUser(u); setModalMode("detail"); }
+  function openDisable(u) { setSelectedUser(u); setModalMode("disable"); }
+  function closeModal() { setModalMode(null); }
 
-  function openEdit(u) {
-    var department = u.dept_id ? { dept_id: u.dept_id } : getDeptByName(u.dept_name);
-
-    setSelectedUser(u);
-    setForm({
-      full_name: u.full_name,
-      email: u.email,
-      password_hash: "",
-      role_name: u.role_name,
-      staff_type: u.staff_type,
-      dept_id: department && department.dept_id ? String(department.dept_id) : "",
-    });
-    setFormErrors({});
-    setModalMode("edit");
-  }
-
-  function openDetail(u) {
-    setSelectedUser(u);
-    setModalMode("detail");
-  }
-
-  function openDisable(u) {
-    setSelectedUser(u);
-    setModalMode("disable");
-  }
-
-  function closeModal() {
-    if (!actionLoading) {
-      setModalMode(null);
-    }
-  }
-
-  async function handleAdd() {
+  // POST /api/users
+  function handleAdd() {
     if (!validate(false)) return;
-
-    setActionLoading(true);
-    setError("");
-
-    try {
-      var createdUser = await createUser(buildUserPayload(form, false));
-      var normalizedUser = normalizeUser(createdUser, departments);
-      setUsers(function(prev) { return [normalizedUser].concat(prev); });
-      closeModal();
-    } catch (err) {
-      setError(err && err.response && err.response.data && err.response.data.message ? err.response.data.message : "Failed to create account.");
-    } finally {
-      setActionLoading(false);
-    }
+    fetch("/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    })
+      .then(function(res) {
+        if (!res.ok) throw new Error("Failed to create user");
+        return res.json();
+      })
+      .then(function(created) {
+        setUsers(function(prev) {
+          return [Object.assign({ dept_name: getDeptName(created.dept_id) }, created)].concat(prev);
+        });
+        closeModal();
+      })
+      .catch(function(err) { setError(err.message); });
   }
 
-  async function handleEdit() {
-    if (!validate(true) || !selectedUser) return;
-
-    setActionLoading(true);
-    setError("");
-
-    try {
-      var department = form.dept_id ? { dept_id: Number(form.dept_id) } : getDeptByName(selectedUser.dept_name);
-      var updatedUser = await updateUser(selectedUser.user_id, buildUserPayload({
-        full_name: form.full_name,
-        email: form.email,
-        password_hash: form.password_hash,
-        role_name: form.role_name,
-        staff_type: form.staff_type,
-        dept_id: department && department.dept_id ? department.dept_id : selectedUser.dept_id,
-      }, true));
-
-      var normalizedUser = normalizeUser(updatedUser, departments, {
-        dept_id: department && department.dept_id ? department.dept_id : selectedUser.dept_id,
-      });
-
-      setUsers(function(prev) {
-        return prev.map(function(u) {
-          return u.user_id === selectedUser.user_id ? normalizedUser : u;
+  // PATCH /api/users/:id
+  function handleEdit() {
+    if (!validate(true)) return;
+    var body = Object.assign({}, form);
+    if (!body.password_hash) delete body.password_hash;
+    fetch("/api/users/" + selectedUser.user_id, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+      .then(function(res) {
+        if (!res.ok) throw new Error("Failed to update user");
+        return res.json();
+      })
+      .then(function(updated) {
+        setUsers(function(prev) {
+          return prev.map(function(u) {
+            return u.user_id === selectedUser.user_id
+              ? Object.assign({}, u, updated, { dept_name: getDeptName(updated.dept_id) })
+              : u;
+          });
         });
-      });
-      setSelectedUser(normalizedUser);
-      closeModal();
-    } catch (err) {
-      setError(err && err.response && err.response.data && err.response.data.message ? err.response.data.message : "Failed to update account.");
-    } finally {
-      setActionLoading(false);
-    }
+        closeModal();
+      })
+      .catch(function(err) { setError(err.message); });
   }
 
-  async function handleDisable() {
-    if (!selectedUser) return;
-
-    setActionLoading(true);
-    setError("");
-
-    try {
-      var toggledUser = await toggleUserActive(selectedUser.user_id);
-      var normalizedUser = normalizeUser(toggledUser, departments, selectedUser);
-
-      setUsers(function(prev) {
-        return prev.map(function(u) {
-          return u.user_id === selectedUser.user_id ? normalizedUser : u;
+  // PATCH /api/users/:id/toggle-active — backend toggle, không nhận body, trả 204
+  function handleDisable() {
+    fetch("/api/users/" + selectedUser.user_id + "/toggle-active", {
+      method: "PATCH",
+    })
+      .then(function(res) {
+        if (!res.ok) throw new Error("Failed to disable user");
+        setUsers(function(prev) {
+          return prev.map(function(u) {
+            return u.user_id === selectedUser.user_id
+              ? Object.assign({}, u, { is_active: false })
+              : u;
+          });
         });
-      });
-      setSelectedUser(normalizedUser);
-      closeModal();
-    } catch (err) {
-      setError(err && err.response && err.response.data && err.response.data.message ? err.response.data.message : "Failed to update account status.");
-    } finally {
-      setActionLoading(false);
-    }
+        closeModal();
+      })
+      .catch(function(err) { setError(err.message); });
   }
 
   var stats = {
@@ -429,6 +316,14 @@ var UserManagement = function() {
     inactive: users.filter(function(u) { return !u.is_active; }).length,
     admins: users.filter(function(u) { return u.role_name === "ADMIN"; }).length,
   };
+
+  if (loading) {
+    return <div className="user-mgmt"><div className="empty-state"><p>Loading users...</p></div></div>;
+  }
+
+  if (error) {
+    return <div className="user-mgmt"><div className="empty-state"><h3>Error</h3><p>{error}</p></div></div>;
+  }
 
   return (
     <div className="user-mgmt">
@@ -442,15 +337,6 @@ var UserManagement = function() {
           Add Account
         </button>
       </div>
-
-      {error && (
-        <div className="admin-card" style={{ marginBottom: 20 }}>
-          <div className="empty-state">
-            <h3>Something went wrong</h3>
-            <p>{error}</p>
-          </div>
-        </div>
-      )}
 
       <div className="stats-row">
         <div className="stat-card">
@@ -503,43 +389,26 @@ var UserManagement = function() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>User</th>
-                <th>Role</th>
-                <th>Staff Type</th>
-                <th>Department</th>
-                <th>Status</th>
-                <th>Created</th>
-                <th>Actions</th>
+                <th>User</th><th>Role</th><th>Staff Type</th><th>Department</th>
+                <th>Status</th><th>Created</th><th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {loading ? (
-                <tr><td colSpan="7">
-                  <div className="empty-state">
-                    <h3>Loading accounts...</h3>
-                    <p>Please wait while user data is being fetched.</p>
-                  </div>
-                </td></tr>
-              ) : paginated.length === 0 ? (
-                <tr><td colSpan="7">
-                  <div className="empty-state">
-                    <h3>No accounts found</h3>
-                    <p>Try adjusting your filters</p>
-                  </div>
-                </td></tr>
+              {paginated.length === 0 ? (
+                <tr><td colSpan="7"><div className="empty-state"><h3>No accounts found</h3><p>Try adjusting your filters</p></div></td></tr>
               ) : paginated.map(function(user) {
                 return (
                   <tr key={user.user_id}>
                     <td>
                       <div className="table-avatar">
-                        <div className="table-avatar-icon">{user.full_name ? user.full_name[0].toUpperCase() : "U"}</div>
+                        <div className="table-avatar-icon">{user.full_name[0].toUpperCase()}</div>
                         <div>
                           <div className="table-avatar-name">{user.full_name}</div>
                           <div className="table-avatar-email">{user.email}</div>
                         </div>
                       </div>
                     </td>
-                    <td><span className={"badge " + (ROLE_BADGE[user.role_name] || "badge--default")}>{ROLE_LABEL[user.role_name] || user.role_name}</span></td>
+                    <td><span className={"badge " + (ROLE_BADGE[user.role_name] || "badge--default")}>{ROLE_LABEL[user.role_name]}</span></td>
                     <td>{user.staff_type}</td>
                     <td>{user.dept_name}</td>
                     <td><span className={"badge " + (user.is_active ? "badge--active" : "badge--inactive")}>{user.is_active ? "Active" : "Disabled"}</span></td>
@@ -560,7 +429,7 @@ var UserManagement = function() {
           </table>
         </div>
 
-        {!loading && totalPages > 1 && (
+        {totalPages > 1 && (
           <div className="pagination">
             <span className="pagination-info">
               Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filtered.length)} of {filtered.length} accounts
@@ -584,8 +453,8 @@ var UserManagement = function() {
             <div className="modal-header"><h2>Add New Account</h2><button className="modal-close" onClick={closeModal}><IconClose/></button></div>
             <div className="modal-body"><UserForm form={form} setForm={setForm} errors={formErrors} isEdit={false} departments={departments}/></div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={closeModal} disabled={actionLoading}>Cancel</button>
-              <button className="btn btn-primary" onClick={handleAdd} disabled={actionLoading}>{actionLoading ? "Creating..." : "Create Account"}</button>
+              <button className="btn btn-secondary" onClick={closeModal}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleAdd}>Create Account</button>
             </div>
           </div>
         </div>
@@ -597,8 +466,8 @@ var UserManagement = function() {
             <div className="modal-header"><h2>Edit Account</h2><button className="modal-close" onClick={closeModal}><IconClose/></button></div>
             <div className="modal-body"><UserForm form={form} setForm={setForm} errors={formErrors} isEdit={true} departments={departments}/></div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={closeModal} disabled={actionLoading}>Cancel</button>
-              <button className="btn btn-primary" onClick={handleEdit} disabled={actionLoading}>{actionLoading ? "Saving..." : "Save Changes"}</button>
+              <button className="btn btn-secondary" onClick={closeModal}>Cancel</button>
+              <button className="btn btn-primary" onClick={handleEdit}>Save Changes</button>
             </div>
           </div>
         </div>
@@ -610,7 +479,7 @@ var UserManagement = function() {
             <div className="modal-header"><h2>Account Detail</h2><button className="modal-close" onClick={closeModal}><IconClose/></button></div>
             <div className="modal-body">
               <div className="detail-avatar-block">
-                <div className="detail-avatar">{selectedUser.full_name ? selectedUser.full_name[0].toUpperCase() : "U"}</div>
+                <div className="detail-avatar">{selectedUser.full_name[0].toUpperCase()}</div>
                 <div>
                   <div className="detail-name">{selectedUser.full_name}</div>
                   <div className="detail-email">{selectedUser.email}</div>
@@ -621,9 +490,9 @@ var UserManagement = function() {
               </div>
               <div className="detail-grid">
                 <div className="detail-field"><span className="detail-key">user_id</span><span className="detail-val">#{selectedUser.user_id}</span></div>
-                <div className="detail-field"><span className="detail-key">role</span><span className="detail-val">{ROLE_LABEL[selectedUser.role_name] || selectedUser.role_name}</span></div>
+                <div className="detail-field"><span className="detail-key">role</span><span className="detail-val">{ROLE_LABEL[selectedUser.role_name]}</span></div>
                 <div className="detail-field"><span className="detail-key">staff_type</span><span className="detail-val">{selectedUser.staff_type}</span></div>
-                <div className="detail-field"><span className="detail-key">dept_id</span><span className="detail-val">{selectedUser.dept_name}{selectedUser.dept_id ? " (#" + selectedUser.dept_id + ")" : ""}</span></div>
+                <div className="detail-field"><span className="detail-key">dept_id</span><span className="detail-val">{selectedUser.dept_name} (#{selectedUser.dept_id})</span></div>
                 <div className="detail-field"><span className="detail-key">created_at</span><span className="detail-val">{selectedUser.created_at}</span></div>
                 <div className="detail-field"><span className="detail-key">is_active</span><span className="detail-val">{String(selectedUser.is_active)}</span></div>
               </div>
@@ -636,6 +505,7 @@ var UserManagement = function() {
         </div>
       )}
 
+      {/* DISABLE — PATCH /api/users/:id/toggle-active (không có body, trả 204) */}
       {modalMode === "disable" && selectedUser && (
         <div className="modal-overlay" onClick={closeModal}>
           <div className="modal" style={{ maxWidth: 400 }} onClick={function(e) { e.stopPropagation(); }}>
@@ -645,8 +515,8 @@ var UserManagement = function() {
               <p><strong>{selectedUser.full_name}</strong> will no longer be able to log in. All idea history and comments are preserved (<code>is_active = false</code>).</p>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={closeModal} disabled={actionLoading}>Cancel</button>
-              <button className="btn btn-danger" onClick={handleDisable} disabled={actionLoading}>{actionLoading ? "Disabling..." : "Disable"}</button>
+              <button className="btn btn-secondary" onClick={closeModal}>Cancel</button>
+              <button className="btn btn-danger" onClick={handleDisable}>Disable</button>
             </div>
           </div>
         </div>

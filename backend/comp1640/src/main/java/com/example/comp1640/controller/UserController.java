@@ -30,14 +30,12 @@ public class UserController {
         this.userService = userService;
     }
 
-    // Chỉ ADMIN mới được tạo user
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
     public ResponseEntity<UserResponse> create(@RequestBody UserRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.create(request));
     }
 
-    // Chỉ ADMIN mới xem được tất cả user
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
     public ResponseEntity<List<UserResponse>> getAll(
@@ -51,6 +49,7 @@ public class UserController {
         return ResponseEntity.ok(userService.getById(id));
     }
 
+    // PUT giữ nguyên để tương thích
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
     public ResponseEntity<UserResponse> update(
@@ -59,7 +58,15 @@ public class UserController {
         return ResponseEntity.ok(userService.update(id, request));
     }
 
-    // Xóa hẳn user
+    // PATCH thêm mới — frontend admin dùng PATCH để update thông tin user
+    @PatchMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
+    public ResponseEntity<UserResponse> patch(
+            @PathVariable Integer id,
+            @RequestBody UserRequest request) {
+        return ResponseEntity.ok(userService.update(id, request));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
@@ -67,7 +74,7 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    // Kích hoạt / vô hiệu hóa user
+    // Toggle active — frontend gọi PATCH /users/:id/toggle-active
     @PatchMapping("/{id}/toggle-active")
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
     public ResponseEntity<Void> toggleActive(@PathVariable Integer id) {
