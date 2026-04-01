@@ -1,105 +1,104 @@
 package com.example.comp1640.service.impl;
 
+import java.time.LocalDateTime;
+
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.example.comp1640.dto.request.TermsConditionsRequest;
 import com.example.comp1640.dto.response.TermsConditionsResponse;
-import com.example.comp1640.entity.TermsConditions;
 import com.example.comp1640.exception.BadRequestException;
 import com.example.comp1640.exception.ResourceNotFoundException;
+import com.example.comp1640.model.TermsConditions;
+import com.example.comp1640.model.User;
+import com.example.comp1640.model.UserTermsAcceptance;
 import com.example.comp1640.repository.TermsConditionsRepository;
+import com.example.comp1640.repository.UserRepository;
+import com.example.comp1640.repository.UserTermsAcceptanceRepository;
 import com.example.comp1640.service.TermsConditionsService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class TermsConditionsServiceImpl implements TermsConditionsService {
 
     private final TermsConditionsRepository termsRepo;
+    private final UserRepository userRepo;
+    private final UserTermsAcceptanceRepository acceptanceRepo;
 
-    /**
-     * Trả về tất cả versions sắp xếp mới nhất trước (version DESC).
-     * Frontend dùng để render timeline.
-     */
-    @Override
-    public List<TermsConditionsResponse> getAll() {
-        return termsRepo.findAll()
-                .stream()
-                .sorted(Comparator.comparingInt(TermsConditions::getVersion).reversed())
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Lấy version cao nhất = version đang active.
-     * Frontend hiển thị trong "Current Version" card.
-     */
-    @Override
-    public TermsConditionsResponse getCurrent() {
-        TermsConditions current = termsRepo.findTopByOrderByVersionDesc()
-                .orElseThrow(() -> new ResourceNotFoundException("Chưa có Terms & Conditions nào trong hệ thống"));
-        return toResponse(current);
+    public TermsConditionsServiceImpl(TermsConditionsRepository termsRepo,
+                                      UserRepository userRepo,
+                                      UserTermsAcceptanceRepository acceptanceRepo) {
+        this.termsRepo = termsRepo;
+        this.userRepo = userRepo;
+        this.acceptanceRepo = acceptanceRepo;
     }
 
     @Override
-    public TermsConditionsResponse getById(Integer id) {
-        return toResponse(findOrThrow(id));
+    public TermsConditionsResponse getLatest() {
+        TermsConditions terms = termsRepo.findTopByOrderByCreatedAtDesc()
+                .orElseThrow(() -> new ResourceNotFoundException("Chưa có điều khoản nào được tạo"));
+        return toResponse(terms);
     }
 
-    /**
-     * Tạo version mới:
-     *  - version = max(version hiện tại) + 1, tự động tính trong Service
-     *  - Frontend chỉ gửi { content, effective_date }
-     *  - Sau khi tạo, version mới này trở thành "current" (có version cao nhất)
-     */
     @Override
+    @Transactional
     public TermsConditionsResponse create(TermsConditionsRequest request) {
         if (request.getContent() == null || request.getContent().isBlank()) {
-            throw new BadRequestException("Nội dung Terms & Conditions không được để trống");
+            throw new BadRequestException("Nội dung điều khoản không được để trống");
         }
-        if (request.getEffectiveDate() == null) {
-            throw new BadRequestException("effective_date không được để trống");
+        if (request.getVersion() == null || request.getVersion().isBlank()) {
+            throw new BadRequestException("Phiên bản điều khoản không được để trống");
         }
 
-        // Tính version tiếp theo
-        Integer nextVersion = termsRepo.findMaxVersion() + 1;
+        User currentUser = getCurrentUser();
 
-        TermsConditions tc = new TermsConditions();
-        tc.setVersion(nextVersion);
-        tc.setContent(request.getContent().trim());
-        tc.setEffectiveDate(request.getEffectiveDate());
-        tc.setCreatedAt(LocalDateTime.now());
+        TermsConditions terms = new TermsConditions();
+        terms.setCreatedBy(currentUser);
+        terms.setVersion(request.getVersion());
+        terms.setContent(request.getContent());
+        terms.setEffectiveDate(request.getEffectiveDate());
+        terms.setCreatedAt(LocalDateTime.now());
 
-        return toResponse(termsRepo.save(tc));
+        return toResponse(termsRepo.save(terms));
     }
 
-    // ── helpers ──────────────────────────────────────────────────────────────
+    @Override
+    @Transactional
+    public void accept() {
+        TermsConditions latest = termsRepo.findTopByOrderByCreatedAtDesc()
+                .orElseThrow(() -> new ResourceNotFoundException("Chưa có điều khoản nào để chấp nhận"));
 
-    private TermsConditions findOrThrow(Integer id) {
-        return termsRepo.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy Terms & Conditions với id: " + id));
+        User currentUser = getCurrentUser();
+
+        // Nếu đã chấp nhận phiên bản này rồi thì bỏ qua
+        if (acceptanceRepo.existsByUser_UserIdAndTermsConditions_TermsId(
+                currentUser.getUserId(), latest.getTermsId())) {
+            return;
+        }
+
+        UserTermsAcceptance acceptance = new UserTermsAcceptance(currentUser, latest, LocalDateTime.now());
+        acceptanceRepo.save(acceptance);
     }
 
-    /**
-     * Map entity → response.
-     * Tên field khớp với frontend (sau khi đã bật SNAKE_CASE Jackson):
-     *   tcId          → tc_id
-     *   version       → version
-     *   content       → content
-     *   effectiveDate → effective_date
-     *   createdAt     → created_at
-     */
-    private TermsConditionsResponse toResponse(TermsConditions tc) {
+    // --- helpers ---
+
+    private User getCurrentUser() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new BadRequestException("Chưa đăng nhập");
+        }
+        return userRepo.findByEmail(auth.getName())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user hiện tại"));
+    }
+
+    private TermsConditionsResponse toResponse(TermsConditions t) {
         return new TermsConditionsResponse(
-                tc.getTcId(),
-                tc.getVersion(),
-                tc.getContent(),
-                tc.getEffectiveDate(),
-                tc.getCreatedAt()
+                t.getTermsId(),
+                t.getVersion(),
+                t.getContent(),
+                t.getEffectiveDate(),
+                t.getCreatedBy() != null ? t.getCreatedBy().getFullName() : null,
+                t.getCreatedAt()
         );
     }
 }
