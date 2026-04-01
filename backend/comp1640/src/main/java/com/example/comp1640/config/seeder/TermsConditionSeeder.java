@@ -1,7 +1,7 @@
 package com.example.comp1640.config.seeder;
 
-import com.example.comp1640.entity.TermsCondition;
-import com.example.comp1640.repository.TermsConditionRepository;
+import com.example.comp1640.entity.TermsConditions;
+import com.example.comp1640.repository.TermsConditionsRepository;
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 public class TermsConditionSeeder implements CommandLineRunner {
 
     @Autowired
-    private TermsConditionRepository termsRepo;  // Assume exists or add if not
+    private TermsConditionsRepository termsRepo; // Assume exists or add if not
 
     @Override
     public void run(String... args) throws Exception {
@@ -21,21 +21,21 @@ public class TermsConditionSeeder implements CommandLineRunner {
             return;
         }
 
-        List<TermsCondition> terms = List.of(
-            createTerms("<p>&amp;nbsp;Người dùng cam kết không chia sẻ ý tưởng vi phạm pháp luật.</p>", 1, LocalDate.of(2024, 1, 1)),
-            createTerms("<p>&amp;nbsp;Ý tưởng thuộc sở hữu tập thể, không được sử dụng thương mại cá nhân.</p>", 2, LocalDate.of(2024, 6, 1))
-        );
+        List<TermsConditions> terms = List.of(
+                createTerms("<p>&amp;nbsp;Người dùng cam kết không chia sẻ ý tưởng vi phạm pháp luật.</p>", 1,
+                        LocalDate.of(2024, 1, 1)),
+                createTerms("<p>&amp;nbsp;Ý tưởng thuộc sở hữu tập thể, không được sử dụng thương mại cá nhân.</p>", 2,
+                        LocalDate.of(2024, 6, 1)));
 
         termsRepo.saveAll(terms);
         System.out.println("Seeded " + terms.size() + " terms conditions.");
     }
 
-    private TermsCondition createTerms(String content, Integer version, LocalDate effectiveDate) {
-        return TermsCondition.builder()
-            .content(content)
-            .version(version)
-            .effectiveDate(effectiveDate)
-            .build();
+    private TermsConditions createTerms(String content, Integer version, LocalDate effectiveDate) {
+        return TermsConditions.builder()
+                .content(content)
+                .version(version)
+                .effectiveDate(effectiveDate)
+                .build();
     }
 }
-

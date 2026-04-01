@@ -1,12 +1,12 @@
 package com.example.comp1640.config.seeder;
 
 import com.example.comp1640.entity.UserTermsAcceptance;
-import com.example.comp1640.entity.TermsCondition;
+import com.example.comp1640.entity.TermsConditions;
 import com.example.comp1640.entity.User;
 import com.example.comp1640.repository.UserTermsAcceptanceRepository;
 import java.util.List;
 import java.util.stream.Collectors;
-import com.example.comp1640.repository.TermsConditionRepository;
+import com.example.comp1640.repository.TermsConditionsRepository;
 import com.example.comp1640.repository.UserRepository;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,7 @@ public class UserTermsAcceptanceSeeder implements CommandLineRunner {
    private UserTermsAcceptanceRepository acceptanceRepo;
 
    @Autowired
-   private TermsConditionRepository termsRepo;
+   private TermsConditionsRepository termsRepo;
 
    @Autowired
    private UserRepository userRepo;
@@ -32,13 +32,13 @@ public class UserTermsAcceptanceSeeder implements CommandLineRunner {
          return;
       }
 
-      List<TermsCondition> termsList = termsRepo.findAll();
+      List<TermsConditions> termsList = termsRepo.findAll();
       List<User> users = userRepo.findAll();
 
       if (termsList.isEmpty() || users.isEmpty())
          return;
 
-      TermsCondition terms1 = termsList.get(0);
+      TermsConditions terms1 = termsList.get(0);
 
       acceptanceRepo.saveAll(List.of(
             UserTermsAcceptance.builder()

@@ -9,7 +9,11 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "user_terms_acceptance")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @IdClass(UserTermsAcceptance.UserTermsId.class)
 public class UserTermsAcceptance {
 
@@ -21,13 +25,16 @@ public class UserTermsAcceptance {
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tc_id")
-    private TermsCondition termsCondition;
+    private TermsConditions termsCondition;
 
     @CreationTimestamp
     private LocalDateTime acceptedAt;
 
     // ── Composite Key class ──────────────────────────────────
-    @Getter @Setter @NoArgsConstructor @AllArgsConstructor
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
     @EqualsAndHashCode
     public static class UserTermsId implements Serializable {
         private Integer user;

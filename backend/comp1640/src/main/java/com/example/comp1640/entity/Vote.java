@@ -3,20 +3,26 @@ package com.example.comp1640.entity;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Table(name = "vote", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"idea_id", "user_id"})
+        @UniqueConstraint(columnNames = { "idea_id", "user_id" })
 })
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Vote {
 
-    public enum VoteType { UPVOTE, DOWNVOTE }
+    public enum VoteType {
+        UPVOTE, DOWNVOTE
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

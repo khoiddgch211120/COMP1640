@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -14,6 +16,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Idea {
 
     @Id
@@ -34,11 +38,7 @@ public class Idea {
     private AcademicYear academicYear;
 
     @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-        name = "idea_category",
-        joinColumns = @JoinColumn(name = "idea_id"),
-        inverseJoinColumns = @JoinColumn(name = "category_id")
-    )
+    @JoinTable(name = "idea_category", joinColumns = @JoinColumn(name = "idea_id"), inverseJoinColumns = @JoinColumn(name = "category_id"))
     private Set<Category> categories = new HashSet<>();
 
     @Column(name = "title", nullable = false, length = 500)
