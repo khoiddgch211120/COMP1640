@@ -19,6 +19,7 @@ public class UserResponse {
     private String staffType;
     private Boolean isActive;
     private String roleName;
+    private Integer deptId;      // thêm — frontend dùng để filter và hiển thị dept
     private String deptName;
     private LocalDateTime createdAt;
 }

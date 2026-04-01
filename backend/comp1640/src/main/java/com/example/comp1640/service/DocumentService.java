@@ -9,4 +9,7 @@ public interface DocumentService {
     DocumentResponse upload(Integer ideaId, MultipartFile file);
     List<DocumentResponse> getByIdea(Integer ideaId);
     void delete(Integer documentId);
+
+    // Thêm mới — dùng cho trang AttachmentManagement của Admin
+    List<DocumentResponse> getAll();
 }

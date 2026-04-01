@@ -41,4 +41,13 @@ public interface IdeaRepository extends JpaRepository<Idea, Integer> {
     List<Idea> findByUser_UserId(Integer userId);
 
     List<Idea> findByAcademicYear_YearIdAndDepartment_DeptId(Integer yearId, Integer deptId);
+
+    // Ideas without any comments
+    @Query("SELECT i FROM Idea i WHERE i.academicYear.yearId = :yearId AND i NOT IN (" +
+            "SELECT DISTINCT c.idea FROM Comment c)")
+    List<Idea> findIdeasWithoutComments(@Param("yearId") Integer yearId);
+
+    // Ideas with anonymous flag = true
+    @Query("SELECT i FROM Idea i WHERE i.academicYear.yearId = :yearId AND i.isAnonymous = true")
+    List<Idea> findAnonymousIdeas(@Param("yearId") Integer yearId);
 }

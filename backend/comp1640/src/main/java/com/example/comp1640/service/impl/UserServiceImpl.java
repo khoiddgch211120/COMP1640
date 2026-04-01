@@ -156,6 +156,7 @@ public class UserServiceImpl implements UserService {
                 user.getIsActive(),
                 // roleName is an enum, convert to String (use name())
                 user.getRole() != null ? user.getRole().getRoleName().name() : null,
+                user.getDepartment() != null ? user.getDepartment().getDeptId() : null,
                 user.getDepartment() != null ? user.getDepartment().getDeptName() : null,
                 user.getCreatedAt());
     }

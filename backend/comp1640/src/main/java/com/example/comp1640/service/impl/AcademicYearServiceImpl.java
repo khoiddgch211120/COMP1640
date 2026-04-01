@@ -81,9 +81,11 @@ public class AcademicYearServiceImpl implements AcademicYearService {
             year.setYearLabel(request.getYearLabel());
         }
 
-        LocalDate newIdeaDate = request.getIdeaClosureDate() != null ? request.getIdeaClosureDate()
+        LocalDate newIdeaDate = request.getIdeaClosureDate() != null
+                ? request.getIdeaClosureDate()
                 : year.getIdeaClosureDate();
-        LocalDate newFinalDate = request.getFinalClosureDate() != null ? request.getFinalClosureDate()
+        LocalDate newFinalDate = request.getFinalClosureDate() != null
+                ? request.getFinalClosureDate()
                 : year.getFinalClosureDate();
 
         if (!newIdeaDate.isBefore(newFinalDate)) {
@@ -104,7 +106,7 @@ public class AcademicYearServiceImpl implements AcademicYearService {
         academicYearRepo.deleteById(id);
     }
 
-    // --- helpers ---
+    // ── helpers ──────────────────────────────────────────────────────────────
 
     private void validateRequest(AcademicYearRequest request) {
         if (request.getYearLabel() == null || request.getYearLabel().isBlank()) {
@@ -129,16 +131,41 @@ public class AcademicYearServiceImpl implements AcademicYearService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user hiện tại"));
     }
 
+    /**
+     * Tính status theo logic:
+     *  - upcoming : hôm nay TRƯỚC idea_closure_date
+     *  - active   : hôm nay SAU idea_closure_date nhưng TRƯỚC final_closure_date
+     *  - closed   : hôm nay SAU final_closure_date
+     *
+     * Thêm createdBy (Integer user_id) và status (String) vào response
+     * để frontend AcademicYearManagement.jsx hiển thị đúng badge.
+     */
     private AcademicYearResponse toResponse(AcademicYear a) {
         LocalDate today = LocalDate.now();
-        return new AcademicYearResponse(
-                a.getYearId(),
-                a.getYearLabel(),
-                a.getIdeaClosureDate(),
-                a.getFinalClosureDate(),
-                a.getCreatedBy() != null ? a.getCreatedBy().getFullName() : null,
-                a.getCreatedAt(),
-                today.isBefore(a.getIdeaClosureDate()) || today.isEqual(a.getIdeaClosureDate()),
-                today.isBefore(a.getFinalClosureDate()) || today.isEqual(a.getFinalClosureDate()));
+
+        boolean ideaOpen    = !today.isAfter(a.getIdeaClosureDate());
+        boolean commentOpen = !today.isAfter(a.getFinalClosureDate());
+
+        String status;
+        if (today.isBefore(a.getIdeaClosureDate())) {
+            status = "upcoming";
+        } else if (!today.isAfter(a.getFinalClosureDate())) {
+            status = "active";
+        } else {
+            status = "closed";
+        }
+
+        AcademicYearResponse resp = new AcademicYearResponse();
+        resp.setYearId(a.getYearId());
+        resp.setYearLabel(a.getYearLabel());
+        resp.setIdeaClosureDate(a.getIdeaClosureDate());
+        resp.setFinalClosureDate(a.getFinalClosureDate());
+        resp.setCreatedBy(a.getCreatedBy() != null ? a.getCreatedBy().getUserId() : null);
+        resp.setCreatedByName(a.getCreatedBy() != null ? a.getCreatedBy().getFullName() : null);
+        resp.setCreatedAt(a.getCreatedAt());
+        resp.setIdeaOpen(ideaOpen);
+        resp.setCommentOpen(commentOpen);
+        resp.setStatus(status);
+        return resp;
     }
 }
