@@ -1,48 +1,53 @@
-package com.example.comp1640.entity;
-
-import com.example.comp1640.enums.NotifStatus;
-import com.example.comp1640.enums.NotifType;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
+package com.example.comp1640.model;
 
 import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "notification_log")
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class NotificationLog {
+
+    public enum NotifType { new_idea, new_comment }
+    public enum NotifStatus { sent, failed }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "log_id")
     private Integer logId;
 
-    @NotNull(message = "Người nhận không được phép null")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "recipient_user_id", nullable = false)
+    @JoinColumn(name = "recipient_user_id")
     private User recipient;
 
-    @NotNull(message = "Idea không được phép null")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "idea_id", nullable = false)
+    @JoinColumn(name = "idea_id")
     private Idea idea;
 
-    @NotNull(message = "Loại thông báo không được phép null")
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "notif_type", length = 20)
     private NotifType notifType;
 
-    @NotNull(message = "Trạng thái không được phép null")
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    @Builder.Default
-    private NotifStatus status = NotifStatus.SENT;
+    @Column(name = "status", length = 10)
+    private NotifStatus status;
 
-    @CreationTimestamp
+    @Column(name = "sent_at")
     private LocalDateTime sentAt;
 }

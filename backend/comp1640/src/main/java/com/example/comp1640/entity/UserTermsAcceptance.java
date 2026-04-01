@@ -1,46 +1,46 @@
-package com.example.comp1640.entity;
+package com.example.comp1640.model;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "user_terms_acceptance")
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
-@IdClass(UserTermsAcceptance.UserTermsId.class)
 public class UserTermsAcceptance {
 
-    @NotNull(message = "User không được phép null")
-    @Id
+    @EmbeddedId
+    private UserTermsAcceptanceId id = new UserTermsAcceptanceId();
+
     @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("userId")
     @JoinColumn(name = "user_id")
     private User user;
 
-    @NotNull(message = "Terms không được phép null")
-    @Id
     @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("tcId")
     @JoinColumn(name = "tc_id")
-    private TermsConditions termsCondition;
+    private TermsConditions termsConditions;
 
-    @CreationTimestamp
+    @Column(name = "accepted_at")
     private LocalDateTime acceptedAt;
 
-    // ── Composite Key class ──────────────────────────────────
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @EqualsAndHashCode
-    public static class UserTermsId implements Serializable {
-        private Integer user;
-        private Integer termsCondition;
+    public UserTermsAcceptance(User user, TermsConditions termsConditions, LocalDateTime acceptedAt) {
+        this.user = user;
+        this.termsConditions = termsConditions;
+        this.acceptedAt = acceptedAt;
+        this.id = new UserTermsAcceptanceId(user.getUserId(), termsConditions.getTermsId());
     }
 }
