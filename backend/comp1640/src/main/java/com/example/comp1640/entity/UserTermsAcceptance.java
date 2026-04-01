@@ -1,6 +1,7 @@
 package com.example.comp1640.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -17,11 +18,13 @@ import java.time.LocalDateTime;
 @IdClass(UserTermsAcceptance.UserTermsId.class)
 public class UserTermsAcceptance {
 
+    @NotNull(message = "User không được phép null")
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
+    @NotNull(message = "Terms không được phép null")
     @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tc_id")
