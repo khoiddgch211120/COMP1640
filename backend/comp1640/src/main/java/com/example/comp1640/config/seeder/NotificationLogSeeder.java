@@ -34,24 +34,62 @@ public class NotificationLogSeeder implements CommandLineRunner {
 
       List<Idea> ideas = ideaRepo.findAll();
       List<User> users = userRepo.findAll();
+      if (users.isEmpty())
+         return;
 
-      logRepo.saveAll(List.of(
-            NotificationLog.builder()
-                  .recipient(users.get(1))
-                  .idea(ideas.get(0))
-                  .notifType(NotifType.NEW_IDEA)
-                  .status(NotifStatus.SENT)
-                  .build(),
-            NotificationLog.builder()
-                  .recipient(users.get(2))
-                  .idea(ideas.get(1))
+      java.util.List<NotificationLog> logs = new java.util.ArrayList<>();
+
+      // Add notifications for ideas and comments
+      for (int i = 0; i < ideas.size(); i++) {
+         Idea idea = ideas.get(i);
+
+         // Notify random users about new ideas
+         int numNotifs = (i % 5) + 2; // 2-6 notifications per idea
+         for (int j = 0; j < numNotifs && j < users.size(); j++) {
+            User recipient = users.get((i * 7 + j) % users.size());
+            if (!recipient.getUserId().equals(idea.getUser().getUserId())) { // Don't notify submitter
+               logs.add(NotificationLog.builder()
+                     .recipient(recipient)
+                     .idea(idea)
+                     .notifType(i % 2 == 0 ? NotifType.NEW_IDEA : NotifType.NEW_COMMENT)
+                     .status(NotifStatus.SENT)
+                     .build());
+            }
+         }
+      }
+
+      // Add more notification types
+      for (int i = 0; i < Math.min(ideas.size(), 20); i++) {
+         Idea idea = ideas.get(i);
+         User randomUser = users.get(i % users.size());
+
+         if (i % 3 == 0) {
+            logs.add(NotificationLog.builder()
+                  .recipient(randomUser)
+                  .idea(idea)
                   .notifType(NotifType.NEW_COMMENT)
                   .status(NotifStatus.SENT)
+                  .build());
+         }
+         if (i % 4 == 0) {
+            logs.add(NotificationLog.builder()
+                  .recipient(randomUser)
+                  .idea(idea)
+                  .notifType(NotifType.NEW_IDEA)
+                  .status(NotifStatus.SENT)
+                  .build());
+         }
+         if (i % 5 == 0) {
+            logs.add(NotificationLog.builder()
+                  .recipient(randomUser)
+                  .idea(idea)
+                  .notifType(NotifType.NEW_COMMENT)
+                  .status(NotifStatus.SENT)
+                  .build());
+         }
+      }
 
-                  .build()
-      // add more
-      ));
-
-      System.out.println("Seeded notification logs.");
+      logRepo.saveAll(logs);
+      System.out.println("Seeded " + logs.size() + " notification logs.");
    }
 }

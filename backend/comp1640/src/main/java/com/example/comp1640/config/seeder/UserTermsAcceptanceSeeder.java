@@ -38,20 +38,19 @@ public class UserTermsAcceptanceSeeder implements CommandLineRunner {
       if (termsList.isEmpty() || users.isEmpty())
          return;
 
-      TermsConditions terms1 = termsList.get(0);
+      TermsConditions latestTerms = termsList.get(termsList.size() - 1);
 
-      acceptanceRepo.saveAll(List.of(
-            UserTermsAcceptance.builder()
-                  .user(users.get(0))
-                  .termsCondition(terms1)
-                  .build(),
-            UserTermsAcceptance.builder()
-                  .user(users.get(1))
-                  .termsCondition(terms1)
-                  .build()
-      // all users accept latest terms
-      ));
+      List<UserTermsAcceptance> acceptances = new java.util.ArrayList<>();
 
-      System.out.println("Seeded user terms acceptances.");
+      // All users accept latest terms (minimum requirement)
+      for (User user : users) {
+         acceptances.add(UserTermsAcceptance.builder()
+               .user(user)
+               .termsCondition(latestTerms)
+               .build());
+      }
+
+      acceptanceRepo.saveAll(acceptances);
+      System.out.println("Seeded " + acceptances.size() + " user terms acceptances.");
    }
 }

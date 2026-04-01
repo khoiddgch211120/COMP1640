@@ -34,23 +34,31 @@ public class VoteSeeder implements CommandLineRunner {
 
       List<Idea> ideas = ideaRepo.findAll();
       List<User> users = userRepo.findAll();
+      if (users.isEmpty())
+         return;
 
-      List<Vote> votes = List.of(
-            createVote(VoteType.UPVOTE, users.get(0), ideas.get(0)),
-            createVote(VoteType.DOWNVOTE, users.get(1), ideas.get(0)),
-            createVote(VoteType.UPVOTE, users.get(2), ideas.get(0)),
-            createVote(VoteType.UPVOTE, users.get(0), ideas.get(1)),
-            createVote(VoteType.DOWNVOTE, users.get(1), ideas.get(1)),
-            createVote(VoteType.UPVOTE, users.get(2), ideas.get(1)),
-            createVote(VoteType.UPVOTE, users.get(0), ideas.get(2)),
-            createVote(VoteType.DOWNVOTE, users.get(1), ideas.get(2)),
-            createVote(VoteType.UPVOTE, users.get(3 % users.size()), ideas.get(0)),
-            createVote(VoteType.DOWNVOTE, users.get(4 % users.size()), ideas.get(1)),
-            createVote(VoteType.UPVOTE, users.get(5 % users.size()), ideas.get(2)),
-            createVote(VoteType.UPVOTE, users.get(0), ideas.get(3)),
-            createVote(VoteType.DOWNVOTE, users.get(1), ideas.get(3))
-      // more for double data
-      );
+      List<Vote> votes = new java.util.ArrayList<>();
+
+      // Add 5-10 up/down votes for each idea
+      for (int i = 0; i < ideas.size(); i++) {
+         Idea idea = ideas.get(i);
+         int userCount = users.size();
+
+         // Add mix of upvotes and downvotes
+         int numVotes = 5 + (i % 6); // 5-10 votes per idea
+         int upvotes = (int) (numVotes * 0.7); // 70% upvotes
+         int downvotes = numVotes - upvotes; // 30% downvotes
+
+         // Add upvotes
+         for (int j = 0; j < upvotes; j++) {
+            votes.add(createVote(VoteType.UPVOTE, users.get((i * 7 + j) % userCount), idea));
+         }
+
+         // Add downvotes
+         for (int j = 0; j < downvotes; j++) {
+            votes.add(createVote(VoteType.DOWNVOTE, users.get((i * 11 + upvotes + j) % userCount), idea));
+         }
+      }
 
       voteRepo.saveAll(votes);
       System.out.println("Seeded " + votes.size() + " votes.");

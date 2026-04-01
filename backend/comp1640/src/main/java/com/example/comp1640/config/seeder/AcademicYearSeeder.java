@@ -26,15 +26,22 @@ public class AcademicYearSeeder implements CommandLineRunner {
             return;
         }
 
-        User adminOrQa = userRepo.findByEmail("admin@gmail.com").orElse(
-                userRepo.findAll().get(0));
+        User adminOrQa = userRepo.findByEmail("admin@greenwich.edu.vn").orElse(
+                userRepo.findAll().isEmpty() ? null : userRepo.findAll().get(0));
+
+        if (adminOrQa == null) {
+            System.out.println("No admin user found for academic year seeding.");
+            return;
+        }
 
         yearRepo.saveAll(java.util.List.of(
+                createYear("2022-2023", LocalDate.of(2023, 5, 20), LocalDate.of(2023, 7, 5), adminOrQa),
                 createYear("2023-2024", LocalDate.of(2024, 5, 15), LocalDate.of(2024, 6, 30), adminOrQa),
                 createYear("2024-2025", LocalDate.of(2025, 5, 10), LocalDate.of(2025, 6, 25), adminOrQa),
-                createYear("2022-2023", LocalDate.of(2023, 5, 20), LocalDate.of(2023, 7, 5), adminOrQa)));
+                createYear("2025-2026", LocalDate.of(2026, 5, 1), LocalDate.of(2026, 6, 15), adminOrQa),
+                createYear("2026-2027", LocalDate.of(2027, 5, 20), LocalDate.of(2027, 7, 10), adminOrQa)));
 
-        System.out.println("Seeded 3 academic years.");
+        System.out.println("Seeded 5 academic years.");
     }
 
     private AcademicYear createYear(String label, LocalDate ideaClose, LocalDate finalClose, User createdBy) {
