@@ -46,9 +46,9 @@ public class ReportServiceImpl implements ReportService {
     private final DocumentRepository documentRepo;
 
     public ReportServiceImpl(IdeaRepository ideaRepo, CommentRepository commentRepo,
-                              VoteRepository voteRepo, UserRepository userRepo,
-                              AcademicYearRepository academicYearRepo,
-                              DocumentRepository documentRepo) {
+            VoteRepository voteRepo, UserRepository userRepo,
+            AcademicYearRepository academicYearRepo,
+            DocumentRepository documentRepo) {
         this.ideaRepo = ideaRepo;
         this.commentRepo = commentRepo;
         this.voteRepo = voteRepo;
@@ -59,12 +59,12 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     public ReportStatsResponse getStats(Integer yearId, Integer deptId) {
-        long totalIdeas        = ideaRepo.countFiltered(yearId, deptId);
-        long totalComments     = commentRepo.countFiltered(yearId, deptId);
-        long totalVotes        = voteRepo.countFiltered(yearId, deptId);
+        long totalIdeas = ideaRepo.countFiltered(yearId, deptId);
+        long totalComments = commentRepo.countFiltered(yearId, deptId);
+        long totalVotes = voteRepo.countFiltered(yearId, deptId);
         long totalContributors = ideaRepo.countDistinctContributors(yearId, deptId);
-        long anonymousIdeas    = ideaRepo.countAnonymous(yearId, deptId);
-        double anonymousRate   = totalIdeas > 0 ? (double) anonymousIdeas / totalIdeas * 100 : 0.0;
+        long anonymousIdeas = ideaRepo.countAnonymous(yearId, deptId);
+        double anonymousRate = totalIdeas > 0 ? (double) anonymousIdeas / totalIdeas * 100 : 0.0;
 
         List<ReportStatsResponse.DeptStats> byDept = ideaRepo.countGroupByDept(yearId)
                 .stream()
@@ -83,8 +83,7 @@ public class ReportServiceImpl implements ReportService {
         return new ReportStatsResponse(
                 totalIdeas, totalComments, totalVotes,
                 totalContributors, anonymousIdeas, anonymousRate,
-                byDept, byCategory
-        );
+                byDept, byCategory);
     }
 
     @Override
@@ -114,32 +113,32 @@ public class ReportServiceImpl implements ReportService {
             baos.write(0xBB);
             baos.write(0xBF);
 
-            writer.writeNext(new String[]{
-                "ID", "Tiêu đề", "Nội dung", "Tác giả", "Phòng ban",
-                "Danh mục", "Ẩn danh", "Lượt xem", "Upvote", "Downvote",
-                "Ngày gửi", "Ngày cập nhật"
+            writer.writeNext(new String[] {
+                    "ID", "Tiêu đề", "Nội dung", "Tác giả", "Phòng ban",
+                    "Danh mục", "Ẩn danh", "Lượt xem", "Upvote", "Downvote",
+                    "Ngày gửi", "Ngày cập nhật"
             });
 
             for (Idea idea : ideas) {
                 String categories = idea.getCategories().stream()
                         .map(Category::getCategoryName)
                         .collect(Collectors.joining("; "));
-                long up   = voteRepo.countUpvotes(idea.getIdeaId());
+                long up = voteRepo.countUpvotes(idea.getIdeaId());
                 long down = voteRepo.countDownvotes(idea.getIdeaId());
 
-                writer.writeNext(new String[]{
-                    String.valueOf(idea.getIdeaId()),
-                    idea.getTitle(),
-                    idea.getContent(),
-                    Boolean.TRUE.equals(idea.getIsAnonymous()) ? "Ẩn danh" : idea.getUser().getFullName(),
-                    idea.getDepartment() != null ? idea.getDepartment().getDeptName() : "",
-                    categories,
-                    Boolean.TRUE.equals(idea.getIsAnonymous()) ? "Có" : "Không",
-                    String.valueOf(idea.getViewCount()),
-                    String.valueOf(up),
-                    String.valueOf(down),
-                    idea.getSubmittedAt() != null ? idea.getSubmittedAt().toString() : "",
-                    idea.getUpdatedAt() != null ? idea.getUpdatedAt().toString() : ""
+                writer.writeNext(new String[] {
+                        String.valueOf(idea.getIdeaId()),
+                        idea.getTitle(),
+                        idea.getContent(),
+                        Boolean.TRUE.equals(idea.getIsAnonymous()) ? "Ẩn danh" : idea.getUser().getFullName(),
+                        idea.getDepartment() != null ? idea.getDepartment().getDeptName() : "",
+                        categories,
+                        Boolean.TRUE.equals(idea.getIsAnonymous()) ? "Có" : "Không",
+                        String.valueOf(idea.getViewCount()),
+                        String.valueOf(up),
+                        String.valueOf(down),
+                        idea.getSubmittedAt() != null ? idea.getSubmittedAt().toString() : "",
+                        idea.getUpdatedAt() != null ? idea.getUpdatedAt().toString() : ""
                 });
             }
         } catch (IOException e) {
@@ -194,7 +193,8 @@ public class ReportServiceImpl implements ReportService {
     }
 
     private boolean canViewIdentity(User viewer) {
-        if (viewer == null) return false;
+        if (viewer == null)
+            return false;
         String role = viewer.getRole() != null ? viewer.getRole().getRoleName() : "";
         return role.equals("ADMIN") || role.equals("QA_MGR");
     }
@@ -206,7 +206,7 @@ public class ReportServiceImpl implements ReportService {
                 .map(Category::getCategoryName)
                 .collect(Collectors.toSet());
 
-        long upvotes   = voteRepo.countUpvotes(idea.getIdeaId());
+        long upvotes = voteRepo.countUpvotes(idea.getIdeaId());
         long downvotes = voteRepo.countDownvotes(idea.getIdeaId());
 
         return new IdeaResponse(
@@ -225,7 +225,6 @@ public class ReportServiceImpl implements ReportService {
                 downvotes,
                 idea.getTermsAccepted(),
                 idea.getSubmittedAt(),
-                idea.getUpdatedAt()
-        );
+                idea.getUpdatedAt());
     }
 }
