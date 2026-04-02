@@ -1,120 +1,234 @@
 package com.example.comp1640.service.impl;
 
-import com.example.comp1640.dto.response.AnonymousContentResponse;
-import com.example.comp1640.dto.response.IdeaNoCommentResponse;
-import com.example.comp1640.dto.response.StatisticsReportResponse;
-import com.example.comp1640.entity.Comment;
-import com.example.comp1640.entity.Department;
-import com.example.comp1640.entity.Idea;
-import com.example.comp1640.repository.CommentRepository;
-import com.example.comp1640.repository.DepartmentRepository;
-import com.example.comp1640.repository.IdeaRepository;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.example.comp1640.dto.response.IdeaResponse;
+import com.example.comp1640.dto.response.ReportStatsResponse;
+import com.example.comp1640.exception.BadRequestException;
+import com.example.comp1640.exception.ResourceNotFoundException;
+import com.example.comp1640.entity.AcademicYear;
+import com.example.comp1640.entity.Category;
+import com.example.comp1640.entity.Document;
+import com.example.comp1640.entity.Idea;
+import com.example.comp1640.entity.User;
+import com.example.comp1640.repository.AcademicYearRepository;
+import com.example.comp1640.repository.CommentRepository;
+import com.example.comp1640.repository.DocumentRepository;
+import com.example.comp1640.repository.IdeaRepository;
+import com.example.comp1640.repository.UserRepository;
+import com.example.comp1640.repository.VoteRepository;
 import com.example.comp1640.service.ReportService;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.opencsv.CSVWriter;
 
 @Service
 @Transactional(readOnly = true)
 public class ReportServiceImpl implements ReportService {
 
-   private final IdeaRepository ideaRepository;
-   private final CommentRepository commentRepository;
-   private final DepartmentRepository departmentRepository;
+    private final IdeaRepository ideaRepo;
+    private final CommentRepository commentRepo;
+    private final VoteRepository voteRepo;
+    private final UserRepository userRepo;
+    private final AcademicYearRepository academicYearRepo;
+    private final DocumentRepository documentRepo;
 
-   public ReportServiceImpl(IdeaRepository ideaRepository, CommentRepository commentRepository,
-         DepartmentRepository departmentRepository) {
-      this.ideaRepository = ideaRepository;
-      this.commentRepository = commentRepository;
-      this.departmentRepository = departmentRepository;
-   }
+    public ReportServiceImpl(IdeaRepository ideaRepo, CommentRepository commentRepo,
+            VoteRepository voteRepo, UserRepository userRepo,
+            AcademicYearRepository academicYearRepo,
+            DocumentRepository documentRepo) {
+        this.ideaRepo = ideaRepo;
+        this.commentRepo = commentRepo;
+        this.voteRepo = voteRepo;
+        this.userRepo = userRepo;
+        this.academicYearRepo = academicYearRepo;
+        this.documentRepo = documentRepo;
+    }
 
-   @Override
-   public List<StatisticsReportResponse> getStatisticsReport(Integer yearId, Integer deptId) {
-      List<Idea> ideas = deptId != null
-            ? ideaRepository.findByAcademicYear_YearIdAndDepartment_DeptId(yearId, deptId)
-            : ideaRepository.findByAcademicYear_YearId(yearId);
+    @Override
+    public ReportStatsResponse getStats(Integer yearId, Integer deptId) {
+        long totalIdeas = ideaRepo.countFiltered(yearId, deptId);
+        long totalComments = commentRepo.countFiltered(yearId, deptId);
+        long totalVotes = voteRepo.countFiltered(yearId, deptId);
+        long totalContributors = ideaRepo.countDistinctContributors(yearId, deptId);
+        long anonymousIdeas = ideaRepo.countAnonymous(yearId, deptId);
+        double anonymousRate = totalIdeas > 0 ? (double) anonymousIdeas / totalIdeas * 100 : 0.0;
 
-      long totalIdeas = ideas.size();
-      if (totalIdeas == 0) {
-         return new ArrayList<>();
-      }
+        List<ReportStatsResponse.DeptStats> byDept = ideaRepo.countGroupByDept(yearId)
+                .stream()
+                .map(row -> new ReportStatsResponse.DeptStats(
+                        row[0] != null ? (String) row[0] : "Không có phòng ban",
+                        (Long) row[1]))
+                .collect(Collectors.toList());
 
-      // Group ideas by department
-      Map<Integer, List<Idea>> ideaByDept = ideas.stream()
-            .collect(Collectors.groupingBy(i -> i.getDepartment() != null ? i.getDepartment().getDeptId() : -1));
+        List<ReportStatsResponse.CategoryStats> byCategory = ideaRepo.countGroupByCategory(yearId)
+                .stream()
+                .map(row -> new ReportStatsResponse.CategoryStats(
+                        (String) row[0],
+                        (Long) row[1]))
+                .collect(Collectors.toList());
 
-      // Get all departments
-      List<Department> departments = departmentRepository.findAll();
+        return new ReportStatsResponse(
+                totalIdeas, totalComments, totalVotes,
+                totalContributors, anonymousIdeas, anonymousRate,
+                byDept, byCategory);
+    }
 
-      // Build statistics
-      return departments.stream()
-            .map(dept -> {
-               List<Idea> deptIdeas = ideaByDept.getOrDefault(dept.getDeptId(), new ArrayList<>());
-               long deptIdeaCount = deptIdeas.size();
-               double percentage = totalIdeas > 0 ? (deptIdeaCount * 100.0) / totalIdeas : 0;
+    @Override
+    public List<IdeaResponse> getNoCommentIdeas(Integer yearId, Integer deptId) {
+        User currentUser = getCurrentUserOptional().orElse(null);
+        return ideaRepo.findNoComment(yearId, deptId)
+                .stream()
+                .map(i -> toResponse(i, currentUser))
+                .collect(Collectors.toList());
+    }
 
-               // Count unique contributors
-               long contributorCount = deptIdeas.stream()
-                     .map(idea -> idea.getUser() != null ? idea.getUser().getUserId() : null)
-                     .distinct()
-                     .count();
+    @Override
+    public byte[] exportIdeasCsv(Integer yearId) {
+        AcademicYear year = academicYearRepo.findById(yearId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy năm học id: " + yearId));
 
-               return StatisticsReportResponse.builder()
-                     .deptId(dept.getDeptId())
-                     .deptName(dept.getDeptName())
-                     .ideaCount((int) deptIdeaCount)
-                     .percentageOfTotal(Math.round(percentage * 100.0) / 100.0)
-                     .contributorCount((int) contributorCount)
-                     .build();
-            })
-            .collect(Collectors.toList());
-   }
+        if (LocalDate.now().isBefore(year.getFinalClosureDate())) {
+            throw new BadRequestException("Chỉ được xuất CSV sau ngày đóng cửa cuối: " + year.getFinalClosureDate());
+        }
 
-   @Override
-   public List<IdeaNoCommentResponse> getIdeasWithoutComments(Integer yearId) {
-      List<Idea> ideasWithoutComments = ideaRepository.findIdeasWithoutComments(yearId);
+        List<Idea> ideas = ideaRepo.findByAcademicYear_YearId(yearId);
 
-      return ideasWithoutComments.stream()
-            .map(idea -> IdeaNoCommentResponse.from(idea))
-            .collect(Collectors.toList());
-   }
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (CSVWriter writer = new CSVWriter(new OutputStreamWriter(baos, StandardCharsets.UTF_8))) {
+            // BOM cho Excel đọc UTF-8
+            baos.write(0xEF);
+            baos.write(0xBB);
+            baos.write(0xBF);
 
-   @Override
-   public List<AnonymousContentResponse> getAnonymousContent(Integer yearId) {
-      List<AnonymousContentResponse> anonymousContents = new ArrayList<>();
+            writer.writeNext(new String[] {
+                    "ID", "Tiêu đề", "Nội dung", "Tác giả", "Phòng ban",
+                    "Danh mục", "Ẩn danh", "Lượt xem", "Upvote", "Downvote",
+                    "Ngày gửi", "Ngày cập nhật"
+            });
 
-      // Get anonymous ideas
-      List<Idea> anonymousIdeas = ideaRepository.findAnonymousIdeas(yearId);
-      anonymousIdeas.forEach(idea -> {
-         anonymousContents.add(AnonymousContentResponse.builder()
-               .contentType("IDEA")
-               .contentId(idea.getIdeaId())
-               .contentPreview(idea.getTitle().substring(0, Math.min(100, idea.getTitle().length())))
-               .authorRealName(idea.getUser() != null ? idea.getUser().getFullName() : "Unknown")
-               .isAnonymous(true)
-               .createdAt(idea.getSubmittedAt())
-               .build());
-      });
+            for (Idea idea : ideas) {
+                String categories = idea.getCategories().stream()
+                        .map(Category::getCategoryName)
+                        .collect(Collectors.joining("; "));
+                long up = voteRepo.countUpvotes(idea.getIdeaId());
+                long down = voteRepo.countDownvotes(idea.getIdeaId());
 
-      // Get anonymous comments
-      List<Comment> anonymousComments = commentRepository.findAnonymousCommentsByYear(yearId);
-      anonymousComments.forEach(comment -> {
-         anonymousContents.add(AnonymousContentResponse.builder()
-               .contentType("COMMENT")
-               .contentId(comment.getCommentId())
-               .contentPreview(comment.getContent().substring(0, Math.min(100, comment.getContent().length())))
-               .authorRealName(comment.getUser() != null ? comment.getUser().getFullName() : "Unknown")
-               .isAnonymous(true)
-               .createdAt(comment.getCreatedAt())
-               .build());
-      });
+                writer.writeNext(new String[] {
+                        String.valueOf(idea.getIdeaId()),
+                        idea.getTitle(),
+                        idea.getContent(),
+                        Boolean.TRUE.equals(idea.getIsAnonymous()) ? "Ẩn danh" : idea.getUser().getFullName(),
+                        idea.getDepartment() != null ? idea.getDepartment().getDeptName() : "",
+                        categories,
+                        (idea.getIsAnonymous() ? "1" : "0"),
+                        String.valueOf(idea.getViewCount()),
+                        String.valueOf(up),
+                        String.valueOf(down),
+                        idea.getSubmittedAt() != null ? idea.getSubmittedAt().toString() : "",
+                        idea.getUpdatedAt() != null ? idea.getUpdatedAt().toString() : ""
+                });
+            }
+        } catch (IOException e) {
+            throw new BadRequestException("Xuất CSV thất bại: " + e.getMessage());
+        }
 
-      // Sort by createdAt descending
-      anonymousContents.sort((a, b) -> b.getCreatedAt().compareTo(a.getCreatedAt()));
+        return baos.toByteArray();
+    }
 
-      return anonymousContents;
-   }
+    @Override
+    public byte[] exportDocumentsZip(Integer yearId) {
+        AcademicYear year = academicYearRepo.findById(yearId)
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy năm học id: " + yearId));
+
+        if (LocalDate.now().isBefore(year.getFinalClosureDate())) {
+            throw new BadRequestException("Chỉ được xuất ZIP sau ngày đóng cửa cuối: " + year.getFinalClosureDate());
+        }
+
+        List<Idea> ideas = ideaRepo.findByAcademicYear_YearId(yearId);
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+            for (Idea idea : ideas) {
+                List<Document> docs = documentRepo.findByIdeaIdeaId(idea.getIdeaId());
+                for (Document doc : docs) {
+                    String entryName = "idea_" + idea.getIdeaId() + "/" + doc.getFileName();
+                    zos.putNextEntry(new ZipEntry(entryName));
+                    try (var in = new URL(doc.getFileUrl()).openStream()) {
+                        in.transferTo(zos);
+                    } catch (IOException e) {
+                        // Ghi note thay thế nếu không download được
+                        zos.write(("Cannot download: " + doc.getFileUrl()).getBytes(StandardCharsets.UTF_8));
+                    }
+                    zos.closeEntry();
+                }
+            }
+        } catch (IOException e) {
+            throw new BadRequestException("Xuất ZIP thất bại: " + e.getMessage());
+        }
+
+        return baos.toByteArray();
+    }
+
+    // --- helpers ---
+
+    private Optional<User> getCurrentUserOptional() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getName())) {
+            return Optional.empty();
+        }
+        return userRepo.findByEmail(auth.getName());
+    }
+
+    private boolean canViewIdentity(User viewer) {
+        if (viewer == null)
+            return false;
+        String role = viewer.getRole() != null ? viewer.getRole().getRoleName().name() : "";
+        return role.equals("ADMIN") || role.equals("QA_MGR");
+    }
+
+    private IdeaResponse toResponse(Idea idea, User viewer) {
+        boolean showIdentity = !Boolean.TRUE.equals(idea.getIsAnonymous()) || canViewIdentity(viewer);
+
+        Set<String> categoryNames = idea.getCategories().stream()
+                .map(Category::getCategoryName)
+                .collect(Collectors.toSet());
+
+        long upvotes = voteRepo.countUpvotes(idea.getIdeaId());
+        long downvotes = voteRepo.countDownvotes(idea.getIdeaId());
+
+        Long commentCount = commentRepo.countByIdeaIdeaId(idea.getIdeaId());
+        return new IdeaResponse(
+                idea.getIdeaId(),
+                idea.getTitle(),
+                idea.getContent(),
+                showIdentity ? idea.getUser().getFullName() : "Ẩn danh",
+                showIdentity ? idea.getUser().getUserId() : null,
+                idea.getDepartment() != null ? idea.getDepartment().getDeptName() : null,
+                idea.getAcademicYear().getYearLabel(),
+                categoryNames,
+                idea.getIsAnonymous(),
+                idea.getIsDisabled(),
+                idea.getViewCount(),
+                upvotes,
+                downvotes,
+                commentCount,
+                idea.getTermsAccepted(),
+                idea.getSubmittedAt(),
+                idea.getUpdatedAt());
+    }
 }

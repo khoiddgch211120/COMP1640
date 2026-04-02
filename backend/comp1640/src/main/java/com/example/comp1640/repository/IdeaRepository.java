@@ -42,12 +42,23 @@ public interface IdeaRepository extends JpaRepository<Idea, Integer> {
 
     List<Idea> findByAcademicYear_YearIdAndDepartment_DeptId(Integer yearId, Integer deptId);
 
-    // Ideas without any comments
-    @Query("SELECT i FROM Idea i WHERE i.academicYear.yearId = :yearId AND i NOT IN (" +
-            "SELECT DISTINCT c.idea FROM Comment c)")
-    List<Idea> findIdeasWithoutComments(@Param("yearId") Integer yearId);
+    // --- Report queries ---
 
-    // Ideas with anonymous flag = true
-    @Query("SELECT i FROM Idea i WHERE i.academicYear.yearId = :yearId AND i.isAnonymous = true")
-    List<Idea> findAnonymousIdeas(@Param("yearId") Integer yearId);
+    @Query("SELECT COUNT(DISTINCT i.user) FROM Idea i WHERE (:yearId IS NULL OR i.academicYear.yearId = :yearId) AND (:deptId IS NULL OR i.department.deptId = :deptId)")
+    long countDistinctContributors(@Param("yearId") Integer yearId, @Param("deptId") Integer deptId);
+
+    @Query("SELECT COUNT(i) FROM Idea i WHERE i.isAnonymous = true AND (:yearId IS NULL OR i.academicYear.yearId = :yearId) AND (:deptId IS NULL OR i.department.deptId = :deptId)")
+    long countAnonymous(@Param("yearId") Integer yearId, @Param("deptId") Integer deptId);
+
+    @Query("SELECT COUNT(i) FROM Idea i WHERE (:yearId IS NULL OR i.academicYear.yearId = :yearId) AND (:deptId IS NULL OR i.department.deptId = :deptId)")
+    long countFiltered(@Param("yearId") Integer yearId, @Param("deptId") Integer deptId);
+
+    @Query("SELECT i.department.deptName, COUNT(i) FROM Idea i WHERE (:yearId IS NULL OR i.academicYear.yearId = :yearId) GROUP BY i.department.deptName")
+    List<Object[]> countGroupByDept(@Param("yearId") Integer yearId);
+
+    @Query("SELECT c.categoryName, COUNT(i) FROM Idea i JOIN i.categories c WHERE (:yearId IS NULL OR i.academicYear.yearId = :yearId) GROUP BY c.categoryName")
+    List<Object[]> countGroupByCategory(@Param("yearId") Integer yearId);
+
+    @Query("SELECT i FROM Idea i WHERE NOT EXISTS (SELECT c FROM Comment c WHERE c.idea = i) AND (:yearId IS NULL OR i.academicYear.yearId = :yearId) AND (:deptId IS NULL OR i.department.deptId = :deptId)")
+    List<Idea> findNoComment(@Param("yearId") Integer yearId, @Param("deptId") Integer deptId);
 }

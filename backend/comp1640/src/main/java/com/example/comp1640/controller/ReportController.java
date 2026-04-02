@@ -1,86 +1,70 @@
 package com.example.comp1640.controller;
 
-import com.example.comp1640.dto.response.AnonymousContentResponse;
-import com.example.comp1640.dto.response.IdeaNoCommentResponse;
-import com.example.comp1640.dto.response.StatisticsReportResponse;
-import com.example.comp1640.service.ExportService;
-import com.example.comp1640.service.ReportService;
-import jakarta.servlet.http.HttpServletResponse;
+import java.util.List;
+
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.example.comp1640.dto.response.IdeaResponse;
+import com.example.comp1640.dto.response.ReportStatsResponse;
+import com.example.comp1640.service.ReportService;
 
 @RestController
 @RequestMapping("/reports")
+@PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER', 'DEPT_MANAGER', 'HR_MANAGER', 'QA_COORDINATOR')")
 public class ReportController {
 
-   private final ReportService reportService;
-   private final ExportService exportService;
+    private final ReportService reportService;
 
-   public ReportController(ReportService reportService, ExportService exportService) {
-      this.reportService = reportService;
-      this.exportService = exportService;
-   }
+    public ReportController(ReportService reportService) {
+        this.reportService = reportService;
+    }
 
-   /**
-    * Get statistics report for all departments in a specific academic year
-    * Accessible by: ADMIN, QA_MANAGER, DEPT_MANAGER, HR_MANAGER, QA_COORDINATOR
-    */
-   @GetMapping("/statistics")
-   @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER', 'DEPT_MANAGER', 'HR_MANAGER', 'QA_COORDINATOR')")
-   public ResponseEntity<List<StatisticsReportResponse>> getStatisticsReport(
-         @RequestParam Integer yearId,
-         @RequestParam(required = false) Integer deptId) {
-      return ResponseEntity.ok(reportService.getStatisticsReport(yearId, deptId));
-   }
+    @GetMapping("/stats")
+    public ResponseEntity<ReportStatsResponse> getStats(
+            @RequestParam(required = false) Integer yearId,
+            @RequestParam(required = false) Integer deptId) {
+        return ResponseEntity.ok(reportService.getStats(yearId, deptId));
+    }
 
-   /**
-    * Get list of ideas without any comments
-    * Accessible by: ADMIN, QA_MANAGER, DEPT_MANAGER, HR_MANAGER, QA_COORDINATOR
-    */
-   @GetMapping("/no-comments")
-   @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER', 'DEPT_MANAGER', 'HR_MANAGER', 'QA_COORDINATOR')")
-   public ResponseEntity<List<IdeaNoCommentResponse>> getIdeasWithoutComments(
-         @RequestParam Integer yearId) {
-      return ResponseEntity.ok(reportService.getIdeasWithoutComments(yearId));
-   }
+    @GetMapping("/no-comment")
+    public ResponseEntity<List<IdeaResponse>> getNoCommentIdeas(
+            @RequestParam(required = false) Integer yearId,
+            @RequestParam(required = false) Integer deptId) {
+        return ResponseEntity.ok(reportService.getNoCommentIdeas(yearId, deptId));
+    }
 
-   /**
-    * Get list of anonymous ideas and comments with author information
-    * Accessible by: ADMIN, QA_MANAGER, DEPT_MANAGER, HR_MANAGER, QA_COORDINATOR
-    */
-   @GetMapping("/anonymous-content")
-   @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER', 'DEPT_MANAGER', 'HR_MANAGER', 'QA_COORDINATOR')")
-   public ResponseEntity<List<AnonymousContentResponse>> getAnonymousContent(
-         @RequestParam Integer yearId) {
-      return ResponseEntity.ok(reportService.getAnonymousContent(yearId));
-   }
+    /** Xuất CSV danh sách ý tưởng (chỉ sau final_closure_date) */
+    @GetMapping("/export/csv")
+    
+    public ResponseEntity<byte[]> exportCsv(@RequestParam Integer yearId) {
+        byte[] csv = reportService.exportIdeasCsv(yearId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment()
+                                .filename("ideas_year_" + yearId + ".csv")
+                                .build().toString())
+                .body(csv);
+    }
 
-   /**
-    * Export all ideas and comments to CSV format
-    * Accessible by: ADMIN, QA_MANAGER, DEPT_MANAGER, HR_MANAGER, QA_COORDINATOR
-    * Only available after final_closure_date
-    */
-   @GetMapping("/export/csv")
-   @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER', 'DEPT_MANAGER', 'HR_MANAGER', 'QA_COORDINATOR')")
-   public void exportToCSV(
-         @RequestParam Integer yearId,
-         HttpServletResponse response) {
-      exportService.exportIdeasAndCommentsToCSV(yearId, response);
-   }
-
-   /**
-    * Export all attachments as ZIP file
-    * Accessible by: ADMIN, QA_MANAGER, DEPT_MANAGER, HR_MANAGER, QA_COORDINATOR
-    * Only available after final_closure_date
-    */
-   @GetMapping("/export/attachments-zip")
-   @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER', 'DEPT_MANAGER', 'HR_MANAGER', 'QA_COORDINATOR')")
-   public void exportAttachmentsAsZip(
-         @RequestParam Integer yearId,
-         HttpServletResponse response) {
-      exportService.exportAttachmentsAsZip(yearId, response);
-   }
+    /** Xuất ZIP tài liệu đính kèm (chỉ sau final_closure_date) */
+    @GetMapping("/export/zip")
+    public ResponseEntity<byte[]> exportZip(@RequestParam Integer yearId) {
+        byte[] zip = reportService.exportDocumentsZip(yearId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType("application/zip"))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment()
+                                .filename("documents_year_" + yearId + ".zip")
+                                .build().toString())
+                .body(zip);
+    }
 }

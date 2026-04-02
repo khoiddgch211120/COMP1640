@@ -30,6 +30,7 @@ import com.example.comp1640.repository.UserRepository;
 import com.example.comp1640.repository.VoteRepository;
 import com.example.comp1640.enums.RoleName;
 import com.example.comp1640.service.IdeaService;
+import com.example.comp1640.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import com.example.comp1640.repository.CommentRepository;
 
@@ -42,6 +43,7 @@ public class IdeaServiceImpl implements IdeaService {
     private final AcademicYearRepository academicYearRepo;
     private final CategoryRepository categoryRepo;
     private final VoteRepository voteRepo;
+    private final NotificationService notificationService;
     private final CommentRepository commentRepo;
 
     @Override
@@ -92,7 +94,9 @@ public class IdeaServiceImpl implements IdeaService {
             categoryRepo.saveAll(categories);
         }
 
-        return toResponse(ideaRepo.save(idea), currentUser);
+        Idea saved = ideaRepo.save(idea);
+        notificationService.notifyNewIdea(saved);
+        return toResponse(saved, currentUser);
     }
 
     @Override

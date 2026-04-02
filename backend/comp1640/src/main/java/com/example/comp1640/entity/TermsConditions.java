@@ -1,5 +1,6 @@
 package com.example.comp1640.entity;
 
+import com.example.comp1640.entity.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,10 +22,9 @@ public class TermsConditions {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "tc_id")
-    private Integer tcId;
+    @Column(name = "terms_id")
+    private Integer termsId;
 
-    // Auto-increment trong Service, không nhận từ client
     @Column(name = "version", nullable = false)
     private Integer version;
 
@@ -36,4 +36,8 @@ public class TermsConditions {
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "created_by")
+    private User createdBy;
 }

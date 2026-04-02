@@ -28,6 +28,13 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DocumentServiceImpl implements DocumentService {
 
+    @Override
+    public List<DocumentResponse> getAll() {
+        return documentRepository.findAll().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
     private final Cloudinary cloudinary;
     private final DocumentRepository documentRepository;
     private final IdeaRepository ideaRepository;
@@ -38,12 +45,14 @@ public class DocumentServiceImpl implements DocumentService {
         Idea idea = ideaRepository.findById(ideaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ý tưởng với id: " + ideaId));
 
+        // Chỉ chủ idea mới được upload file
         User currentUser = getCurrentUser();
         if (!idea.getUser().getUserId().equals(currentUser.getUserId())) {
             throw new AccessDeniedException("Bạn chỉ được upload file cho ý tưởng của mình");
         }
 
         try {
+            // Upload lên Cloudinary, lưu vào folder theo ideaId
             Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
                     ObjectUtils.asMap(
                             "folder", "comp1640/ideas/" + ideaId,
@@ -67,23 +76,7 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public List<DocumentResponse> getByIdea(Integer ideaId) {
         return documentRepository.findByIdeaIdeaId(ideaId)
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Lấy tất cả documents — dùng cho trang AttachmentManagement của Admin.
-     * Trả về đầy đủ các field mà frontend cần:
-     * doc_id, idea_id, idea_title, file_name, file_path, file_type,
-     * file_size_kb, uploader_name, dept_id, uploaded_at
-     */
-    @Override
-    public List<DocumentResponse> getAll() {
-        return documentRepository.findAll()
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+                .stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     @Override
@@ -95,11 +88,13 @@ public class DocumentServiceImpl implements DocumentService {
         boolean isAdmin = currentUser.getRole() != null &&
                 "ADMIN".equals(currentUser.getRole().getRoleName());
 
+        // ADMIN hoặc chủ idea mới được xóa file
         if (!document.getIdea().getUser().getUserId().equals(currentUser.getUserId()) && !isAdmin) {
             throw new AccessDeniedException("Bạn chỉ được xóa file của ý tưởng mình");
         }
 
         try {
+            // Xóa file khỏi Cloudinary theo public_id
             cloudinary.uploader().destroy(document.getPublicId(),
                     ObjectUtils.asMap("resource_type", "auto"));
         } catch (IOException e) {
@@ -109,51 +104,21 @@ public class DocumentServiceImpl implements DocumentService {
         documentRepository.delete(document);
     }
 
-    // ── helpers ──────────────────────────────────────────────────────────────
-
     private User getCurrentUser() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user hiện tại"));
     }
 
-    /**
-     * Map Document entity → DocumentResponse.
-     *
-     * Các field mới so với version cũ:
-     * - docId : dùng document_id nhưng đặt tên docId cho khớp frontend (doc_id)
-     * - ideaTitle : lấy từ idea.getTitle()
-     * - fileSizeKb : Document entity chưa có file_size_kb nên tính xấp xỉ từ
-     * fileUrl,
-     * hoặc để null — frontend đã xử lý null gracefully.
-     * Khi bạn thêm cột file_size_kb vào entity thì sửa dòng này.
-     * - uploaderName : lấy từ idea.getUser().getFullName()
-     * - deptId : lấy từ idea.getDepartment()
-     * - filePath : dùng fileUrl (Cloudinary URL) thay cho file_path local
-     */
     private DocumentResponse toResponse(Document doc) {
         Idea idea = doc.getIdea();
-
-        Integer deptId = (idea.getDepartment() != null)
-                ? idea.getDepartment().getDeptId()
-                : null;
-
-        String uploaderName = (idea.getUser() != null)
-                ? idea.getUser().getFullName()
-                : null;
-
-        Long fileSizeKb = doc.getFileSizeKb();
-
         return new DocumentResponse(
-                doc.getDocumentId(), // docId — khớp với doc_id ở frontend
+                doc.getDocumentId(),
                 idea.getIdeaId(),
-                idea.getTitle(), // ideaTitle
                 doc.getFileName(),
-                doc.getFileUrl(), // filePath — dùng Cloudinary URL
+                doc.getFileUrl(),
                 doc.getFileType(),
-                fileSizeKb,
-                uploaderName,
-                deptId,
+                doc.getFileSizeKb().intValue(),
                 doc.getUploadedAt());
     }
 }
