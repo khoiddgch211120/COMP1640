@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 import com.example.comp1640.dto.request.CategoryRequest;
 import com.example.comp1640.dto.response.CategoryResponse;
@@ -31,7 +32,7 @@ public class CategoryController {
     // ADMIN và QA_MGR được tạo category
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'QA_MGR')")
-    public ResponseEntity<CategoryResponse> create(@RequestBody CategoryRequest request) {
+    public ResponseEntity<CategoryResponse> create(@Valid @RequestBody CategoryRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.create(request));
     }
 
@@ -51,7 +52,7 @@ public class CategoryController {
     @PreAuthorize("hasAnyRole('ADMIN', 'QA_MGR')")
     public ResponseEntity<CategoryResponse> update(
             @PathVariable Integer id,
-            @RequestBody CategoryRequest request) {
+            @Valid @RequestBody CategoryRequest request) {
         return ResponseEntity.ok(categoryService.update(id, request));
     }
 

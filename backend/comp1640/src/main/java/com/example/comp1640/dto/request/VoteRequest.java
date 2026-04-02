@@ -2,11 +2,13 @@ package com.example.comp1640.dto.request;
 
 import com.example.comp1640.entity.Vote.VoteType;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class VoteRequest {
     private VoteType voteType; // UPVOTE hoặc DOWNVOTE
 }

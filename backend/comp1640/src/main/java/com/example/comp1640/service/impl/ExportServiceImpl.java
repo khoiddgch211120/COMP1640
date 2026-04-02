@@ -10,6 +10,9 @@ import com.example.comp1640.service.ExportService;
 import com.opencsv.CSVWriter;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
 import java.net.URI;
@@ -21,7 +24,10 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 @Service
+@Transactional(readOnly = true)
 public class ExportServiceImpl implements ExportService {
+
+   private static final Logger logger = LoggerFactory.getLogger(ExportServiceImpl.class);
 
    private final IdeaRepository ideaRepository;
    private final CommentRepository commentRepository;
@@ -64,7 +70,7 @@ public class ExportServiceImpl implements ExportService {
                   "Ý tưởng",
                   String.valueOf(idea.getIdeaId()),
                   idea.getTitle(),
-                  idea.getIsAnonymous() ? "Ẩn danh" : idea.getUser().getFullName(),
+                  idea.getIsAnonymous() ? "Ẩn danh" : (idea.getUser() != null ? idea.getUser().getFullName() : "Unknown"),
                   idea.getIsAnonymous() ? "Có" : "Không",
                   idea.getDepartment() != null ? idea.getDepartment().getDeptName() : "N/A",
                   idea.getSubmittedAt().toString()
@@ -78,7 +84,7 @@ public class ExportServiceImpl implements ExportService {
                      "  └─ Bình luận",
                      String.valueOf(comment.getCommentId()),
                      comment.getContent(),
-                     comment.getIsAnonymous() ? "Ẩn danh" : comment.getUser().getFullName(),
+                     comment.getIsAnonymous() ? "Ẩn danh" : (comment.getUser() != null ? comment.getUser().getFullName() : "Unknown"),
                      comment.getIsAnonymous() ? "Có" : "Không",
                      idea.getDepartment() != null ? idea.getDepartment().getDeptName() : "N/A",
                      comment.getCreatedAt().toString()
@@ -124,7 +130,7 @@ public class ExportServiceImpl implements ExportService {
 
                   zos.closeEntry();
                } catch (Exception e) {
-                  System.err.println("Error adding document to ZIP: " + doc.getFileName() + " - " + e.getMessage());
+                  logger.warn("Error adding document to ZIP: {} - {}", doc.getFileName(), e.getMessage(), e);
                   // Continue processing other documents
                }
             }

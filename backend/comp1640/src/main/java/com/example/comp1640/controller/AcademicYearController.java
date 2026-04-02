@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 import com.example.comp1640.dto.request.AcademicYearRequest;
 import com.example.comp1640.dto.response.AcademicYearResponse;
@@ -31,7 +32,7 @@ public class AcademicYearController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<AcademicYearResponse> create(@RequestBody AcademicYearRequest request) {
+    public ResponseEntity<AcademicYearResponse> create(@Valid @RequestBody AcademicYearRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(academicYearService.create(request));
     }
 
@@ -55,7 +56,7 @@ public class AcademicYearController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AcademicYearResponse> update(
             @PathVariable Integer id,
-            @RequestBody AcademicYearRequest request) {
+            @Valid @RequestBody AcademicYearRequest request) {
         return ResponseEntity.ok(academicYearService.update(id, request));
     }
 
@@ -64,7 +65,7 @@ public class AcademicYearController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AcademicYearResponse> patch(
             @PathVariable Integer id,
-            @RequestBody AcademicYearRequest request) {
+            @Valid @RequestBody AcademicYearRequest request) {
         return ResponseEntity.ok(academicYearService.update(id, request));
     }
 

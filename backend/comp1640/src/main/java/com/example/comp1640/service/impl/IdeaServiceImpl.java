@@ -67,7 +67,7 @@ public class IdeaServiceImpl implements IdeaService {
 
         Idea idea = new Idea();
         idea.setUser(currentUser);
-        idea.setDepartment(currentUser.getDepartment());
+        idea.setDepartment(currentUser.getDepartment()); // May be null if user has no department
         idea.setAcademicYear(year);
         idea.setTitle(request.getTitle());
         idea.setContent(request.getContent());

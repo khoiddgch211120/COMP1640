@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 import com.example.comp1640.dto.request.IdeaRequest;
 import com.example.comp1640.dto.response.IdeaResponse;
@@ -33,7 +34,7 @@ public class IdeaController {
 
     // Tất cả user đã đăng nhập đều submit được
     @PostMapping
-    public ResponseEntity<IdeaResponse> submit(@RequestBody IdeaRequest request) {
+    public ResponseEntity<IdeaResponse> submit(@Valid @RequestBody IdeaRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(ideaService.submit(request));
     }
 
@@ -76,7 +77,7 @@ public class IdeaController {
     @PutMapping("/{id}")
     public ResponseEntity<IdeaResponse> update(
             @PathVariable Integer id,
-            @RequestBody IdeaRequest request) {
+            @Valid @RequestBody IdeaRequest request) {
         return ResponseEntity.ok(ideaService.update(id, request));
     }
 

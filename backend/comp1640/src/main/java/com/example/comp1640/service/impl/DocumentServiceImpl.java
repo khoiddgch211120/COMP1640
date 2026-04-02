@@ -55,6 +55,7 @@ public class DocumentServiceImpl implements DocumentService {
             document.setFileUrl((String) uploadResult.get("secure_url"));
             document.setPublicId((String) uploadResult.get("public_id"));
             document.setFileType(file.getContentType());
+            document.setFileSizeKb((file.getSize() + 1023) / 1024);
             document.setUploadedAt(LocalDateTime.now());
 
             return toResponse(documentRepository.save(document));
@@ -120,14 +121,15 @@ public class DocumentServiceImpl implements DocumentService {
      * Map Document entity → DocumentResponse.
      *
      * Các field mới so với version cũ:
-     *  - docId        : dùng document_id nhưng đặt tên docId cho khớp frontend (doc_id)
-     *  - ideaTitle    : lấy từ idea.getTitle()
-     *  - fileSizeKb   : Document entity chưa có file_size_kb nên tính xấp xỉ từ fileUrl,
-     *                   hoặc để null — frontend đã xử lý null gracefully.
-     *                   Khi bạn thêm cột file_size_kb vào entity thì sửa dòng này.
-     *  - uploaderName : lấy từ idea.getUser().getFullName()
-     *  - deptId       : lấy từ idea.getDepartment()
-     *  - filePath     : dùng fileUrl (Cloudinary URL) thay cho file_path local
+     * - docId : dùng document_id nhưng đặt tên docId cho khớp frontend (doc_id)
+     * - ideaTitle : lấy từ idea.getTitle()
+     * - fileSizeKb : Document entity chưa có file_size_kb nên tính xấp xỉ từ
+     * fileUrl,
+     * hoặc để null — frontend đã xử lý null gracefully.
+     * Khi bạn thêm cột file_size_kb vào entity thì sửa dòng này.
+     * - uploaderName : lấy từ idea.getUser().getFullName()
+     * - deptId : lấy từ idea.getDepartment()
+     * - filePath : dùng fileUrl (Cloudinary URL) thay cho file_path local
      */
     private DocumentResponse toResponse(Document doc) {
         Idea idea = doc.getIdea();
@@ -140,22 +142,18 @@ public class DocumentServiceImpl implements DocumentService {
                 ? idea.getUser().getFullName()
                 : null;
 
-        // file_size_kb: Entity chưa có field này.
-        // Tạm để null — frontend hiển thị "0.0 KB" nếu null.
-        // TODO: thêm @Column file_size_kb vào Document entity và set khi upload
-        Long fileSizeKb = null;
+        Long fileSizeKb = doc.getFileSizeKb();
 
         return new DocumentResponse(
-                doc.getDocumentId(),   // docId — khớp với doc_id ở frontend
+                doc.getDocumentId(), // docId — khớp với doc_id ở frontend
                 idea.getIdeaId(),
-                idea.getTitle(),       // ideaTitle
+                idea.getTitle(), // ideaTitle
                 doc.getFileName(),
-                doc.getFileUrl(),      // filePath — dùng Cloudinary URL
+                doc.getFileUrl(), // filePath — dùng Cloudinary URL
                 doc.getFileType(),
                 fileSizeKb,
                 uploaderName,
                 deptId,
-                doc.getUploadedAt()
-        );
+                doc.getUploadedAt());
     }
 }

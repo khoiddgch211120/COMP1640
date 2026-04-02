@@ -35,6 +35,9 @@ public class Document {
     @Column(name = "file_type")
     private String fileType;
 
+    @Column(name = "file_size_kb")
+    private Long fileSizeKb;
+
     @Column(name = "uploaded_at")
     private LocalDateTime uploadedAt;
 }

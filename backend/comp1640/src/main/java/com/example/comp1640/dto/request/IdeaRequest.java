@@ -2,13 +2,13 @@ package com.example.comp1640.dto.request;
 
 import java.util.Set;
 
-import lombok.Getter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class IdeaRequest {
 
     private Integer yearId;

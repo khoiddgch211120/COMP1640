@@ -10,12 +10,14 @@ import com.example.comp1640.repository.CommentRepository;
 import com.example.comp1640.repository.DepartmentRepository;
 import com.example.comp1640.repository.IdeaRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.comp1640.service.ReportService;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class ReportServiceImpl implements ReportService {
 
    private final IdeaRepository ideaRepository;
@@ -42,7 +44,7 @@ public class ReportServiceImpl implements ReportService {
 
       // Group ideas by department
       Map<Integer, List<Idea>> ideaByDept = ideas.stream()
-            .collect(Collectors.groupingBy(i -> i.getDepartment().getDeptId()));
+            .collect(Collectors.groupingBy(i -> i.getDepartment() != null ? i.getDepartment().getDeptId() : -1));
 
       // Get all departments
       List<Department> departments = departmentRepository.findAll();
@@ -56,7 +58,7 @@ public class ReportServiceImpl implements ReportService {
 
                // Count unique contributors
                long contributorCount = deptIdeas.stream()
-                     .map(idea -> idea.getUser().getUserId())
+                     .map(idea -> idea.getUser() != null ? idea.getUser().getUserId() : null)
                      .distinct()
                      .count();
 
@@ -91,7 +93,7 @@ public class ReportServiceImpl implements ReportService {
                .contentType("IDEA")
                .contentId(idea.getIdeaId())
                .contentPreview(idea.getTitle().substring(0, Math.min(100, idea.getTitle().length())))
-               .authorRealName(idea.getUser().getFullName())
+               .authorRealName(idea.getUser() != null ? idea.getUser().getFullName() : "Unknown")
                .isAnonymous(true)
                .createdAt(idea.getSubmittedAt())
                .build());
@@ -104,7 +106,7 @@ public class ReportServiceImpl implements ReportService {
                .contentType("COMMENT")
                .contentId(comment.getCommentId())
                .contentPreview(comment.getContent().substring(0, Math.min(100, comment.getContent().length())))
-               .authorRealName(comment.getUser().getFullName())
+               .authorRealName(comment.getUser() != null ? comment.getUser().getFullName() : "Unknown")
                .isAnonymous(true)
                .createdAt(comment.getCreatedAt())
                .build());

@@ -1,10 +1,12 @@
 package com.example.comp1640.dto.request;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter
-@Setter
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class CommentRequest {
     private String content;
     private Boolean isAnonymous = false;

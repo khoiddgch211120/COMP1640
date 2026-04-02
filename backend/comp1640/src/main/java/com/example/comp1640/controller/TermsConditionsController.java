@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -41,7 +42,7 @@ public class TermsConditionsController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<TermsConditionsResponse> create(
-            @RequestBody TermsConditionsRequest request) {
+            @Valid @RequestBody TermsConditionsRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(termsConditionsService.create(request));
     }

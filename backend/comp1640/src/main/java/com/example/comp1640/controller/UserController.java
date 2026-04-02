@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 import com.example.comp1640.dto.request.UserRequest;
 import com.example.comp1640.dto.response.UserResponse;
@@ -32,7 +33,7 @@ public class UserController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
-    public ResponseEntity<UserResponse> create(@RequestBody UserRequest request) {
+    public ResponseEntity<UserResponse> create(@Valid @RequestBody UserRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.create(request));
     }
 
@@ -54,7 +55,7 @@ public class UserController {
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
     public ResponseEntity<UserResponse> update(
             @PathVariable Integer id,
-            @RequestBody UserRequest request) {
+            @Valid @RequestBody UserRequest request) {
         return ResponseEntity.ok(userService.update(id, request));
     }
 
@@ -63,7 +64,7 @@ public class UserController {
     @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
     public ResponseEntity<UserResponse> patch(
             @PathVariable Integer id,
-            @RequestBody UserRequest request) {
+            @Valid @RequestBody UserRequest request) {
         return ResponseEntity.ok(userService.update(id, request));
     }
 
