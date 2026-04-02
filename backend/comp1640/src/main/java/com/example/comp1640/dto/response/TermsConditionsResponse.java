@@ -15,7 +15,7 @@ import lombok.Setter;
 public class TermsConditionsResponse {
 
     private Integer termsId;
-    private String version;
+    private Integer version;
     private String content;
     private LocalDate effectiveDate;
     private String createdByName;

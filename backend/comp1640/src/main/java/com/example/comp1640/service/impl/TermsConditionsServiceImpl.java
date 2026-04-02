@@ -10,9 +10,10 @@ import com.example.comp1640.dto.request.TermsConditionsRequest;
 import com.example.comp1640.dto.response.TermsConditionsResponse;
 import com.example.comp1640.exception.BadRequestException;
 import com.example.comp1640.exception.ResourceNotFoundException;
-import com.example.comp1640.model.TermsConditions;
-import com.example.comp1640.model.User;
-import com.example.comp1640.model.UserTermsAcceptance;
+import com.example.comp1640.entity.TermsConditions;
+import com.example.comp1640.entity.User;
+import com.example.comp1640.entity.UserTermsAcceptance;
+import com.example.comp1640.entity.UserTermsAcceptanceId;
 import com.example.comp1640.repository.TermsConditionsRepository;
 import com.example.comp1640.repository.UserRepository;
 import com.example.comp1640.repository.UserTermsAcceptanceRepository;
@@ -26,8 +27,8 @@ public class TermsConditionsServiceImpl implements TermsConditionsService {
     private final UserTermsAcceptanceRepository acceptanceRepo;
 
     public TermsConditionsServiceImpl(TermsConditionsRepository termsRepo,
-                                      UserRepository userRepo,
-                                      UserTermsAcceptanceRepository acceptanceRepo) {
+            UserRepository userRepo,
+            UserTermsAcceptanceRepository acceptanceRepo) {
         this.termsRepo = termsRepo;
         this.userRepo = userRepo;
         this.acceptanceRepo = acceptanceRepo;
@@ -54,7 +55,7 @@ public class TermsConditionsServiceImpl implements TermsConditionsService {
 
         TermsConditions terms = new TermsConditions();
         terms.setCreatedBy(currentUser);
-        terms.setVersion(request.getVersion());
+        terms.setVersion(Integer.valueOf(request.getVersion()));
         terms.setContent(request.getContent());
         terms.setEffectiveDate(request.getEffectiveDate());
         terms.setCreatedAt(LocalDateTime.now());
@@ -76,7 +77,9 @@ public class TermsConditionsServiceImpl implements TermsConditionsService {
             return;
         }
 
-        UserTermsAcceptance acceptance = new UserTermsAcceptance(currentUser, latest, LocalDateTime.now());
+        UserTermsAcceptanceId id = new UserTermsAcceptanceId(currentUser.getUserId(),
+                latest.getTermsId());
+        UserTermsAcceptance acceptance = new UserTermsAcceptance(id, currentUser, latest, LocalDateTime.now());
         acceptanceRepo.save(acceptance);
     }
 
@@ -98,7 +101,6 @@ public class TermsConditionsServiceImpl implements TermsConditionsService {
                 t.getContent(),
                 t.getEffectiveDate(),
                 t.getCreatedBy() != null ? t.getCreatedBy().getFullName() : null,
-                t.getCreatedAt()
-        );
+                t.getCreatedAt());
     }
 }

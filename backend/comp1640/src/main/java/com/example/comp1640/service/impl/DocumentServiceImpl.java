@@ -5,9 +5,9 @@ import com.cloudinary.utils.ObjectUtils;
 import com.example.comp1640.dto.response.DocumentResponse;
 import com.example.comp1640.exception.BadRequestException;
 import com.example.comp1640.exception.ResourceNotFoundException;
-import com.example.comp1640.model.Document;
-import com.example.comp1640.model.Idea;
-import com.example.comp1640.model.User;
+import com.example.comp1640.entity.Document;
+import com.example.comp1640.entity.Idea;
+import com.example.comp1640.entity.User;
 import com.example.comp1640.repository.DocumentRepository;
 import com.example.comp1640.repository.IdeaRepository;
 import com.example.comp1640.repository.UserRepository;
@@ -27,6 +27,13 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class DocumentServiceImpl implements DocumentService {
+
+    @Override
+    public List<DocumentResponse> getAll() {
+        return documentRepository.findAll().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
 
     private final Cloudinary cloudinary;
     private final DocumentRepository documentRepository;
@@ -49,8 +56,7 @@ public class DocumentServiceImpl implements DocumentService {
             Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
                     ObjectUtils.asMap(
                             "folder", "comp1640/ideas/" + ideaId,
-                            "resource_type", "auto"
-                    ));
+                            "resource_type", "auto"));
 
             Document document = new Document();
             document.setIdea(idea);
@@ -106,27 +112,13 @@ public class DocumentServiceImpl implements DocumentService {
 
     private DocumentResponse toResponse(Document doc) {
         Idea idea = doc.getIdea();
-
-        Integer deptId = (idea.getDepartment() != null)
-                ? idea.getDepartment().getDeptId()
-                : null;
-
-        String uploaderName = (idea.getUser() != null)
-                ? idea.getUser().getFullName()
-                : null;
-
-        Long fileSizeKb = doc.getFileSizeKb();
-
         return new DocumentResponse(
                 doc.getDocumentId(),
                 idea.getIdeaId(),
-                idea.getTitle(),
                 doc.getFileName(),
                 doc.getFileUrl(),
                 doc.getFileType(),
-                fileSizeKb,
-                uploaderName,
-                deptId,
+                doc.getFileSizeKb().intValue(),
                 doc.getUploadedAt());
     }
 }

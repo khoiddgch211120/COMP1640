@@ -67,22 +67,4 @@ public class ReportController {
                                 .build().toString())
                 .body(zip);
     }
-    @GetMapping("/statistics")
-    public ResponseEntity<List<StatisticsReportResponse>> getStatisticsReport(
-            @RequestParam Integer yearId,
-            @RequestParam(required = false) Integer deptId) {
-        return ResponseEntity.ok(reportService.getStatisticsReport(yearId, deptId));
-    }
-
-    @GetMapping("/no-comments")
-    public ResponseEntity<List<IdeaNoCommentResponse>> getIdeasWithoutComments(
-            @RequestParam Integer yearId) {
-        return ResponseEntity.ok(reportService.getIdeasWithoutComments(yearId));
-    }
-
-    @GetMapping("/anonymous-content")
-    public ResponseEntity<List<AnonymousContentResponse>> getAnonymousContent(
-            @RequestParam Integer yearId) {
-        return ResponseEntity.ok(reportService.getAnonymousContent(yearId));
-    }
 }

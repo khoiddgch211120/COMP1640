@@ -22,11 +22,11 @@ import com.example.comp1640.dto.response.IdeaResponse;
 import com.example.comp1640.dto.response.ReportStatsResponse;
 import com.example.comp1640.exception.BadRequestException;
 import com.example.comp1640.exception.ResourceNotFoundException;
-import com.example.comp1640.model.AcademicYear;
-import com.example.comp1640.model.Category;
-import com.example.comp1640.model.Document;
-import com.example.comp1640.model.Idea;
-import com.example.comp1640.model.User;
+import com.example.comp1640.entity.AcademicYear;
+import com.example.comp1640.entity.Category;
+import com.example.comp1640.entity.Document;
+import com.example.comp1640.entity.Idea;
+import com.example.comp1640.entity.User;
 import com.example.comp1640.repository.AcademicYearRepository;
 import com.example.comp1640.repository.CommentRepository;
 import com.example.comp1640.repository.DocumentRepository;
@@ -135,7 +135,7 @@ public class ReportServiceImpl implements ReportService {
                         Boolean.TRUE.equals(idea.getIsAnonymous()) ? "Ẩn danh" : idea.getUser().getFullName(),
                         idea.getDepartment() != null ? idea.getDepartment().getDeptName() : "",
                         categories,
-                        Boolean.TRUE.equals(idea.getIsAnonymous()) ? "Có" : "Không",
+                        (idea.getIsAnonymous() ? "1" : "0"),
                         String.valueOf(idea.getViewCount()),
                         String.valueOf(up),
                         String.valueOf(down),
@@ -197,7 +197,7 @@ public class ReportServiceImpl implements ReportService {
     private boolean canViewIdentity(User viewer) {
         if (viewer == null)
             return false;
-        String role = viewer.getRole() != null ? viewer.getRole().getRoleName() : "";
+        String role = viewer.getRole() != null ? viewer.getRole().getRoleName().name() : "";
         return role.equals("ADMIN") || role.equals("QA_MGR");
     }
 
@@ -211,6 +211,7 @@ public class ReportServiceImpl implements ReportService {
         long upvotes = voteRepo.countUpvotes(idea.getIdeaId());
         long downvotes = voteRepo.countDownvotes(idea.getIdeaId());
 
+        Long commentCount = commentRepo.countByIdeaIdeaId(idea.getIdeaId());
         return new IdeaResponse(
                 idea.getIdeaId(),
                 idea.getTitle(),
@@ -225,6 +226,7 @@ public class ReportServiceImpl implements ReportService {
                 idea.getViewCount(),
                 upvotes,
                 downvotes,
+                commentCount,
                 idea.getTermsAccepted(),
                 idea.getSubmittedAt(),
                 idea.getUpdatedAt());

@@ -1,4 +1,4 @@
-package com.example.comp1640.model;
+package com.example.comp1640.entity;
 
 import java.io.Serializable;
 import java.util.Objects;

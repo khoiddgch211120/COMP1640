@@ -53,6 +53,7 @@ public class NotificationLogSeeder implements CommandLineRunner {
                      .idea(idea)
                      .notifType(i % 2 == 0 ? NotifType.NEW_IDEA : NotifType.NEW_COMMENT)
                      .status(NotifStatus.SENT)
+                     .sentAt(java.time.LocalDateTime.now())
                      .build());
             }
          }
@@ -69,6 +70,7 @@ public class NotificationLogSeeder implements CommandLineRunner {
                   .idea(idea)
                   .notifType(NotifType.NEW_COMMENT)
                   .status(NotifStatus.SENT)
+                  .sentAt(java.time.LocalDateTime.now())
                   .build());
          }
          if (i % 4 == 0) {
@@ -77,6 +79,7 @@ public class NotificationLogSeeder implements CommandLineRunner {
                   .idea(idea)
                   .notifType(NotifType.NEW_IDEA)
                   .status(NotifStatus.SENT)
+                  .sentAt(java.time.LocalDateTime.now())
                   .build());
          }
          if (i % 5 == 0) {
@@ -85,6 +88,7 @@ public class NotificationLogSeeder implements CommandLineRunner {
                   .idea(idea)
                   .notifType(NotifType.NEW_COMMENT)
                   .status(NotifStatus.SENT)
+                  .sentAt(java.time.LocalDateTime.now())
                   .build());
          }
       }

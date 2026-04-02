@@ -46,7 +46,8 @@ public class UserTermsAcceptanceSeeder implements CommandLineRunner {
       for (User user : users) {
          acceptances.add(UserTermsAcceptance.builder()
                .user(user)
-               .termsCondition(latestTerms)
+               .termsConditions(latestTerms)
+               .acceptedAt(java.time.LocalDateTime.now())
                .build());
       }
 

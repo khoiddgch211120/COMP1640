@@ -11,12 +11,12 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import com.example.comp1640.model.Comment;
-import com.example.comp1640.model.Idea;
-import com.example.comp1640.model.NotificationLog;
-import com.example.comp1640.model.NotificationLog.NotifStatus;
-import com.example.comp1640.model.NotificationLog.NotifType;
-import com.example.comp1640.model.User;
+import com.example.comp1640.entity.Comment;
+import com.example.comp1640.entity.Idea;
+import com.example.comp1640.entity.NotificationLog;
+import com.example.comp1640.enums.NotifStatus;
+import com.example.comp1640.enums.NotifType;
+import com.example.comp1640.entity.User;
 import com.example.comp1640.repository.NotificationLogRepository;
 import com.example.comp1640.repository.UserRepository;
 import com.example.comp1640.service.NotificationService;
@@ -48,7 +48,8 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Async
     public void notifyNewIdea(Idea idea) {
-        if (idea.getDepartment() == null) return;
+        if (idea.getDepartment() == null)
+            return;
 
         Integer deptId = idea.getDepartment().getDeptId();
         List<User> qaCoords = userRepo.findByDepartment_DeptId(deptId)
@@ -60,14 +61,13 @@ public class NotificationServiceImpl implements NotificationService {
             sendAndLog(
                     recipient,
                     idea,
-                    NotifType.new_idea,
+                    NotifType.NEW_IDEA,
                     "Ý tưởng mới trong phòng ban của bạn",
                     "Xin chào " + recipient.getFullName() + ",\n\n"
                             + "Có một ý tưởng mới được gửi trong phòng ban của bạn:\n"
                             + "Tiêu đề: " + idea.getTitle() + "\n"
                             + "Phòng ban: " + idea.getDepartment().getDeptName() + "\n\n"
-                            + "Hệ thống COMP1640"
-            );
+                            + "Hệ thống COMP1640");
         }
     }
 
@@ -80,7 +80,8 @@ public class NotificationServiceImpl implements NotificationService {
     public void notifyNewComment(Comment comment) {
         User ideaOwner = comment.getIdea().getUser();
         // Không gửi email nếu chính chủ idea là người comment
-        if (ideaOwner.getUserId().equals(comment.getUser().getUserId())) return;
+        if (ideaOwner.getUserId().equals(comment.getUser().getUserId()))
+            return;
 
         String commenterName = Boolean.TRUE.equals(comment.getIsAnonymous())
                 ? "Ẩn danh"
@@ -89,13 +90,12 @@ public class NotificationServiceImpl implements NotificationService {
         sendAndLog(
                 ideaOwner,
                 comment.getIdea(),
-                NotifType.new_comment,
+                NotifType.NEW_COMMENT,
                 "Ý tưởng của bạn có bình luận mới",
                 "Xin chào " + ideaOwner.getFullName() + ",\n\n"
                         + "Ý tưởng \"" + comment.getIdea().getTitle() + "\" của bạn vừa nhận được bình luận mới từ "
                         + commenterName + ".\n\n"
-                        + "Hệ thống COMP1640"
-        );
+                        + "Hệ thống COMP1640");
     }
 
     // --- helper ---
@@ -108,7 +108,7 @@ public class NotificationServiceImpl implements NotificationService {
         logEntry.setSentAt(LocalDateTime.now());
 
         if (mailSender == null) {
-            logEntry.setStatus(NotifStatus.failed);
+            logEntry.setStatus(NotifStatus.FAILED);
             log.info("[Mail disabled] Would notify {} about {}", recipient.getEmail(), type);
             logRepo.save(logEntry);
             return;
@@ -122,10 +122,10 @@ public class NotificationServiceImpl implements NotificationService {
             message.setText(body);
             mailSender.send(message);
 
-            logEntry.setStatus(NotifStatus.sent);
+            logEntry.setStatus(NotifStatus.SENT);
             log.info("Email sent to {} for {}", recipient.getEmail(), type);
         } catch (MailException e) {
-            logEntry.setStatus(NotifStatus.failed);
+            logEntry.setStatus(NotifStatus.FAILED);
             log.warn("Failed to send email to {}: {}", recipient.getEmail(), e.getMessage());
         }
 

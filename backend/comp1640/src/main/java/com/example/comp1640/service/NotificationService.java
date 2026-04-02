@@ -1,7 +1,7 @@
 package com.example.comp1640.service;
 
-import com.example.comp1640.model.Comment;
-import com.example.comp1640.model.Idea;
+import com.example.comp1640.entity.Comment;
+import com.example.comp1640.entity.Idea;
 
 public interface NotificationService {
 

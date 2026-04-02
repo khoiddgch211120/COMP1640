@@ -1,38 +1,31 @@
-package com.example.comp1640.model;
+package com.example.comp1640.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
-import java.io.Serializable;
-import java.time.LocalDateTime;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.MapsId;
-import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "user_terms_acceptance")
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class UserTermsAcceptance {
 
-    @Id
+    @EmbeddedId
+    private UserTermsAcceptanceId id;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("userId")
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("tcId")
     @JoinColumn(name = "tc_id")
@@ -40,11 +33,4 @@ public class UserTermsAcceptance {
 
     @Column(name = "accepted_at")
     private LocalDateTime acceptedAt;
-
-    public UserTermsAcceptance(User user, TermsConditions termsConditions, LocalDateTime acceptedAt) {
-        this.user = user;
-        this.termsConditions = termsConditions;
-        this.acceptedAt = acceptedAt;
-        this.id = new UserTermsAcceptanceId(user.getUserId(), termsConditions.getTermsId());
-    }
 }

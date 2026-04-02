@@ -42,11 +42,10 @@ public class TermsConditionsController {
     // Chỉ ADMIN mới được tạo/cập nhật điều khoản
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-
     public ResponseEntity<TermsConditionsResponse> create(
             @Valid @RequestBody TermsConditionsRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(termsConditionsService.create(request));
+                .body(termsService.create(request));
     }
 
     // User đã đăng nhập xác nhận đồng ý điều khoản
