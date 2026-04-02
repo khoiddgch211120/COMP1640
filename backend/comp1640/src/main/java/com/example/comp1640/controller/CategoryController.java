@@ -28,9 +28,9 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-    // ADMIN và QA_MGR được tạo category
+    // ADMIN và QA_MANAGER được tạo category
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'QA_MGR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER')")
     public ResponseEntity<CategoryResponse> create(@RequestBody CategoryRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(categoryService.create(request));
     }
@@ -46,18 +46,18 @@ public class CategoryController {
         return ResponseEntity.ok(categoryService.getById(id));
     }
 
-    // ADMIN và QA_MGR được sửa
+    // ADMIN và QA_MANAGER được sửa
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'QA_MGR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER')")
     public ResponseEntity<CategoryResponse> update(
             @PathVariable Integer id,
             @RequestBody CategoryRequest request) {
         return ResponseEntity.ok(categoryService.update(id, request));
     }
 
-    // ADMIN và QA_MGR được xóa (chỉ khi chưa dùng)
+    // ADMIN và QA_MANAGER được xóa (chỉ khi chưa dùng)
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'QA_MGR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER')")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         categoryService.delete(id);
         return ResponseEntity.noContent().build();
