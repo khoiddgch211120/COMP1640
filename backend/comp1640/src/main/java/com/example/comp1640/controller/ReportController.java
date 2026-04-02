@@ -26,10 +26,10 @@ public class ReportController {
 
    /**
     * Get statistics report for all departments in a specific academic year
-    * Accessible by: MANAGER, ADMIN
+    * Accessible by: ADMIN, QA_MANAGER, DEPT_MANAGER, HR_MANAGER, QA_COORDINATOR
     */
    @GetMapping("/statistics")
-   @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+   @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER', 'DEPT_MANAGER', 'HR_MANAGER', 'QA_COORDINATOR')")
    public ResponseEntity<List<StatisticsReportResponse>> getStatisticsReport(
          @RequestParam Integer yearId,
          @RequestParam(required = false) Integer deptId) {
@@ -38,10 +38,10 @@ public class ReportController {
 
    /**
     * Get list of ideas without any comments
-    * Accessible by: MANAGER, ADMIN
+    * Accessible by: ADMIN, QA_MANAGER, DEPT_MANAGER, HR_MANAGER, QA_COORDINATOR
     */
    @GetMapping("/no-comments")
-   @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+   @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER', 'DEPT_MANAGER', 'HR_MANAGER', 'QA_COORDINATOR')")
    public ResponseEntity<List<IdeaNoCommentResponse>> getIdeasWithoutComments(
          @RequestParam Integer yearId) {
       return ResponseEntity.ok(reportService.getIdeasWithoutComments(yearId));
@@ -49,10 +49,10 @@ public class ReportController {
 
    /**
     * Get list of anonymous ideas and comments with author information
-    * Accessible by: MANAGER, ADMIN
+    * Accessible by: ADMIN, QA_MANAGER, DEPT_MANAGER, HR_MANAGER, QA_COORDINATOR
     */
    @GetMapping("/anonymous-content")
-   @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+   @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER', 'DEPT_MANAGER', 'HR_MANAGER', 'QA_COORDINATOR')")
    public ResponseEntity<List<AnonymousContentResponse>> getAnonymousContent(
          @RequestParam Integer yearId) {
       return ResponseEntity.ok(reportService.getAnonymousContent(yearId));
@@ -60,11 +60,11 @@ public class ReportController {
 
    /**
     * Export all ideas and comments to CSV format
-    * Accessible by: MANAGER, ADMIN
+    * Accessible by: ADMIN, QA_MANAGER, DEPT_MANAGER, HR_MANAGER, QA_COORDINATOR
     * Only available after final_closure_date
     */
    @GetMapping("/export/csv")
-   @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+   @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER', 'DEPT_MANAGER', 'HR_MANAGER', 'QA_COORDINATOR')")
    public void exportToCSV(
          @RequestParam Integer yearId,
          HttpServletResponse response) {
@@ -73,11 +73,11 @@ public class ReportController {
 
    /**
     * Export all attachments as ZIP file
-    * Accessible by: MANAGER, ADMIN
+    * Accessible by: ADMIN, QA_MANAGER, DEPT_MANAGER, HR_MANAGER, QA_COORDINATOR
     * Only available after final_closure_date
     */
    @GetMapping("/export/attachments-zip")
-   @PreAuthorize("hasAnyRole('MANAGER', 'ADMIN')")
+   @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER', 'DEPT_MANAGER', 'HR_MANAGER', 'QA_COORDINATOR')")
    public void exportAttachmentsAsZip(
          @RequestParam Integer yearId,
          HttpServletResponse response) {
