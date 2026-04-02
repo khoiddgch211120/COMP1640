@@ -4,12 +4,10 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class IdeaResponse {
@@ -17,22 +15,18 @@ public class IdeaResponse {
     private Integer ideaId;
     private String title;
     private String content;
-
-    // Ẩn danh: trả null nếu isAnonymous = true (trừ ADMIN/QA_MGR)
     private String authorName;
     private Integer authorId;
-
-    private String departmentName;
-    private String academicYearLabel;
+    private String department;
+    private String yearLabel;
     private Set<String> categories;
-
     private Boolean isAnonymous;
     private Boolean isDisabled;
     private Integer viewCount;
     private long upvotes;
     private long downvotes;
+    private Long commentCount;
     private Boolean termsAccepted;
-
     private LocalDateTime submittedAt;
     private LocalDateTime updatedAt;
 }

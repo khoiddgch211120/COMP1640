@@ -1,91 +1,21 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import "../../styles/coordinator.css"; // ← điều chỉnh path nếu cần
+import { useSelector } from "react-redux";
+import { getAllIdeas } from "../../services/ideaService";
+import "../../styles/coordinator.css";
 
-/* ── Mock notifications ──────────────────────────────────── */
-const MOCK_NOTIFICATIONS = [
-  {
-    id: 1,
-    type: "idea",
-    title: "Ý tưởng mới được nộp",
-    desc: 'Nguyễn Văn A đã nộp ý tưởng "Cải thiện quy trình đánh giá học sinh" trong phòng ban của bạn.',
-    time: "5 phút trước",
-    read: false,
-    ideaId: 1,
-  },
-  {
-    id: 2,
-    type: "idea",
-    title: "Ý tưởng mới được nộp",
-    desc: 'Trần Thị B đã nộp ý tưởng "Đề xuất phòng học thực hành mới" trong phòng ban của bạn.',
-    time: "2 giờ trước",
-    read: false,
-    ideaId: 2,
-  },
-  {
-    id: 3,
-    type: "email",
-    title: "Email thông báo đã gửi",
-    desc: "Hệ thống đã tự động gửi email thông báo ý tưởng mới đến địa chỉ email của bạn.",
-    time: "2 giờ trước",
-    read: false,
-    ideaId: null,
-  },
-  {
-    id: 4,
-    type: "idea",
-    title: "Ý tưởng mới được nộp",
-    desc: 'Lê Văn C đã nộp ý tưởng "Chương trình trao đổi sinh viên quốc tế".',
-    time: "1 ngày trước",
-    read: true,
-    ideaId: 3,
-  },
-  {
-    id: 5,
-    type: "email",
-    title: "Email thông báo đã gửi",
-    desc: "Hệ thống đã tự động gửi email thông báo ý tưởng mới đến địa chỉ email của bạn.",
-    time: "1 ngày trước",
-    read: true,
-    ideaId: null,
-  },
-  {
-    id: 6,
-    type: "idea",
-    title: "Ý tưởng mới được nộp",
-    desc: 'Phạm Thị D đã nộp ý tưởng "Hệ thống thông báo nội bộ tự động".',
-    time: "3 ngày trước",
-    read: true,
-    ideaId: 4,
-  },
-  {
-    id: 7,
-    type: "idea",
-    title: "Ý tưởng mới được nộp",
-    desc: 'Hoàng Văn E đã nộp ý tưởng "Nâng cấp cơ sở hạ tầng mạng WiFi".',
-    time: "5 ngày trước",
-    read: true,
-    ideaId: 5,
-  },
-  {
-    id: 8,
-    type: "email",
-    title: "Email thông báo đã gửi",
-    desc: "Hệ thống đã tự động gửi email thông báo ý tưởng mới đến địa chỉ email của bạn.",
-    time: "5 ngày trước",
-    read: true,
-    ideaId: null,
-  },
-];
+/*
+  NOTE: BE hiện chưa có endpoint notification riêng cho coordinator.
+  Trang này tự build notifications từ các ideas mới nhất trong dept.
+  Khi BE có NotificationLog API → thay fetchNotifications() bằng API call thật.
+*/
 
 const FILTERS = [
   { key: "all",    label: "Tất cả"      },
   { key: "unread", label: "Chưa đọc"    },
   { key: "idea",   label: "Ý tưởng mới" },
-  { key: "email",  label: "Email"        },
 ];
 
-/* ── Icon components ────────────────────────────────────── */
 const IdeaIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
     <path d="M12 2a7 7 0 0 1 7 7c0 3-1.5 5-3.5 6.5V17a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-1.5C6.5 14 5 12 5 9a7 7 0 0 1 7-7z"/>
@@ -93,34 +23,73 @@ const IdeaIcon = () => (
   </svg>
 );
 
-const EmailIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-    <polyline points="22,6 12,13 2,6"/>
-  </svg>
-);
+/* Lưu trạng thái "đã đọc" trong localStorage theo ideaId */
+const READ_KEY = "coord_read_notifications";
+const getReadSet  = () => new Set(JSON.parse(localStorage.getItem(READ_KEY) || "[]"));
+const saveReadSet = (set) => localStorage.setItem(READ_KEY, JSON.stringify([...set]));
 
 const CoordinatorNotifications = () => {
-  const navigate   = useNavigate();
-  const [filter, setFilter]     = useState("all");
-  const [items, setItems]       = useState(MOCK_NOTIFICATIONS);
+  const navigate = useNavigate();
+  const user     = useSelector((state) => state.auth.user);
 
-  const unreadCount = items.filter((n) => !n.read).length;
+  const [ideas,   setIdeas]   = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [readIds, setReadIds] = useState(getReadSet());
+  const [filter,  setFilter]  = useState("all");
+
+  useEffect(() => {
+    const fetch = async () => {
+      setLoading(true);
+      try {
+        const data = await getAllIdeas({
+          deptId: user?.deptId,
+          size: 50,
+        });
+        setIdeas(data?.content ?? []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetch();
+  }, [user]);
+
+  /* Chuyển ideas → notification items */
+  const notifications = useMemo(() =>
+    ideas.map((idea) => ({
+      id:     idea.ideaId,
+      type:   "idea",
+      title:  "Ý tưởng mới được nộp",
+      desc:   `${idea.isAnonymous ? "Ẩn danh" : (idea.authorName ?? "Someone")} đã nộp ý tưởng "${idea.title}"`,
+      time:   idea.submittedAt
+        ? new Date(idea.submittedAt).toLocaleDateString("vi-VN")
+        : "—",
+      read:   readIds.has(idea.ideaId),
+      ideaId: idea.ideaId,
+    })), [ideas, readIds]);
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   const filtered = useMemo(() => {
     switch (filter) {
-      case "unread": return items.filter((n) => !n.read);
-      case "idea":   return items.filter((n) => n.type === "idea");
-      case "email":  return items.filter((n) => n.type === "email");
-      default:       return items;
+      case "unread": return notifications.filter((n) => !n.read);
+      case "idea":   return notifications.filter((n) => n.type === "idea");
+      default:       return notifications;
     }
-  }, [filter, items]);
+  }, [filter, notifications]);
 
-  const markAllRead = () =>
-    setItems((prev) => prev.map((n) => ({ ...n, read: true })));
+  const markRead = (id) => {
+    const updated = new Set([...readIds, id]);
+    setReadIds(updated);
+    saveReadSet(updated);
+  };
 
-  const markRead = (id) =>
-    setItems((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
+  const markAllRead = () => {
+    const updated = new Set(notifications.map((n) => n.id));
+    setReadIds(updated);
+    saveReadSet(updated);
+  };
 
   const handleClick = (notif) => {
     markRead(notif.id);
@@ -129,8 +98,6 @@ const CoordinatorNotifications = () => {
 
   return (
     <div className="co-page">
-
-      {/* ── Header ─────────────────────────────────────────── */}
       <div className="co-page-header">
         <div>
           <h1 className="co-page-title">
@@ -139,18 +106,16 @@ const CoordinatorNotifications = () => {
               <span style={{
                 marginLeft: 10, fontSize: 13, fontWeight: 700,
                 background: "#2563eb", color: "#fff",
-                padding: "2px 9px", borderRadius: 20,
-                verticalAlign: "middle",
+                padding: "2px 9px", borderRadius: 20, verticalAlign: "middle",
               }}>
                 {unreadCount}
               </span>
             )}
           </h1>
-          <p className="co-page-sub">Thông báo ý tưởng mới nộp trong department của bạn</p>
+          <p className="co-page-sub">Ý tưởng mới nộp trong department của bạn</p>
         </div>
       </div>
 
-      {/* ── Filters ────────────────────────────────────────── */}
       <div className="co-card">
         <div className="co-card-head" style={{ padding: "12px 16px" }}>
           <div className="co-notif-filters">
@@ -163,7 +128,8 @@ const CoordinatorNotifications = () => {
                 {f.label}
                 {f.key === "unread" && unreadCount > 0 && (
                   <span style={{
-                    marginLeft: 5, background: filter === "unread" ? "rgba(255,255,255,0.3)" : "#dbeafe",
+                    marginLeft: 5,
+                    background: filter === "unread" ? "rgba(255,255,255,0.3)" : "#dbeafe",
                     color: filter === "unread" ? "#fff" : "#2563eb",
                     fontSize: 10, fontWeight: 700,
                     padding: "1px 6px", borderRadius: 20,
@@ -181,9 +147,12 @@ const CoordinatorNotifications = () => {
           </div>
         </div>
 
-        {/* ── Notification list ─────────────────────────────── */}
         <div className="co-notif-list">
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div style={{ padding: "40px 0", textAlign: "center", color: "#64748b" }}>
+              Đang tải...
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="co-empty">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
@@ -201,26 +170,20 @@ const CoordinatorNotifications = () => {
                 tabIndex={0}
                 onKeyDown={(e) => e.key === "Enter" && handleClick(notif)}
               >
-                {/* Icon */}
-                <div className={`co-notif-icon co-notif-icon--${notif.type}`}>
-                  {notif.type === "idea" ? <IdeaIcon /> : <EmailIcon />}
+                <div className="co-notif-icon co-notif-icon--idea">
+                  <IdeaIcon />
                 </div>
-
-                {/* Body */}
                 <div className="co-notif-body">
                   <div className="co-notif-title">{notif.title}</div>
                   <div className="co-notif-desc">{notif.desc}</div>
                   <div className="co-notif-time">{notif.time}</div>
                 </div>
-
-                {/* Unread dot */}
                 {!notif.read && <div className="co-notif-dot" />}
               </div>
             ))
           )}
         </div>
       </div>
-
     </div>
   );
 };
