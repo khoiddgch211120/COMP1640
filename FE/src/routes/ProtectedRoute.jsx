@@ -1,26 +1,25 @@
 import { useSelector } from "react-redux";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
 const ProtectedRoute = ({ children, roles }) => {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
 
-  // ❌ Chưa login
-  if (!isAuthenticated || !user) {
+  // ❗ chưa login
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // ❌ Sai role
+  // ❗ chưa load user xong → KHÔNG redirect
+  if (!user) {
+    return null; // hoặc loading
+  }
+
+  // ❗ check role
   if (roles && !roles.includes(user.role)) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/unauthorized" replace />; // ❌ KHÔNG redirect về "/"
   }
 
-  // ✅ Nếu có children thì render children
-  if (children) {
-    return children;
-  }
-
-  // ✅ Nếu dùng nested route thì render Outlet
-  return <Outlet />;
+  return children;
 };
 
 export default ProtectedRoute;

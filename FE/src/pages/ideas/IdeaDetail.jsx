@@ -1,123 +1,174 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import {
-  incrementView,
-  toggleVote,
-  addComment,
-} from "../../redux/slices/ideaSlice";
+import { useSelector } from "react-redux";
 import { ROLES } from "../../constants/roles";
-import "../../styles/ideas.css"; // ← điều chỉnh path nếu cần
-
-/* ── Mock fallback ──────────────────────────────────────── */
-const MOCK_IDEA = {
-  id: "1",
-  title: "Improving the Student Assessment Process",
-  description: "Proposing a continuous assessment system instead of relying solely on final exams, to better reflect students' abilities. The system includes progress-based evaluation, group assignments, presentations, and periodic quizzes. This not only reduces exam pressure but also helps teachers closely monitor each student's learning progress.",
-  author: { id: "u1", name: "John Nguyen" },
-  isAnonymous: false,
-  category: "Academic",
-  views: 142,
-  upvotes: ["u2", "u3", "u4"],
-  downvotes: ["u5"],
-  attachments: [
-    { id: "a1", name: "proposal.pdf",   url: "#" },
-    { id: "a2", name: "research.docx",  url: "#" },
-  ],
-  comments: [
-    { id: "c1", name: "Jane Smith",   content: "Great idea! I've seen this model work effectively at many international schools.", isAnonymous: false, createdAt: "2026-01-16T10:00:00" },
-    { id: "c2", name: "Anonymous",       content: "We need to consider teacher resources and implementation timeline further.", isAnonymous: true,  createdAt: "2026-01-17T14:30:00" },
-    { id: "c3", name: "Robert Lee",      content: "I support this! Could we pilot it in a few classes first?", isAnonymous: false, createdAt: "2026-01-18T09:15:00" },
-  ],
-  createdAt: "2026-01-15",
-};
+import { getIdeaById } from "../../services/ideaService";
+import { getCommentsByIdea, addComment as addCommentApi } from "../../services/commentService";
+import { getIdeaVotes, voteOnIdea, deleteVote } from "../../services/voteService";
+import { getDocumentsByIdea } from "../../services/documentService";
+import "../../styles/ideas.css";
 
 const IdeaDetail = () => {
-  const { id }       = useParams();
-  const dispatch     = useDispatch();
-  const navigate     = useNavigate();
+  const { id }   = useParams();
+  const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
+  const fetchedRef = useRef(false);
+  /* ── State ───────────────────────────────────────────────── */
+  const [idea,      setIdea]      = useState(null);
+  const [comments,  setComments]  = useState([]);
+  const [vote,      setVote]      = useState(null);   // { ideaId, upvotes, downvotes, userVote }
+  const [documents, setDocuments] = useState([]);
+  const [loading,   setLoading]   = useState(true);
+  const [error,     setError]     = useState(null);
 
-  const { user }               = useSelector((state) => state.auth);
-  const { currentAcademicYear } = useSelector((state) => state.academicYear ?? {});
+  const [commentText,    setCommentText]    = useState("");
+  const [isAnonymousCmt, setAnonymousCmt]   = useState(false);
+  const [postingComment, setPostingComment] = useState(false);
+  const [votingLoading,  setVotingLoading]  = useState(false);
 
-  const reduxIdea = useSelector((state) =>
-    state.ideas?.ideas?.find((i) => i.id === id)
-  );
-
-  const idea = reduxIdea ?? MOCK_IDEA;
-
-  const [commentText,   setCommentText]   = useState("");
-  const [isAnonymousCmt, setAnonymousCmt] = useState(false);
-
-  /* ── Increment view ─────────────────────────────────────── */
+  /* ── Fetch tất cả data cùng lúc ─────────────────────────── */
   useEffect(() => {
-    if (reduxIdea) dispatch(incrementView(id));
-  }, [id, dispatch]);
+    if (fetchedRef.current) return;   // 🔥 chặn chạy lần 2
+    fetchedRef.current = true;
+  
+    const fetchAll = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const [ideaData, commentData, docsData] = await Promise.all([
+          getIdeaById(id),
+          getCommentsByIdea(id),
+          getDocumentsByIdea(id),
+        ]);
+        setIdea(ideaData);
+        setComments(commentData ?? []);
+        setDocuments(docsData ?? []);
 
-  if (!idea) {
-    return (
-      <div className="id-page">
-        <div className="id-access-denied">Idea not found.</div>
-      </div>
-    );
-  }
+        // Vote chỉ fetch khi đã đăng nhập
+        if (user) {
+          try {
+            const voteData = await getIdeaVotes(id);
+            setVote(voteData);
+          } catch {
+            // Chưa vote → bỏ qua lỗi
+          }
+        }
+      } catch (err) {
+        setError("Failed to load idea. Please try again.");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAll();
+  }, [id, user]);
 
-  /* ── Derived values ─────────────────────────────────────── */
-  const score        = idea.upvotes.length - idea.downvotes.length;
-  const scoreSign    = score > 0 ? `+${score}` : `${score}`;
-  const scoreCls     = score > 0 ? "id-score--pos" : score < 0 ? "id-score--neg" : "id-score--neu";
-  const commentClosed = currentAcademicYear && new Date() > new Date(currentAcademicYear.finalClosureDate);
-  const authorName   = idea.isAnonymous ? "Anonymous" : (idea.author?.name ?? "—");
-  const authorInitial = idea.isAnonymous ? "?" : (authorName[0] ?? "?").toUpperCase();
-
+  /* ── Helpers ─────────────────────────────────────────────── */
   const formatDate = (d) => {
     if (!d) return "";
     return new Date(d).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
   };
-
   const formatDateTime = (d) => {
     if (!d) return "";
     return new Date(d).toLocaleString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
   };
 
-  /* ── Handlers ───────────────────────────────────────────── */
-  const handleVote = (type) => {
+  /* ── Vote handler ────────────────────────────────────────── */
+  const handleVote = async (voteType) => {
     if (!user || user.role !== ROLES.STAFF) return;
-    if (idea.author?.id === user.id) { alert("You cannot vote on your own idea"); return; }
-    dispatch(toggleVote({ ideaId: id, userId: user.id, type }));
+    if (idea?.authorId === user?.userId) {
+      alert("You cannot vote on your own idea");
+      return;
+    }
+    setVotingLoading(true);
+    try {
+      // Nếu đã vote cùng loại → xoá vote (toggle off)
+      if (vote?.userVote === voteType) {
+        await deleteVote(id);
+        const updated = await getIdeaVotes(id);
+        setVote(updated);
+      } else {
+        // Vote mới hoặc đổi vote
+        const updated = await voteOnIdea(id, { voteType });
+        setVote(updated);
+      }
+    } catch (err) {
+      alert(err?.response?.data?.message || "Vote failed");
+    } finally {
+      setVotingLoading(false);
+    }
   };
 
-  const handleComment = () => {
+  /* ── Comment handler ─────────────────────────────────────── */
+  const handleComment = async () => {
     if (!commentText.trim()) return;
-    if (commentClosed) { alert("Comment period has closed"); return; }
-    dispatch(addComment({
-      ideaId: id,
-      comment: {
-        userId:      user.id,
-        name:        isAnonymousCmt ? "Anonymous" : user.fullName,
+    setPostingComment(true);
+    try {
+      const newComment = await addCommentApi(id, {
         content:     commentText,
         isAnonymous: isAnonymousCmt,
-        createdAt:   new Date().toISOString(),
-      },
-    }));
-    setCommentText("");
+      });
+      setComments((prev) => [newComment, ...prev]);
+      setCommentText("");
+      setAnonymousCmt(false);
+    } catch (err) {
+      alert(err?.response?.data?.message || "Failed to post comment");
+    } finally {
+      setPostingComment(false);
+    }
   };
 
-  const canComment = user?.role === ROLES.STAFF || user?.role === ROLES.QA_COORDINATOR;
-  const canVote    = user?.role === ROLES.STAFF;
+  /* ── Loading / Error states ──────────────────────────────── */
+  if (loading) {
+    return (
+      <div className="id-page">
+        <div style={{ textAlign: "center", padding: "80px 0", color: "#64748b" }}>
+          Loading idea...
+        </div>
+      </div>
+    );
+  }
 
-  const sortedComments = [...idea.comments].sort(
+  if (error || !idea) {
+    return (
+      <div className="id-page">
+        <div className="id-access-denied">{error || "Idea not found."}</div>
+      </div>
+    );
+  }
+
+  /* ── Derived values ─────────────────────────────────────── */
+  const upvotes   = vote?.upvotes   ?? idea.upvotes   ?? 0;
+  const downvotes = vote?.downvotes ?? idea.downvotes ?? 0;
+  const score     = upvotes - downvotes;
+  const scoreSign = score > 0 ? `+${score}` : `${score}`;
+  const scoreCls  = score > 0 ? "id-score--pos" : score < 0 ? "id-score--neg" : "id-score--neu";
+
+  const authorName    = idea.isAnonymous ? "Anonymous" : (idea.authorName ?? "—");
+  const authorInitial = idea.isAnonymous ? "?" : (authorName[0] ?? "?").toUpperCase();
+
+  const commentClosed = !idea.termsAccepted || idea.isDisabled;
+  const canComment =
+  user?.role === ROLES.ACADEMIC ||
+  user?.role === ROLES.SUPPORT ||
+  user?.role === ROLES.QA_COORDINATOR;
+
+const canVote =
+  user?.role === ROLES.ACADEMIC ||
+  user?.role === ROLES.SUPPORT;
+
+  const sortedComments = [...comments].sort(
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
   );
 
   return (
     <div className="id-page">
-
       {/* ── Back button ────────────────────────────────────── */}
       <div>
         <button className="id-btn id-btn--ghost" onClick={() => navigate(-1)}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
-            <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
           </svg>
           Back
         </button>
@@ -125,13 +176,10 @@ const IdeaDetail = () => {
 
       {/* ── Hero card ──────────────────────────────────────── */}
       <div className="id-detail-hero">
-
         <div className="id-detail-hero-top">
-
-          {/* Badges */}
           <div className="id-detail-badges">
-            {idea.category && (
-              <span className="id-detail-category">{idea.category}</span>
+            {idea.categories?.length > 0 && (
+              <span className="id-detail-category">{idea.categories[0]}</span>
             )}
             {idea.isAnonymous && (
               <span className="id-detail-anon">Anonymous</span>
@@ -140,11 +188,7 @@ const IdeaDetail = () => {
               {score >= 0 ? "▲" : "▼"} {scoreSign}
             </span>
           </div>
-
-          {/* Title */}
           <h1 className="id-detail-title">{idea.title}</h1>
-
-          {/* Author */}
           <div className="id-detail-author-row">
             <div className="id-detail-avatar"
               style={{ background: idea.isAnonymous ? "#94a3b8" : "#2563eb" }}>
@@ -152,25 +196,24 @@ const IdeaDetail = () => {
             </div>
             <div>
               <div className="id-detail-author-name">{authorName}</div>
-              <div className="id-detail-author-date">{formatDate(idea.createdAt)}</div>
+              <div className="id-detail-author-date">{formatDate(idea.submittedAt)}</div>
             </div>
           </div>
-
         </div>
 
-        {/* Description */}
-        <div className="id-detail-desc">{idea.description}</div>
+        {/* Content — BE field là "content" */}
+        <div className="id-detail-desc">{idea.content}</div>
 
-        {/* Attachments */}
-        {idea.attachments?.length > 0 && (
+        {/* Documents/Attachments */}
+        {documents.length > 0 && (
           <div className="id-detail-attachments">
             <div className="id-attachment-label">Attachments</div>
-            {idea.attachments.map((f) => (
-              <a key={f.id} href={f.url} download className="id-attachment-item">
+            {documents.map((doc) => (
+              <a key={doc.docId} href={doc.filePath} target="_blank" rel="noreferrer" className="id-attachment-item">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                   <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
                 </svg>
-                {f.name}
+                {doc.fileName} ({doc.fileSizeKb} KB)
               </a>
             ))}
           </div>
@@ -184,34 +227,41 @@ const IdeaDetail = () => {
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                 <circle cx="12" cy="12" r="3"/>
               </svg>
-              {idea.views} views
+              {idea.viewCount ?? 0} views
             </span>
             <span className="id-detail-meta-item">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
               </svg>
-              {idea.comments.length} comments
+              {comments.length} comments
             </span>
           </div>
 
           {canVote && (
             <div className="id-vote-group">
-              <button className="id-vote-btn id-vote-btn--up" onClick={() => handleVote("up")}>
+              <button
+                className={`id-vote-btn id-vote-btn--up${vote?.userVote === "UPVOTE" ? " id-vote-btn--active" : ""}`}
+                onClick={() => handleVote("UPVOTE")}
+                disabled={votingLoading}
+              >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
                   <polyline points="18 15 12 9 6 15"/>
                 </svg>
-                Upvote · {idea.upvotes.length}
+                Upvote · {upvotes}
               </button>
-              <button className="id-vote-btn id-vote-btn--down" onClick={() => handleVote("down")}>
+              <button
+                className={`id-vote-btn id-vote-btn--down${vote?.userVote === "DOWNVOTE" ? " id-vote-btn--active" : ""}`}
+                onClick={() => handleVote("DOWNVOTE")}
+                disabled={votingLoading}
+              >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="14" height="14">
                   <polyline points="6 9 12 15 18 9"/>
                 </svg>
-                Downvote · {idea.downvotes.length}
+                Downvote · {downvotes}
               </button>
             </div>
           )}
         </div>
-
       </div>
 
       {/* ── Comments ───────────────────────────────────────── */}
@@ -223,19 +273,9 @@ const IdeaDetail = () => {
               marginLeft: 8, fontSize: 12, background: "#e2e8f0", color: "#475569",
               padding: "2px 8px", borderRadius: 20, fontWeight: 600,
             }}>
-              {idea.comments.length}
+              {comments.length}
             </span>
           </h3>
-          {commentClosed && (
-            <div className="id-closed-banner">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="12"/>
-                <line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              Comment period has closed
-            </div>
-          )}
         </div>
 
         {/* Comment box */}
@@ -262,10 +302,10 @@ const IdeaDetail = () => {
               <button
                 className="id-btn id-btn--primary"
                 onClick={handleComment}
-                disabled={!commentText.trim()}
+                disabled={!commentText.trim() || postingComment}
                 style={{ opacity: commentText.trim() ? 1 : 0.5 }}
               >
-                Post Comment
+                {postingComment ? "Posting..." : "Post Comment"}
               </button>
             </div>
           </div>
@@ -282,10 +322,10 @@ const IdeaDetail = () => {
         ) : (
           <div className="id-comments-section">
             {sortedComments.map((c) => {
-              const name    = c.isAnonymous ? "Anonymous" : c.name;
+              const name    = c.isAnonymous ? "Anonymous" : (c.authorName ?? "—");
               const initial = c.isAnonymous ? "?" : (name[0] ?? "?").toUpperCase();
               return (
-                <div key={c.id} className="id-comment-item">
+                <div key={c.commentId} className="id-comment-item">
                   <div className="id-comment-header">
                     <div className="id-comment-avatar"
                       style={{ background: c.isAnonymous ? "#94a3b8" : "#2563eb" }}>
@@ -301,7 +341,6 @@ const IdeaDetail = () => {
           </div>
         )}
       </div>
-
     </div>
   );
 };

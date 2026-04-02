@@ -1,218 +1,81 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { ROLES } from "../../constants/roles";
 
-/* ========================
-   FAKE USERS (FE ONLY)
-======================== */
+/* =========================
+   NORMALIZE ROLE (🔥 FIX)
+========================= */
+export const normalizeRole = (role = "") => {
+  const r = role.replace("ROLE_", "").toUpperCase();
 
-const fakeUsers = [
-  {
-    id: "1",
-    email: "staff@test.com",
-    password: "123456",
-    fullName: "Staff User",
-    role: ROLES.STAFF,
-    department: "IT",
-    status: true,
-  },
-  {
-    id: "2",
-    email: "coordinator@test.com",
-    password: "123456",
-    fullName: "QA Coordinator",
-    role: ROLES.QA_COORDINATOR,
-    department: "IT",
-    status: true,
-  },
-  {
-    id: "3",
-    email: "manager@test.com",
-    password: "123456",
-    fullName: "QA Manager",
-    role: ROLES.QA_MANAGER,
-    department: "Management",
-    status: true,
-  },
-  {
-    id: "4",
-    email: "admin@test.com",
-    password: "123456",
-    fullName: "System Admin",
-    role: ROLES.ADMIN,
-    department: "System",
-    status: true,
-  },
-];
+  if (r.includes("ACADEMIC")) return "ACADEMIC";
+  if (r.includes("SUPPORT")) return "SUPPORT";
 
-/* ========================
-   LOAD AUTH FROM STORAGE
-======================== */
+  return r;
+};
 
-const savedAuth = JSON.parse(localStorage.getItem("auth"));
+/* =========================
+   LOAD STORAGE
+========================= */
+const savedAuth = (() => {
+  try {
+    const data = JSON.parse(localStorage.getItem("auth"));
+    if (!data) return null;
 
-/* ========================
+    return {
+      ...data,
+      user: data.user
+        ? {
+            ...data.user,
+            role: normalizeRole(data.user.role),
+          }
+        : null,
+    };
+  } catch {
+    return null;
+  }
+})();
+
+/* =========================
    INITIAL STATE
-======================== */
-
+========================= */
 const initialState = {
   user: savedAuth?.user || null,
   token: savedAuth?.token || null,
-  isAuthenticated: !!savedAuth,
-  users: fakeUsers,
+  isAuthenticated: !!savedAuth?.token,
 };
 
-/* ========================
+/* =========================
    SLICE
-======================== */
-
+========================= */
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-
-    /* ================= LOGIN (FAKE) ================= */
-
-    login: (state, action) => {
-      const { email, password } = action.payload;
-
-      const user = state.users.find(
-        (u) =>
-          u.email === email &&
-          u.password === password &&
-          u.status !== false
-      );
-
-      if (user) {
-
-        state.user = user;
-        state.token = "fake-jwt-token";
-        state.isAuthenticated = true;
-
-        /* SAVE LOGIN */
-        localStorage.setItem(
-          "auth",
-          JSON.stringify({
-            user: user,
-            token: "fake-jwt-token"
-          })
-        );
-
-      } else {
-        alert("Invalid credentials or account disabled");
-      }
-    },
-
     loginSuccess: (state, action) => {
+      const { user, token } = action.payload;
 
-      state.user = action.payload.user;
-      state.token = action.payload.token;
+      const normalizedUser = {
+        ...user,
+        role: normalizeRole(user.role), // 🔥 FIX
+      };
+
+      state.user = normalizedUser;
+      state.token = token;
       state.isAuthenticated = true;
 
       localStorage.setItem(
         "auth",
-        JSON.stringify({
-          user: action.payload.user,
-          token: action.payload.token
-        })
+        JSON.stringify({ user: normalizedUser, token })
       );
-
     },
 
     logout: (state) => {
-
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
-
       localStorage.removeItem("auth");
-
     },
-
-    /* ================= USER MANAGEMENT ================= */
-
-    addUser: (state, action) => {
-      state.users.push(action.payload);
-    },
-
-    updateUser: (state, action) => {
-
-      const index = state.users.findIndex(
-        (u) => u.id === action.payload.id
-      );
-
-      if (index !== -1) {
-
-        state.users[index] = action.payload;
-
-        if (state.user?.id === action.payload.id) {
-          state.user = action.payload;
-
-          localStorage.setItem(
-            "auth",
-            JSON.stringify({
-              user: action.payload,
-              token: state.token
-            })
-          );
-        }
-
-      }
-    },
-
-    deleteUser: (state, action) => {
-
-      state.users = state.users.filter(
-        (u) => u.id !== action.payload
-      );
-
-      if (state.user?.id === action.payload) {
-
-        state.user = null;
-        state.token = null;
-        state.isAuthenticated = false;
-
-        localStorage.removeItem("auth");
-
-      }
-    },
-
-    toggleUserStatus: (state, action) => {
-
-      const user = state.users.find(
-        (u) => u.id === action.payload
-      );
-
-      if (user) {
-
-        user.status = !user.status;
-
-        if (
-          state.user?.id === user.id &&
-          user.status === false
-        ) {
-
-          state.user = null;
-          state.token = null;
-          state.isAuthenticated = false;
-
-          localStorage.removeItem("auth");
-
-        }
-
-      }
-    },
-
   },
 });
 
-export const {
-  login,
-  loginSuccess,
-  logout,
-  addUser,
-  updateUser,
-  deleteUser,
-  toggleUserStatus,
-} = authSlice.actions;
-
+export const { loginSuccess, logout } = authSlice.actions;
 export default authSlice.reducer;

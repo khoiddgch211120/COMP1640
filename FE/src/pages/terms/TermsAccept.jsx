@@ -1,37 +1,50 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import "../../styles/terms-modal.css"; // ← điều chỉnh path nếu cần
-
-const RULES = [
-  "All submitted ideas become the intellectual property of the university.",
-  "Staff must not submit content that violates copyright, law, or internal policy.",
-  "The university reserves the right to use, modify, or reject ideas without prior notice.",
-  "All submitted content must align with the university's ethical and cultural standards.",
-  "Staff must accept the latest Terms & Conditions version before submitting any subsequent ideas.",
-];
+import { getTermsConditions } from "../../services/termsconditionsService";
+import "../../styles/terms-modal.css";
 
 const TermsAccept = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate  = useNavigate();
+  const location  = useLocation();
+  const returnTo  = location.state?.from ?? "/submit-idea";
 
-  // Nếu điều hướng từ /submit-idea (state.from), sau khi accept → quay lại
-  // Ngược lại → về /submit-idea mặc định
-  const returnTo = location.state?.from ?? "/submit-idea";
+  const [checked,  setChecked]  = useState(false);
+  const [terms,    setTerms]    = useState(null);   // current terms từ BE
+  const [loading,  setLoading]  = useState(true);
 
-  const [checked, setChecked] = useState(false);
+  /* ── Load current terms từ BE ────────────────────────────── */
+  useEffect(() => {
+    const fetch = async () => {
+      setLoading(true);
+      try {
+        // termsconditionsService.js gọi /terms-conditions/current
+        // nhưng file hiện tại gọi /terms-conditions/active (sai) → dùng getTermsConditions()
+        // và lấy version mới nhất (sort by version desc, lấy [0])
+        const data = await getTermsConditions();
+        if (Array.isArray(data) && data.length > 0) {
+          // Lấy version cao nhất
+          const latest = [...data].sort((a, b) => b.version - a.version)[0];
+          setTerms(latest);
+        }
+      } catch (err) {
+        console.error("Failed to load terms:", err);
+        // Vẫn cho hiển thị trang với fallback text
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetch();
+  }, []);
 
   const handleAccept = () => {
     localStorage.setItem("acceptedTerms", "true");
     navigate(returnTo);
   };
 
-  const handleCancel = () => {
-    navigate("/ideas");
-  };
+  const handleCancel = () => navigate("/ideas");
 
   return (
     <div className="ta-page">
-
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="ta-header">
         <div className="ta-header-icon">
@@ -44,7 +57,9 @@ const TermsAccept = () => {
         </div>
         <div>
           <h1 className="ta-title">Terms &amp; Conditions</h1>
-          <p className="ta-sub">Please read carefully before submitting your idea</p>
+          <p className="ta-sub">
+            {terms ? `Version ${terms.version} — Effective ${terms.effectiveDate}` : "Please read carefully before submitting your idea"}
+          </p>
         </div>
       </div>
 
@@ -52,38 +67,45 @@ const TermsAccept = () => {
       <div className="ta-card">
         <div className="ta-card-head">University Idea Management — Policy Agreement</div>
         <div className="ta-card-body">
+          {loading ? (
+            <div style={{ padding: "32px 0", textAlign: "center", color: "#64748b" }}>
+              Loading terms...
+            </div>
+          ) : terms ? (
+            /* Render content từ BE (plain text hoặc markdown) */
+            <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.7, color: "#374151", fontSize: 14 }}>
+              {terms.content}
+            </div>
+          ) : (
+            /* Fallback nếu BE không trả về terms */
+            <ul className="ta-rules">
+              {[
+                "All submitted ideas become the intellectual property of the university.",
+                "Staff must not submit content that violates copyright, law, or internal policy.",
+                "The university reserves the right to use, modify, or reject ideas without prior notice.",
+                "All submitted content must align with the university's ethical and cultural standards.",
+                "Staff must accept the latest Terms & Conditions version before submitting any subsequent ideas.",
+              ].map((rule, i) => (
+                <li key={i} className="ta-rule">
+                  <span className="ta-rule-num">{i + 1}</span>
+                  <span className="ta-rule-text">{rule}</span>
+                </li>
+              ))}
+            </ul>
+          )}
 
-          <p className="ta-intro">
-            By submitting ideas to the University Idea Management System, you agree to the
-            following rules and policies. These terms ensure a respectful, lawful, and
-            productive environment for sharing innovation.
-          </p>
-
-          <ul className="ta-rules">
-            {RULES.map((rule, i) => (
-              <li key={i} className="ta-rule">
-                <span className="ta-rule-num">{i + 1}</span>
-                <span className="ta-rule-text">{rule}</span>
-              </li>
-            ))}
-          </ul>
-
-          {/* Agree checkbox */}
-          <label
-            className="ta-agree-row"
-            onClick={() => setChecked((c) => !c)}
-          >
+          <label className="ta-agree-row" onClick={() => setChecked((c) => !c)}>
             <input
               type="checkbox"
               checked={checked}
               onChange={(e) => setChecked(e.target.checked)}
               onClick={(e) => e.stopPropagation()}
+              disabled={loading}
             />
             <span className="ta-agree-label">
               I have read and agree to all Terms &amp; Conditions stated above.
             </span>
           </label>
-
         </div>
       </div>
 
@@ -95,8 +117,7 @@ const TermsAccept = () => {
         <button
           className="ta-btn-accept"
           onClick={handleAccept}
-          disabled={!checked}
-          title={!checked ? "Please tick the checkbox above first" : ""}
+          disabled={!checked || loading}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" width="14" height="14">
             <polyline points="20 6 9 17 4 12"/>
@@ -104,7 +125,6 @@ const TermsAccept = () => {
           I Agree — Continue
         </button>
       </div>
-
     </div>
   );
 };

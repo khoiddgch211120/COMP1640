@@ -1,23 +1,18 @@
-import { useSelector } from "react-redux";
-import { useState, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { ROLES } from "../../constants/roles";
-import "../../styles/ideas.css"; // ← điều chỉnh path nếu cần
-
-/* ── Mock fallback data ─────────────────────────────────── */
-const MOCK_IDEAS = [
-  { id: "1", title: "Improving the Student Assessment Process", description: "Proposing a continuous assessment system instead of relying solely on final exams.", author: { id: "u1", name: "John Nguyen" }, isAnonymous: false, category: "Academic", views: 142, upvotes: ["u2","u3","u4"], downvotes: ["u5"], comments: [{id:"c1"},{id:"c2"},{id:"c3"}], createdAt: "2026-01-15", dept_id: "IT" },
-  { id: "2", title: "New Practical Learning Room Proposal", description: "Building modern lab rooms with updated equipment for a better student learning environment.", author: { id: "u2", name: "Jane Smith" }, isAnonymous: false, category: "Facilities", views: 98, upvotes: ["u1","u3"], downvotes: [], comments: [{id:"c4"},{id:"c5"}], createdAt: "2026-01-18", dept_id: "IT" },
-  { id: "3", title: "International Student Exchange Program", description: "Partnering with universities in Europe and Asia to expand learning opportunities for students.", author: { id: "u3", name: "Robert Lee" }, isAnonymous: true, category: "Academic", views: 211, upvotes: ["u1","u2","u4","u5"], downvotes: ["u6"], comments: [{id:"c6"},{id:"c7"},{id:"c8"},{id:"c9"},{id:"c10"},{id:"c11"}], createdAt: "2026-01-20", dept_id: "IT" },
-  { id: "4", title: "Automated Internal Notification System", description: "Deploying a mobile app to send real-time notifications to all staff instead of traditional email.", author: { id: "u4", name: "Diana Pham" }, isAnonymous: false, category: "Technology", views: 77, upvotes: ["u2","u3"], downvotes: ["u1","u5"], comments: [{id:"c12"},{id:"c13"}], createdAt: "2026-01-22", dept_id: "IT" },
-  { id: "5", title: "Campus-Wide WiFi Upgrade", description: "Investing in WiFi 6 equipment to ensure stable connectivity for over 5,000 simultaneous users.", author: { id: "u5", name: "Edward Hoang" }, isAnonymous: false, category: "Technology", views: 63, upvotes: ["u1"], downvotes: ["u2","u3","u4"], comments: [{id:"c14"}], createdAt: "2026-01-24", dept_id: "IT" },
-  { id: "6", title: "Internal Mentorship Program", description: "Connecting senior staff with junior colleagues to share knowledge and experience, fostering a learning culture.", author: { id: "u6", name: "Fiona Vu" }, isAnonymous: false, category: "Human Resources", views: 134, upvotes: ["u1","u2","u3","u4","u5"], downvotes: [], comments: [{id:"c15"},{id:"c16"},{id:"c17"}], createdAt: "2026-01-26", dept_id: "IT" },
-];
+import {
+  getAllIdeas,
+  getLatestIdeas,
+  getMostPopularIdeas,
+} from "../../services/ideaService";
+import "../../styles/ideas.css";
 
 const FILTERS = [
-  { key: "latest",  label: "Latest"     },
+  { key: "latest",  label: "Latest"       },
   { key: "popular", label: "Most Popular" },
-  { key: "views",   label: "Most Viewed"},
+  { key: "all",     label: "All Ideas"    },
 ];
 
 const EyeIcon = () => (
@@ -26,78 +21,93 @@ const EyeIcon = () => (
     <circle cx="12" cy="12" r="3"/>
   </svg>
 );
-
 const ChatIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
   </svg>
 );
 
-const UserIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-    <circle cx="12" cy="7" r="4"/>
-  </svg>
-);
-
 const IdeaList = () => {
-  const reduxIdeas = useSelector((state) => state.ideas?.ideas ?? []);
-  const user       = useSelector((state) => state.auth.user);
-  const navigate   = useNavigate();
+  const user     = useSelector((state) => state.auth.user);
+  const navigate = useNavigate();
 
-  const ideas = reduxIdeas.length > 0 ? reduxIdeas : MOCK_IDEAS;
+  const [ideas,       setIdeas]       = useState([]);
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState(null);
+  const [filter,      setFilter]      = useState("latest");
+  const [currentPage, setCurrentPage] = useState(0);   // BE dùng 0-based
+  const [totalPages,  setTotalPages]  = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [filter, setFilter]           = useState("latest");
-  const ideasPerPage = 6;
+  const PAGE_SIZE = 6;
 
-  /* ── Filter by dept for coordinator ────────────────────── */
-  const deptIdeas = useMemo(() => {
-    if (user?.role === ROLES.QA_COORDINATOR) {
-      return ideas.filter((i) => i.dept_id === user.dept_id);
+  /* ── Fetch ideas theo filter ─────────────────────────────── */
+  const fetchIdeas = useCallback(async (f, page) => {
+    setLoading(true);
+    setError(null);
+    try {
+      let data;
+      if (f === "latest") {
+        data = await getLatestIdeas(page, PAGE_SIZE);
+      } else if (f === "popular") {
+        data = await getMostPopularIdeas(page, PAGE_SIZE);
+      } else {
+        // "all" — có thể filter thêm theo dept nếu là coordinator
+        const params = { page, size: PAGE_SIZE };
+        if (user?.role === ROLES.QA_COORDINATOR && user?.deptId) {
+          params.deptId = user.deptId;
+        }
+        data = await getAllIdeas(params);
+      }
+      // BE trả về Page object: { content, totalPages, totalElements, ... }
+      setIdeas(data.content ?? []);
+      setTotalPages(data.totalPages ?? 0);
+      setTotalElements(data.totalElements ?? 0);
+    } catch (err) {
+      setError("Failed to load ideas. Please try again.");
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
-    return ideas;
-  }, [ideas, user]);
+  }, [user]);
 
-  /* ── Sort ───────────────────────────────────────────────── */
-  const sorted = useMemo(() => {
-    const arr = [...deptIdeas];
-    if (filter === "popular") arr.sort((a, b) => (b.upvotes.length - b.downvotes.length) - (a.upvotes.length - a.downvotes.length));
-    if (filter === "views")   arr.sort((a, b) => b.views - a.views);
-    if (filter === "latest")  arr.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    return arr;
-  }, [deptIdeas, filter]);
+  useEffect(() => {
+    fetchIdeas(filter, currentPage);
+  }, [filter, currentPage, fetchIdeas]);
 
-  /* ── Pagination ─────────────────────────────────────────── */
-  const totalPages   = Math.ceil(sorted.length / ideasPerPage);
-  const currentIdeas = sorted.slice((currentPage - 1) * ideasPerPage, currentPage * ideasPerPage);
+  /* ── Handlers ────────────────────────────────────────────── */
+  const handleFilterChange = (f) => {
+    setFilter(f);
+    setCurrentPage(0); // reset về trang đầu khi đổi filter
+  };
 
-  /* ── Stats ───────────────────────────────────────────────── */
-  const maxViews = deptIdeas.length > 0 ? Math.max(...deptIdeas.map((i) => i.views)) : 0;
-  const maxScore = deptIdeas.length > 0 ? Math.max(...deptIdeas.map((i) => i.upvotes.length - i.downvotes.length)) : 0;
+  /* ── Helpers ─────────────────────────────────────────────── */
+  const formatDate = (d) => d ? new Date(d).toLocaleDateString("en-GB") : "";
 
-  const scoreClass = (idea) => {
-    const s = idea.upvotes.length - idea.downvotes.length;
+  const scoreClass = (upvotes, downvotes) => {
+    const s = upvotes - downvotes;
     if (s > 0) return "id-score--pos";
     if (s < 0) return "id-score--neg";
     return "id-score--neu";
   };
 
-  const formatDate = (d) => d ? new Date(d).toLocaleDateString("en-GB") : "";
+  /* ── Stats ───────────────────────────────────────────────── */
+  const maxViews = ideas.length > 0 ? Math.max(...ideas.map((i) => i.viewCount ?? 0)) : 0;
+  const maxScore = ideas.length > 0 ? Math.max(...ideas.map((i) => (i.upvotes ?? 0) - (i.downvotes ?? 0))) : 0;
 
   return (
     <div className="id-page">
-
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="id-page-header">
         <div>
           <h1 className="id-page-title">Idea List</h1>
           <p className="id-page-sub">Explore and manage submitted ideas</p>
         </div>
-        {user?.role === ROLES.STAFF && (
+        {[ROLES.ACADEMIC, ROLES.SUPPORT].includes(user?.role) && (
           <Link to="/submit-idea" className="id-btn id-btn--primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" width="14" height="14">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
             </svg>
             Submit Idea
           </Link>
@@ -115,10 +125,9 @@ const IdeaList = () => {
           </div>
           <div className="id-stat-body">
             <div className="id-stat-label">Total Ideas</div>
-            <div className="id-stat-value">{deptIdeas.length}</div>
+            <div className="id-stat-value">{totalElements}</div>
           </div>
         </div>
-
         <div className="id-stat-card">
           <div className="id-stat-icon id-stat-icon--green">
             <EyeIcon />
@@ -128,7 +137,6 @@ const IdeaList = () => {
             <div className="id-stat-value">{maxViews}</div>
           </div>
         </div>
-
         <div className="id-stat-card">
           <div className="id-stat-icon id-stat-icon--purple">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -149,18 +157,41 @@ const IdeaList = () => {
           <button
             key={f.key}
             className={`id-filter-btn${filter === f.key ? " id-filter-btn--active" : ""}`}
-            onClick={() => { setFilter(f.key); setCurrentPage(1); }}
+            onClick={() => handleFilterChange(f.key)}
           >
             {f.label}
           </button>
         ))}
         <span style={{ marginLeft: "auto", fontSize: 12, color: "#94a3b8", alignSelf: "center" }}>
-          {deptIdeas.length} ideas
+          {totalElements} ideas
         </span>
       </div>
 
+      {/* ── Loading ────────────────────────────────────────── */}
+      {loading && (
+        <div style={{ textAlign: "center", padding: "48px 0", color: "#64748b" }}>
+          Loading ideas...
+        </div>
+      )}
+
+      {/* ── Error ──────────────────────────────────────────── */}
+      {error && !loading && (
+        <div style={{
+          background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 10,
+          padding: "16px 20px", color: "#dc2626", fontSize: 14,
+        }}>
+          {error}
+          <button
+            onClick={() => fetchIdeas(filter, currentPage)}
+            style={{ marginLeft: 12, textDecoration: "underline", cursor: "pointer", background: "none", border: "none", color: "#dc2626" }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* ── Empty ──────────────────────────────────────────── */}
-      {currentIdeas.length === 0 && (
+      {!loading && !error && ideas.length === 0 && (
         <div className="id-empty">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M12 2a7 7 0 0 1 7 7c0 3-1.5 5-3.5 6.5V17a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-1.5C6.5 14 5 12 5 9a7 7 0 0 1 7-7z"/>
@@ -171,87 +202,92 @@ const IdeaList = () => {
       )}
 
       {/* ── Grid ───────────────────────────────────────────── */}
-      <div className="id-grid">
-        {currentIdeas.map((idea) => {
-          const score     = idea.upvotes.length - idea.downvotes.length;
-          const scoreSign = score > 0 ? `+${score}` : `${score}`;
-          const author    = idea.isAnonymous ? "Anonymous" : (idea.author?.name ?? idea.author ?? "—");
-          const initial   = idea.isAnonymous ? "?" : (author[0] ?? "?").toUpperCase();
+      {!loading && !error && ideas.length > 0 && (
+        <div className="id-grid">
+          {ideas.map((idea) => {
+            const upvotes   = idea.upvotes   ?? 0;
+            const downvotes = idea.downvotes ?? 0;
+            const score     = upvotes - downvotes;
+            const scoreSign = score > 0 ? `+${score}` : `${score}`;
+            // BE trả authorName — ẩn nếu isAnonymous
+            const author  = idea.isAnonymous ? "Anonymous" : (idea.authorName ?? "—");
+            const initial = idea.isAnonymous ? "?" : (author[0] ?? "?").toUpperCase();
 
-          return (
-            <div key={idea.id} className="id-idea-card" onClick={() => navigate(`/ideas/${idea.id}`)}>
-              {idea.category && (
-                <span className="id-idea-category">{idea.category}</span>
-              )}
-
-              <Link
-                to={`/ideas/${idea.id}`}
-                className="id-idea-title"
-                onClick={(e) => e.stopPropagation()}
+            return (
+              <div
+                key={idea.ideaId}
+                className="id-idea-card"
+                onClick={() => navigate(`/ideas/${idea.ideaId}`)}
               >
-                {idea.title}
-              </Link>
-
-              <div className="id-idea-author">
-                <div style={{
-                  width: 20, height: 20, borderRadius: "50%",
-                  background: idea.isAnonymous ? "#94a3b8" : "#2563eb",
-                  color: "#fff", fontSize: 9, fontWeight: 700,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  flexShrink: 0,
-                }}>
-                  {initial}
+                {idea.categories?.length > 0 && (
+                  <span className="id-idea-category">{idea.categories[0]}</span>
+                )}
+                <Link
+                  to={`/ideas/${idea.ideaId}`}
+                  className="id-idea-title"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  {idea.title}
+                </Link>
+                <div className="id-idea-author">
+                  <div style={{
+                    width: 20, height: 20, borderRadius: "50%",
+                    background: idea.isAnonymous ? "#94a3b8" : "#2563eb",
+                    color: "#fff", fontSize: 9, fontWeight: 700,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    flexShrink: 0,
+                  }}>
+                    {initial}
+                  </div>
+                  {author} · {formatDate(idea.submittedAt)}
                 </div>
-                {author} · {formatDate(idea.createdAt)}
-              </div>
-
-              <div className="id-idea-footer">
-                <div className="id-idea-meta">
-                  <span className="id-idea-meta-item"><EyeIcon /> {idea.views}</span>
-                  <span className="id-idea-meta-item"><ChatIcon /> {Array.isArray(idea.comments) ? idea.comments.length : 0}</span>
+                <div className="id-idea-footer">
+                  <div className="id-idea-meta">
+                    <span className="id-idea-meta-item"><EyeIcon /> {idea.viewCount ?? 0}</span>
+                    <span className="id-idea-meta-item">
+  <ChatIcon /> {idea.commentCount ?? 0}
+</span>
+                  </div>
+                  <span className={`id-score ${scoreClass(upvotes, downvotes)}`}>
+                    {score >= 0 ? "▲" : "▼"} {scoreSign}
+                  </span>
                 </div>
-                <span className={`id-score ${scoreClass(idea)}`}>
-                  {score >= 0 ? "▲" : "▼"} {scoreSign}
-                </span>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* ── Pagination ─────────────────────────────────────── */}
       {totalPages > 1 && (
         <div className="id-pagination">
           <button
             className="id-page-btn id-page-btn--nav"
-            disabled={currentPage === 1}
+            disabled={currentPage === 0}
             onClick={() => setCurrentPage((p) => p - 1)}
-            style={{ opacity: currentPage === 1 ? 0.4 : 1 }}
+            style={{ opacity: currentPage === 0 ? 0.4 : 1 }}
           >
             ← Prev
           </button>
-
           {Array.from({ length: totalPages }, (_, i) => (
             <button
               key={i}
-              className={`id-page-btn${currentPage === i + 1 ? " id-page-btn--active" : ""}`}
-              onClick={() => setCurrentPage(i + 1)}
+              className={`id-page-btn${currentPage === i ? " id-page-btn--active" : ""}`}
+              onClick={() => setCurrentPage(i)}
             >
               {i + 1}
             </button>
           ))}
-
           <button
             className="id-page-btn id-page-btn--nav"
-            disabled={currentPage === totalPages}
+            disabled={currentPage === totalPages - 1}
             onClick={() => setCurrentPage((p) => p + 1)}
-            style={{ opacity: currentPage === totalPages ? 0.4 : 1 }}
+            style={{ opacity: currentPage === totalPages - 1 ? 0.4 : 1 }}
           >
             Next →
           </button>
         </div>
       )}
-
     </div>
   );
 };

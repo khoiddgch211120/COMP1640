@@ -31,6 +31,7 @@ import com.example.comp1640.repository.VoteRepository;
 import com.example.comp1640.enums.RoleName;
 import com.example.comp1640.service.IdeaService;
 import lombok.RequiredArgsConstructor;
+import com.example.comp1640.repository.CommentRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +42,7 @@ public class IdeaServiceImpl implements IdeaService {
     private final AcademicYearRepository academicYearRepo;
     private final CategoryRepository categoryRepo;
     private final VoteRepository voteRepo;
+    private final CommentRepository commentRepo;
 
     @Override
     @Transactional
@@ -241,6 +243,7 @@ public class IdeaServiceImpl implements IdeaService {
 
         long upvotes = voteRepo.countUpvotes(idea.getIdeaId());
         long downvotes = voteRepo.countDownvotes(idea.getIdeaId());
+        long commentCount = commentRepo.countByIdeaIdeaId(idea.getIdeaId());
 
         return new IdeaResponse(
                 idea.getIdeaId(),
@@ -256,6 +259,7 @@ public class IdeaServiceImpl implements IdeaService {
                 idea.getViewCount(),
                 upvotes,
                 downvotes,
+                commentCount,
                 idea.getTermsAccepted(),
                 idea.getSubmittedAt(),
                 idea.getUpdatedAt());
