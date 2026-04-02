@@ -1,4 +1,11 @@
-package com.example.comp1640.model;
+package com.example.comp1640.entity;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -28,17 +35,13 @@ public class TermsConditions {
     @Column(name = "terms_id")
     private Integer termsId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by")
-    private User createdBy;
+    @Column(name = "version", nullable = false)
+    private Integer version;
 
-    @Column(name = "version", nullable = false, length = 20)
-    private String version;
-
-    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "content", columnDefinition = "TEXT", nullable = false)
     private String content;
 
-    @Column(name = "effective_date")
+    @Column(name = "effective_date", nullable = false)
     private LocalDate effectiveDate;
 
     @Column(name = "created_at")

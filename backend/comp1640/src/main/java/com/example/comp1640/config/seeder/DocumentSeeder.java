@@ -27,25 +27,39 @@ public class DocumentSeeder implements CommandLineRunner {
       }
 
       List<Idea> ideas = ideaRepo.findAll();
-      Idea idea1 = ideas.get(0);
-      Idea idea2 = ideas.size() > 1 ? ideas.get(1) : idea1;
+      List<Document> documents = new java.util.ArrayList<>();
 
-      docRepo.saveAll(List.of(
-            createDoc("proposal_ai_test.pdf", "https://cloudinary/sample/proposal1.pdf", idea1),
-            createDoc("design_diagram.png", "https://cloudinary/sample/diagram1.png", idea1),
-            createDoc("presentation.pptx", "https://cloudinary/sample/ppt1.pptx", idea2),
-            createDoc("budget.xlsx", "https://cloudinary/sample/budget1.xlsx", idea2),
-            createDoc("research_doc.docx", "https://cloudinary/sample/research1.docx", idea1)));
+      String[] fileNames = {
+            "proposal.pdf", "design_diagram.png", "presentation.pptx", "budget.xlsx",
+            "technical_spec.docx", "timeline.xlsx", "risk_analysis.pdf", "research_paper.pdf",
+            "architecture.png", "mockups.figma", "requirements.txt", "implementation_guide.docx"
+      };
 
-      System.out.println("Seeded 5 documents.");
+      // Add 1-3 documents per idea
+      for (int i = 0; i < ideas.size(); i++) {
+         Idea idea = ideas.get(i);
+         int numDocs = (i % 3) + 1; // 1-3 docs per idea
+
+         for (int j = 0; j < numDocs; j++) {
+            String fileName = fileNames[(i * 5 + j) % fileNames.length];
+            String fileExtension = fileName.substring(fileName.lastIndexOf('.') + 1);
+            String publicId = "doc_" + idea.getIdeaId() + "_" + j;
+            String fileUrl = "https://res.cloudinary.com/sample/" + idea.getIdeaId() + "/" + fileName;
+
+            documents.add(createDoc(fileName, fileUrl, publicId, fileExtension, idea));
+         }
+      }
+
+      docRepo.saveAll(documents);
+      System.out.println("Seeded " + documents.size() + " documents.");
    }
 
-   private Document createDoc(String originalName, String url, Idea idea) {
+   private Document createDoc(String fileName, String url, String publicId, String fileType, Idea idea) {
       Document doc = new Document();
-      doc.setFileName(originalName);
+      doc.setFileName(fileName);
       doc.setFileUrl(url);
-      doc.setPublicId("sample_public_id_" + originalName);
-      doc.setFileType(originalName.substring(originalName.lastIndexOf('.') + 1));
+      doc.setPublicId(publicId);
+      doc.setFileType(fileType);
       doc.setIdea(idea);
       doc.setUploadedAt(LocalDateTime.now());
       return doc;

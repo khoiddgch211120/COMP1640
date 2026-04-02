@@ -32,6 +32,7 @@ import com.example.comp1640.enums.RoleName;
 import com.example.comp1640.service.IdeaService;
 import com.example.comp1640.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import com.example.comp1640.repository.CommentRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +44,7 @@ public class IdeaServiceImpl implements IdeaService {
     private final CategoryRepository categoryRepo;
     private final VoteRepository voteRepo;
     private final NotificationService notificationService;
+    private final CommentRepository commentRepo;
 
     @Override
     @Transactional
@@ -69,7 +71,7 @@ public class IdeaServiceImpl implements IdeaService {
 
         Idea idea = new Idea();
         idea.setUser(currentUser);
-        idea.setDepartment(currentUser.getDepartment());
+        idea.setDepartment(currentUser.getDepartment()); // May be null if user has no department
         idea.setAcademicYear(year);
         idea.setTitle(request.getTitle());
         idea.setContent(request.getContent());
@@ -245,6 +247,7 @@ public class IdeaServiceImpl implements IdeaService {
 
         long upvotes = voteRepo.countUpvotes(idea.getIdeaId());
         long downvotes = voteRepo.countDownvotes(idea.getIdeaId());
+        long commentCount = commentRepo.countByIdeaIdeaId(idea.getIdeaId());
 
         return new IdeaResponse(
                 idea.getIdeaId(),
@@ -260,6 +263,7 @@ public class IdeaServiceImpl implements IdeaService {
                 idea.getViewCount(),
                 upvotes,
                 downvotes,
+                commentCount,
                 idea.getTermsAccepted(),
                 idea.getSubmittedAt(),
                 idea.getUpdatedAt());

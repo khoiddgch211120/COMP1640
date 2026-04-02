@@ -18,22 +18,23 @@ public class DashboardController {
     private final DashboardService dashboardService;
 
     /**
-     * GET /dashboard           → thống kê toàn trường
+     * GET /dashboard → thống kê toàn trường
      * GET /dashboard?dept_id=1 → thống kê theo phòng ban
      *
      * Response khớp với AdminDashboard.jsx:
      * {
-     *   total_ideas, total_comments, total_users, total_departments,
-     *   ideas_this_year, anonymous_ideas,
-     *   ideas_with_comments, ideas_without_comments,
-     *   dept_name (khi filter theo dept),
-     *   monthly_trend: [{ month, idea_count }],
-     *   top_contributors: [{ full_name, dept_name, idea_count, initial }],
-     *   by_department: [{ dept_id, dept_name, idea_count, comment_count, user_count, percent }]
+     * total_ideas, total_comments, total_users, total_departments,
+     * ideas_this_year, anonymous_ideas,
+     * ideas_with_comments, ideas_without_comments,
+     * dept_name (khi filter theo dept),
+     * monthly_trend: [{ month, idea_count }],
+     * top_contributors: [{ full_name, dept_name, idea_count, initial }],
+     * by_department: [{ dept_id, dept_name, idea_count, comment_count, user_count,
+     * percent }]
      * }
      */
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER', 'DEPT_MANAGER', 'HR_MANAGER', 'QA_COORDINATOR')")
     public ResponseEntity<DashboardResponse> getDashboard(
             @RequestParam(required = false) Integer deptId) {
         return ResponseEntity.ok(dashboardService.getDashboard(deptId));

@@ -1,111 +1,93 @@
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 import {
-  Table, Tabs, Tag, Card, Avatar, Tooltip, Badge, Button,
-  Input, Select, Empty, Modal, Descriptions, Divider, Spin, message
+  Table, Tabs, Tag, Card, Avatar, Badge, Button,
+  Input, Select, Empty, Spin, message,
 } from "antd";
 import {
   WarningOutlined, MessageOutlined, EyeInvisibleOutlined,
-  UserOutlined, SearchOutlined, CalendarOutlined, FilterOutlined,
-  EyeOutlined, ExclamationCircleOutlined
+  UserOutlined, SearchOutlined, CalendarOutlined,
 } from "@ant-design/icons";
+import { getAcademicYears } from "../../services/academicYearService";
 import { getIdeasWithoutComments, getAnonymousContent } from "../../services/reportService";
 import "../../styles/exception-reports.css";
 
 const { TabPane } = Tabs;
-const { Option } = Select;
+const { Option }  = Select;
 
-/* ── Sub-components ── */
 const DaysOpenBadge = ({ date }) => {
-  const submitted = new Date(date);
-  const today = new Date();
-  const daysOpen = Math.floor((today - submitted) / (1000 * 60 * 60 * 24));
+  const daysOpen = Math.floor((new Date() - new Date(date)) / 86400000);
   const color = daysOpen > 60 ? "red" : daysOpen > 30 ? "orange" : "green";
   const label = daysOpen > 60 ? "Overdue" : daysOpen > 30 ? "Pending" : "Recent";
-  return (
-    <Tag color={color} className="exc-days-tag">
-      {daysOpen}d &bull; {label}
-    </Tag>
-  );
+  return <Tag color={color} className="exc-days-tag">{daysOpen}d &bull; {label}</Tag>;
 };
 
-/* ── Main Component ── */
 const ExceptionReports = () => {
-  const academicYearState = useSelector((state) => state.academicYear);
-  const academicYears = academicYearState?.items || [];
-  const [selectedYearId, setSelectedYearId] = useState(null);
-
-  const [noCommentIdeas, setNoCommentIdeas] = useState([]);
+  const [academicYears,     setAcademicYears]     = useState([]);
+  const [selectedYearId,    setSelectedYearId]    = useState(null);
+  const [noCommentIdeas,    setNoCommentIdeas]    = useState([]);
   const [anonymousContents, setAnonymousContents] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading,           setLoading]           = useState(false);
+  const [fetchingYears,     setFetchingYears]     = useState(true);
+  const [noCommentSearch,   setNoCommentSearch]   = useState("");
+  const [noCommentDept,     setNoCommentDept]     = useState("All");
+  const [anonSearch,        setAnonSearch]        = useState("");
 
-  const [noCommentSearch, setNoCommentSearch] = useState("");
-  const [noCommentDept, setNoCommentDept] = useState("All");
-  const [anonSearch, setAnonSearch] = useState("");
-  const [detailModal, setDetailModal] = useState(null);
-
-  // Auto-select first year
+  /* ── Load academic years ─────────────────────────────────── */
   useEffect(() => {
-    if (academicYears.length > 0 && !selectedYearId) {
-      setSelectedYearId(academicYears[0].id);
-    }
-  }, [academicYears, selectedYearId]);
+    const fetch = async () => {
+      setFetchingYears(true);
+      try {
+        const data = await getAcademicYears();
+        setAcademicYears(data ?? []);
+        if (data?.length > 0) setSelectedYearId(data[0].yearId);
+      } catch {
+        message.error("Failed to load academic years");
+      } finally {
+        setFetchingYears(false);
+      }
+    };
+    fetch();
+  }, []);
 
-  // Fetch data when year changes
+  /* ── Load reports khi đổi year ───────────────────────────── */
   useEffect(() => {
-    if (selectedYearId) {
-      fetchData();
-    }
+    if (!selectedYearId) return;
+    const fetch = async () => {
+      setLoading(true);
+      try {
+        const [noComment, anon] = await Promise.all([
+          getIdeasWithoutComments(selectedYearId),
+          getAnonymousContent(selectedYearId),
+        ]);
+        setNoCommentIdeas(noComment    ?? []);
+        setAnonymousContents(anon      ?? []);
+      } catch {
+        message.error("Failed to load exception reports");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetch();
   }, [selectedYearId]);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [noCommentData, anonymousData] = await Promise.all([
-        getIdeasWithoutComments(selectedYearId),
-        getAnonymousContent(selectedYearId)
-      ]);
-      setNoCommentIdeas(noCommentData || []);
-      setAnonymousContents(anonymousData || []);
-    } catch (error) {
-      console.error("Error fetching exception reports:", error);
-      message.error("Failed to load exception reports");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const departments = [...new Set(noCommentIdeas.map((i) => i.deptName).filter(Boolean))];
 
-  // Get unique departments from data
-  const departments = Array.from(
-    new Set(noCommentIdeas.map((i) => i.deptName).filter(Boolean))
-  );
-
-  /* ── No-comment filtered ── */
   const filteredNoComment = noCommentIdeas.filter((i) => {
-    const matchSearch =
-      i.title.toLowerCase().includes(noCommentSearch.toLowerCase()) ||
-      (i.authorName &&
-        i.authorName.toLowerCase().includes(noCommentSearch.toLowerCase()));
-    const matchDept = noCommentDept === "All" || i.deptName === noCommentDept;
+    const matchSearch = i.title.toLowerCase().includes(noCommentSearch.toLowerCase());
+    const matchDept   = noCommentDept === "All" || i.deptName === noCommentDept;
     return matchSearch && matchDept;
   });
 
-  /* ── Anonymous filtered ── */
   const filteredAnon = anonymousContents.filter((item) =>
-    item.contentPreview.toLowerCase().includes(anonSearch.toLowerCase())
+    (item.contentPreview ?? "").toLowerCase().includes(anonSearch.toLowerCase())
   );
 
-  /* ── No-comment columns ── */
   const noCommentColumns = [
     {
       title: "Idea",
       dataIndex: "title",
       key: "title",
-      render: (title) => (
-        <div className="exc-idea-cell">
-          <span className="exc-idea-title">{title}</span>
-        </div>
-      ),
+      render: (title) => <span className="exc-idea-title">{title}</span>,
     },
     {
       title: "Department",
@@ -115,20 +97,6 @@ const ExceptionReports = () => {
       render: (d) => <span className="exc-dept">{d}</span>,
     },
     {
-      title: "Submitted By",
-      dataIndex: "authorName",
-      key: "authorName",
-      width: 160,
-      render: (name, record) => (
-        <div className="exc-author-cell">
-          <Avatar size={26} icon={<UserOutlined />} className="exc-author-avatar" />
-          <span className="exc-author-name">
-            {record.isAnonymous ? "Anonymous" : name}
-          </span>
-        </div>
-      ),
-    },
-    {
       title: "Submitted",
       dataIndex: "submittedAt",
       key: "submittedAt",
@@ -136,30 +104,27 @@ const ExceptionReports = () => {
       render: (d) => (
         <span className="exc-date">
           <CalendarOutlined style={{ marginRight: 4 }} />
-          {new Date(d).toLocaleDateString()}
+          {d ? new Date(d).toLocaleDateString() : "—"}
         </span>
       ),
     },
     {
       title: "Time Open",
       dataIndex: "submittedAt",
-      key: "submittedAt",
+      key: "timeOpen",
       width: 130,
-      render: (date) => <DaysOpenBadge date={date} />,
+      render: (date) => date ? <DaysOpenBadge date={date} /> : "—",
     },
   ];
 
-  /* ── Anonymous columns ── */
   const anonColumns = [
     {
       title: "Type",
       dataIndex: "contentType",
       key: "contentType",
-      width: 80,
+      width: 90,
       render: (type) => (
-        <Tag color={type === "IDEA" ? "blue" : "cyan"}>
-          {type}
-        </Tag>
+        <Tag color={type === "IDEA" ? "blue" : "cyan"}>{type}</Tag>
       ),
     },
     {
@@ -168,7 +133,7 @@ const ExceptionReports = () => {
       key: "contentPreview",
       render: (text) => (
         <span className="exc-content-preview" title={text}>
-          {text.length > 80 ? text.slice(0, 80) + "…" : text}
+          {(text ?? "").length > 80 ? text.slice(0, 80) + "…" : text}
         </span>
       ),
     },
@@ -176,7 +141,7 @@ const ExceptionReports = () => {
       title: "Real Author",
       dataIndex: "authorRealName",
       key: "authorRealName",
-      width: 140,
+      width: 150,
       render: (name) => (
         <div className="exc-author-cell">
           <Avatar size={24} icon={<UserOutlined />} className="exc-author-avatar" />
@@ -189,129 +154,96 @@ const ExceptionReports = () => {
       dataIndex: "createdAt",
       key: "createdAt",
       width: 120,
-      render: (d) => new Date(d).toLocaleDateString(),
+      render: (d) => d ? new Date(d).toLocaleDateString() : "—",
     },
     {
       title: "Time",
       dataIndex: "createdAt",
-      key: "createdAt",
+      key: "time",
       width: 130,
-      render: (date) => <DaysOpenBadge date={date} />,
+      render: (date) => date ? <DaysOpenBadge date={date} /> : "—",
     },
   ];
 
+  const currentYearLabel = academicYears.find((y) => y.yearId === selectedYearId)?.yearLabel ?? "";
+
   return (
-    <Spin spinning={loading}>
+    <Spin spinning={fetchingYears || loading}>
       <div className="exc-page">
-        {/* ── Page header ── */}
         <div className="exc-page-header">
           <div className="exc-page-title-block">
             <WarningOutlined className="exc-page-icon" />
             <div>
               <h2 className="exc-page-title">Exception Reports</h2>
               <p className="exc-page-sub">
-                {selectedYearId && academicYears.find((y) => y.id === selectedYearId)
-                  ? `Academic Year: ${academicYears.find((y) => y.id === selectedYearId).yearLabel}`
-                  : "Select an academic year"}
+                {currentYearLabel ? `Academic Year: ${currentYearLabel}` : "Select an academic year"}
               </p>
             </div>
           </div>
           <Select
-            value={selectedYearId || undefined}
+            value={selectedYearId}
             onChange={setSelectedYearId}
             placeholder="Select Academic Year"
-            style={{ width: 200 }}
+            style={{ width: 220 }}
           >
-            {academicYears.map((year) => (
-              <Option key={year.id} value={year.id}>
-                {year.yearLabel}
-              </Option>
+            {academicYears.map((y) => (
+              <Option key={y.yearId} value={y.yearId}>{y.yearLabel}</Option>
             ))}
           </Select>
         </div>
 
-        {/* ── Alert banners ── */}
         <div className="exc-alert-row">
           <div className="exc-alert exc-alert-orange">
             <MessageOutlined />
-            <span>
-              <strong>{noCommentIdeas.length}</strong> ideas have received no
-              comments since submission
-            </span>
+            <span><strong>{noCommentIdeas.length}</strong> ideas have received no comments</span>
           </div>
           <div className="exc-alert exc-alert-violet">
             <EyeInvisibleOutlined />
-            <span>
-              <strong>{anonymousContents.length}</strong> ideas or comments were
-              submitted anonymously
-            </span>
+            <span><strong>{anonymousContents.length}</strong> ideas or comments submitted anonymously</span>
           </div>
         </div>
 
-        {/* ── Tabs ── */}
         <Card className="exc-card">
           <Tabs defaultActiveKey="no-comment" className="exc-tabs">
-            {/* ── Tab 1: No comments ── */}
             <TabPane
               tab={
                 <span className="exc-tab-label">
                   <MessageOutlined className="exc-tab-icon" />
                   No Comments
-                  <Badge
-                    count={noCommentIdeas.length}
-                    color="#ea580c"
-                    style={{ marginLeft: 8 }}
-                  />
+                  <Badge count={noCommentIdeas.length} color="#ea580c" style={{ marginLeft: 8 }} />
                 </span>
               }
               key="no-comment"
             >
               <div className="exc-filter-row">
                 <Input
-                  placeholder="Search by title or author..."
+                  placeholder="Search by title..."
                   prefix={<SearchOutlined style={{ color: "#94a3b8" }} />}
                   value={noCommentSearch}
                   onChange={(e) => setNoCommentSearch(e.target.value)}
-                  allowClear
-                  className="exc-search-input"
+                  allowClear className="exc-search-input"
                 />
-                <Select
-                  value={noCommentDept}
-                  onChange={setNoCommentDept}
-                  style={{ width: 180 }}
-                >
+                <Select value={noCommentDept} onChange={setNoCommentDept} style={{ width: 180 }}>
                   <Option value="All">All Departments</Option>
-                  {["All", ...departments].map((d) => (
-                    <Option key={d} value={d}>
-                      {d}
-                    </Option>
-                  ))}
+                  {departments.map((d) => <Option key={d} value={d}>{d}</Option>)}
                 </Select>
               </div>
-
               <Table
                 columns={noCommentColumns}
                 dataSource={filteredNoComment}
                 rowKey="ideaId"
                 pagination={{ pageSize: 8, showSizeChanger: false }}
-                locale={{
-                  emptyText: <Empty description="No ideas without comments 🎉" />,
-                }}
+                locale={{ emptyText: <Empty description="No ideas without comments 🎉" /> }}
                 className="exc-table"
               />
             </TabPane>
 
-            {/* ── Tab 2: Anonymous content ── */}
             <TabPane
               tab={
                 <span className="exc-tab-label">
                   <EyeInvisibleOutlined className="exc-tab-icon" />
                   Anonymous Content
-                  <Badge
-                    count={anonymousContents.length}
-                    color="#7c3aed"
-                    style={{ marginLeft: 8 }}
-                  />
+                  <Badge count={anonymousContents.length} color="#7c3aed" style={{ marginLeft: 8 }} />
                 </span>
               }
               key="anonymous"
@@ -322,19 +254,15 @@ const ExceptionReports = () => {
                   prefix={<SearchOutlined style={{ color: "#94a3b8" }} />}
                   value={anonSearch}
                   onChange={(e) => setAnonSearch(e.target.value)}
-                  allowClear
-                  className="exc-search-input"
+                  allowClear className="exc-search-input"
                 />
               </div>
-
               <Table
                 columns={anonColumns}
                 dataSource={filteredAnon}
-                rowKey={(record) => record.contentId}
+                rowKey="contentId"
                 pagination={{ pageSize: 8, showSizeChanger: false }}
-                locale={{
-                  emptyText: <Empty description="No anonymous content found" />,
-                }}
+                locale={{ emptyText: <Empty description="No anonymous content found" /> }}
                 className="exc-table"
               />
             </TabPane>

@@ -16,6 +16,7 @@ import java.util.zip.ZipOutputStream;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.comp1640.dto.response.IdeaResponse;
 import com.example.comp1640.dto.response.ReportStatsResponse;
@@ -36,6 +37,7 @@ import com.example.comp1640.service.ReportService;
 import com.opencsv.CSVWriter;
 
 @Service
+@Transactional(readOnly = true)
 public class ReportServiceImpl implements ReportService {
 
     private final IdeaRepository ideaRepo;

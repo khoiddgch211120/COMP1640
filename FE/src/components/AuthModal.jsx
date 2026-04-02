@@ -1,15 +1,21 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "../styles/auth-modal.css"; // ← điều chỉnh path nếu cần
+import "../styles/auth-modal.css";
 
 const AuthModal = ({ children }) => {
   const navigate = useNavigate();
-  const handleClose = () => navigate(-1);
+
+  // 🔥 FIX Ở ĐÂY
+  const handleClose = () => navigate("/");
 
   useEffect(() => {
-    const onKey = (e) => { if (e.key === "Escape") handleClose(); };
+    const onKey = (e) => {
+      if (e.key === "Escape") handleClose();
+    };
+
     document.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
+
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = "";

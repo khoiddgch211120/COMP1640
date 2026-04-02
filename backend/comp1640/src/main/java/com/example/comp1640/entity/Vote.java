@@ -3,7 +3,6 @@ package com.example.comp1640.entity;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -30,17 +29,14 @@ public class Vote {
     @Column(name = "vote_id")
     private Integer voteId;
 
-    @NotNull(message = "Idea không được phép null")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "idea_id", nullable = false)
     private Idea idea;
 
-    @NotNull(message = "User không được phép null")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @NotNull(message = "Loại phiếu bầu không được phép null")
     @Enumerated(EnumType.STRING)
     @Column(name = "vote_type", nullable = false, length = 10)
     private VoteType voteType;

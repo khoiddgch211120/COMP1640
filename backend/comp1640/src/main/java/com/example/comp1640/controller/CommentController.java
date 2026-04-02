@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -21,7 +22,7 @@ public class CommentController {
     @PostMapping("/ideas/{ideaId}/comments")
     public ResponseEntity<CommentResponse> add(
             @PathVariable Integer ideaId,
-            @RequestBody CommentRequest request) {
+            @Valid @RequestBody CommentRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(commentService.add(ideaId, request));
     }
 
@@ -43,7 +44,7 @@ public class CommentController {
     @PutMapping("/comments/{commentId}")
     public ResponseEntity<CommentResponse> update(
             @PathVariable Integer commentId,
-            @RequestBody CommentRequest request) {
+            @Valid @RequestBody CommentRequest request) {
         return ResponseEntity.ok(commentService.update(commentId, request));
     }
 

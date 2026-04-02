@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.validation.Valid;
 
 import java.util.List;
 import java.util.Map;
@@ -62,7 +63,7 @@ public class DocumentController {
     // DELETE bulk — frontend gửi { doc_ids: [1, 2, 3] }
     @DeleteMapping("/documents")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> deleteBulk(@RequestBody Map<String, List<Integer>> body) {
+    public ResponseEntity<Void> deleteBulk(@Valid @RequestBody Map<String, List<Integer>> body) {
         List<Integer> docIds = body.get("doc_ids");
         if (docIds != null) {
             docIds.forEach(documentService::delete);

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 import com.example.comp1640.dto.request.UserRequest;
 import com.example.comp1640.dto.response.UserResponse;
@@ -31,44 +32,44 @@ public class UserController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
-    public ResponseEntity<UserResponse> create(@RequestBody UserRequest request) {
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
+    public ResponseEntity<UserResponse> create(@Valid @RequestBody UserRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.create(request));
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     public ResponseEntity<List<UserResponse>> getAll(
             @RequestParam(required = false) Integer deptId) {
         return ResponseEntity.ok(userService.getAll(deptId));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     public ResponseEntity<UserResponse> getById(@PathVariable Integer id) {
         return ResponseEntity.ok(userService.getById(id));
     }
 
     // PUT giữ nguyên để tương thích
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     public ResponseEntity<UserResponse> update(
             @PathVariable Integer id,
-            @RequestBody UserRequest request) {
+            @Valid @RequestBody UserRequest request) {
         return ResponseEntity.ok(userService.update(id, request));
     }
 
     // PATCH thêm mới — frontend admin dùng PATCH để update thông tin user
     @PatchMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     public ResponseEntity<UserResponse> patch(
             @PathVariable Integer id,
-            @RequestBody UserRequest request) {
+            @Valid @RequestBody UserRequest request) {
         return ResponseEntity.ok(userService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         userService.delete(id);
         return ResponseEntity.noContent().build();
@@ -76,7 +77,7 @@ public class UserController {
 
     // Toggle active — frontend gọi PATCH /users/:id/toggle-active
     @PatchMapping("/{id}/toggle-active")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MGR')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR_MANAGER')")
     public ResponseEntity<Void> toggleActive(@PathVariable Integer id) {
         userService.toggleActive(id);
         return ResponseEntity.noContent().build();

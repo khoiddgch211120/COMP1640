@@ -1,5 +1,10 @@
 package com.example.comp1640.model;
 
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -21,14 +26,13 @@ import lombok.Setter;
 @NoArgsConstructor
 public class UserTermsAcceptance {
 
-    @EmbeddedId
-    private UserTermsAcceptanceId id = new UserTermsAcceptanceId();
-
+    @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("userId")
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Id
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("tcId")
     @JoinColumn(name = "tc_id")

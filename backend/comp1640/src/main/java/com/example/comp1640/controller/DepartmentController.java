@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import jakarta.validation.Valid;
 
 import com.example.comp1640.dto.request.DepartmentRequest;
 import com.example.comp1640.dto.response.DepartmentResponse;
@@ -31,7 +32,7 @@ public class DepartmentController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<DepartmentResponse> create(@RequestBody DepartmentRequest request) {
+    public ResponseEntity<DepartmentResponse> create(@Valid @RequestBody DepartmentRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(departmentService.create(request));
     }
 
@@ -50,7 +51,7 @@ public class DepartmentController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DepartmentResponse> update(
             @PathVariable Integer id,
-            @RequestBody DepartmentRequest request) {
+            @Valid @RequestBody DepartmentRequest request) {
         return ResponseEntity.ok(departmentService.update(id, request));
     }
 
@@ -59,7 +60,7 @@ public class DepartmentController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<DepartmentResponse> patch(
             @PathVariable Integer id,
-            @RequestBody DepartmentRequest request) {
+            @Valid @RequestBody DepartmentRequest request) {
         return ResponseEntity.ok(departmentService.update(id, request));
     }
 

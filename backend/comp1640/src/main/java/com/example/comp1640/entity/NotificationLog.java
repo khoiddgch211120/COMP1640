@@ -1,4 +1,10 @@
-package com.example.comp1640.model;
+package com.example.comp1640.entity;
+
+import com.example.comp1640.enums.NotifStatus;
+import com.example.comp1640.enums.NotifType;
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 

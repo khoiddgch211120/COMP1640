@@ -26,38 +26,69 @@ public class CommentSeeder implements CommandLineRunner {
 
    @Override
    public void run(String... args) throws Exception {
-      if (commentRepo.count() > 10 || ideaRepo.count() == 0) {
+      if (commentRepo.count() > 50 || ideaRepo.count() == 0) {
          System.out.println("Comments already seeded or no ideas.");
          return;
       }
 
       List<Idea> ideas = ideaRepo.findAll();
       List<User> users = userRepo.findAll();
+      if (users.isEmpty())
+         return;
 
-      List<Comment> comments = List.of(
-            createComment("Ý tưởng hay! Có thể implement ngay.", users.get(0), ideas.get(0)),
-            createComment("Need more details on cost.", users.get(1), ideas.get(0)),
-            createComment("Great suggestion! Support it.", users.get(2), ideas.get(0)),
-            createComment("This could save time for lecturers.", users.get(3 % users.size()), ideas.get(0)),
-            createComment("Good idea for Greenwich VN campus.", users.get(0), ideas.get(0)),
-            createComment("How about integration with LMS?", users.get(1), ideas.get(1)),
-            createComment("Approved by IT team.", users.get(2), ideas.get(1)),
-            createComment("Need POC first.", users.get(0), ideas.get(1)),
-            createComment("Excellent for student experience.", users.get(1), ideas.get(2)),
-            createComment("Vote up!", users.get(2), ideas.get(2)),
-            createComment("Should test with students.", users.get(3 % users.size()), ideas.get(2)),
-            createComment("Perfect for research.", users.get(0), ideas.get(3)),
-            createComment("Cost effective solution.", users.get(1), ideas.get(3)),
-            createComment("Ready to implement.", users.get(2), ideas.get(3)),
-            // doubled data - more comments
-            createComment("Additional thought: security concerns?", users.get(4 % users.size()), ideas.get(0)),
-            createComment("Love this idea for Computing school.", users.get(5 % users.size()), ideas.get(1)),
-            createComment("Business school needs this.", users.get(0), ideas.get(2)),
-            createComment("Health dept approves.", users.get(1), ideas.get(3)),
-            createComment("More details please.", users.get(2), ideas.get(0)),
-            createComment("Great for Vietnam campus!", users.get(3 % users.size()), ideas.get(1)),
-            createComment("Implement ASAP.", users.get(4 % users.size()), ideas.get(2)),
-            createComment("Team support.", users.get(5 % users.size()), ideas.get(3)));
+      List<Comment> comments = new java.util.ArrayList<>();
+
+      // Add 3-5 comments for each idea
+      for (int i = 0; i < Math.min(ideas.size(), 30); i++) {
+         Idea idea = ideas.get(i);
+         int userCount = users.size();
+
+         comments.add(createComment("Ý tưởng hay! Rất thực tế.", users.get(i % userCount), idea));
+         comments.add(createComment("Bạn có thể expand thêm chi tiết về timeline không?",
+               users.get((i + 1) % userCount), idea));
+         comments.add(createComment("Team của tôi rất hỗ trợ idea này!", users.get((i + 2) % userCount), idea));
+
+         if (i % 3 == 0) {
+            comments.add(createComment("Cần POC trước khi implement toàn diện.", users.get((i + 3) % userCount), idea));
+         }
+         if (i % 4 == 0) {
+            comments.add(
+                  createComment("Quá tuyệt vời! Implement ngay từ quarter này.", users.get((i + 4) % userCount), idea));
+         }
+      }
+
+      // Ensure we have a good number of comments
+      if (comments.size() < 75) {
+         // Add more random comments to other ideas
+         for (int i = 0; i < ideas.size() && comments.size() < 120; i++) {
+            Idea idea = ideas.get(i);
+            int userCount = users.size();
+            int numComments = (i % 5) + 2;
+
+            for (int j = 0; j < numComments; j++) {
+               String[] commentTexts = {
+                     "Good point! Let's discuss più in detail.",
+                     "Great innovation! +1",
+                     "Needs more research and validation.",
+                     "This could revolucionize our workflow.",
+                     "Agree with this approach.",
+                     "How about phase implementation?",
+                     "Safety and security concerns?",
+                     "Budget allocation required.",
+                     "Timeline looks reasonable.",
+                     "Team capacity available?",
+                     "Customer feedback needed.",
+                     "Competitor analysis done?",
+                     "Technical feasibility confirmed?",
+                     "Framework support required?",
+                     "Training needed for staff?"
+               };
+
+               String comment = commentTexts[(i * comments.size() + j) % commentTexts.length];
+               comments.add(createComment(comment, users.get((i + j) % userCount), idea));
+            }
+         }
+      }
 
       commentRepo.saveAll(comments);
       System.out.println("Seeded " + comments.size() + " comments.");

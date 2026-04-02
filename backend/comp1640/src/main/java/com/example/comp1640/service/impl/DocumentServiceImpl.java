@@ -58,7 +58,7 @@ public class DocumentServiceImpl implements DocumentService {
             document.setFileUrl((String) uploadResult.get("secure_url"));
             document.setPublicId((String) uploadResult.get("public_id"));
             document.setFileType(file.getContentType());
-            document.setFileSizeKb((int) (file.getSize() / 1024));
+            document.setFileSizeKb((file.getSize() + 1023) / 1024);
             document.setUploadedAt(LocalDateTime.now());
 
             return toResponse(documentRepository.save(document));
@@ -105,14 +105,28 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     private DocumentResponse toResponse(Document doc) {
+        Idea idea = doc.getIdea();
+
+        Integer deptId = (idea.getDepartment() != null)
+                ? idea.getDepartment().getDeptId()
+                : null;
+
+        String uploaderName = (idea.getUser() != null)
+                ? idea.getUser().getFullName()
+                : null;
+
+        Long fileSizeKb = doc.getFileSizeKb();
+
         return new DocumentResponse(
                 doc.getDocumentId(),
-                doc.getIdea().getIdeaId(),
+                idea.getIdeaId(),
+                idea.getTitle(),
                 doc.getFileName(),
                 doc.getFileUrl(),
                 doc.getFileType(),
-                doc.getFileSizeKb(),
-                doc.getUploadedAt()
-        );
+                fileSizeKb,
+                uploaderName,
+                deptId,
+                doc.getUploadedAt());
     }
 }

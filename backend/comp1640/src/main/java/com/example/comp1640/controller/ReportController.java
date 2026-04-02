@@ -18,7 +18,7 @@ import com.example.comp1640.service.ReportService;
 
 @RestController
 @RequestMapping("/reports")
-@PreAuthorize("hasAnyRole('ADMIN', 'QA_MGR', 'QA_COORD')")
+@PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER', 'DEPT_MANAGER', 'HR_MANAGER', 'QA_COORDINATOR')")
 public class ReportController {
 
     private final ReportService reportService;
@@ -43,6 +43,7 @@ public class ReportController {
 
     /** Xuất CSV danh sách ý tưởng (chỉ sau final_closure_date) */
     @GetMapping("/export/csv")
+    
     public ResponseEntity<byte[]> exportCsv(@RequestParam Integer yearId) {
         byte[] csv = reportService.exportIdeasCsv(yearId);
         return ResponseEntity.ok()
@@ -65,5 +66,23 @@ public class ReportController {
                                 .filename("documents_year_" + yearId + ".zip")
                                 .build().toString())
                 .body(zip);
+    }
+    @GetMapping("/statistics")
+    public ResponseEntity<List<StatisticsReportResponse>> getStatisticsReport(
+            @RequestParam Integer yearId,
+            @RequestParam(required = false) Integer deptId) {
+        return ResponseEntity.ok(reportService.getStatisticsReport(yearId, deptId));
+    }
+
+    @GetMapping("/no-comments")
+    public ResponseEntity<List<IdeaNoCommentResponse>> getIdeasWithoutComments(
+            @RequestParam Integer yearId) {
+        return ResponseEntity.ok(reportService.getIdeasWithoutComments(yearId));
+    }
+
+    @GetMapping("/anonymous-content")
+    public ResponseEntity<List<AnonymousContentResponse>> getAnonymousContent(
+            @RequestParam Integer yearId) {
+        return ResponseEntity.ok(reportService.getAnonymousContent(yearId));
     }
 }
