@@ -8,6 +8,50 @@ import { getIdeaVotes, voteOnIdea, deleteVote } from "../../services/voteService
 import { getDocumentsByIdea } from "../../services/documentService";
 import "../../styles/ideas.css";
 
+// ── MOCK DATA (dùng khi API chưa sẵn sàng) ──────────────────────────────────
+const USE_MOCK = true; // đổi thành true để dùng mock, false để gọi API thật
+
+const MOCK_IDEAS = {
+  "1": { ideaId: 1, title: "Improve Onboarding Process",       content: "Streamline the onboarding workflow by creating interactive guides, automated email sequences, and a buddy-system pairing new staff with experienced mentors. This reduces time-to-productivity from 3 weeks to under 1 week.", isAnonymous: false, authorName: "Nguyen Van An",  authorId: 1, submittedAt: "2025-01-15T09:00:00", viewCount: 142, upvotes: 24, downvotes: 2, termsAccepted: true, isDisabled: false, categories: ["HR"]         },
+  "2": { ideaId: 2, title: "Shift Management Mobile App",       content: "Develop a mobile app so staff can view, swap, and request changes to their shifts without needing to contact their manager directly. Includes push notifications and conflict detection.", isAnonymous: true,  authorName: null,             authorId: 2, submittedAt: "2025-01-20T11:30:00", viewCount: 98,  upvotes: 18, downvotes: 1, termsAccepted: true, isDisabled: false, categories: ["Technology"] },
+  "3": { ideaId: 3, title: "Operational Cost Optimisation",     content: "Audit all recurring vendor contracts and renegotiate terms where market rates have fallen. Estimated savings of 15% on operational spend this fiscal year based on benchmarking analysis.",            isAnonymous: false, authorName: "Le Van Cuong",   authorId: 3, submittedAt: "2025-02-01T08:45:00", viewCount: 76,  upvotes: 12, downvotes: 4, termsAccepted: true, isDisabled: false, categories: ["Finance"]    },
+  "4": { ideaId: 4, title: "Q1 Marketing Campaign Strategy",    content: "Launch a targeted social-media campaign during Q1 focusing on brand awareness among the 18-35 demographic in three key markets. Includes influencer partnerships and retargeting ads.",            isAnonymous: false, authorName: "Pham Thi Dung",  authorId: 4, submittedAt: "2025-02-10T14:20:00", viewCount: 201, upvotes: 31, downvotes: 3, termsAccepted: true, isDisabled: false, categories: ["Marketing"]  },
+};
+
+const MOCK_COMMENTS = {
+  "1": [
+    { commentId: 1, content: "Great idea! We had a similar onboarding issue last year and this would have saved weeks.",    isAnonymous: false, authorName: "Tran Thi Binh",  createdAt: "2025-01-16T10:00:00" },
+    { commentId: 2, content: "I support this. Maybe we can pilot it with the next cohort in March?",                       isAnonymous: true,  authorName: null,              createdAt: "2025-01-17T14:30:00" },
+    { commentId: 3, content: "The buddy-system part is key. Strong +1 from the engineering team.",                         isAnonymous: false, authorName: "Hoang Minh Duc", createdAt: "2025-01-18T09:15:00" },
+  ],
+  "2": [
+    { commentId: 4, content: "Shift swaps are a nightmare right now. This app would be a game changer.",                   isAnonymous: true,  authorName: null,              createdAt: "2025-01-21T08:00:00" },
+    { commentId: 5, content: "Push notifications are essential. Without them staff will just ignore it.",                  isAnonymous: false, authorName: "Dang Quoc Khai", createdAt: "2025-01-22T11:45:00" },
+  ],
+  "3": [
+    { commentId: 6, content: "We should start with the 3 largest contracts. That alone covers most of the savings.",       isAnonymous: false, authorName: "Vu Thi Huong",   createdAt: "2025-02-02T10:00:00" },
+  ],
+  "4": [
+    { commentId: 7,  content: "Love the influencer angle. Data shows it converts 3x better for our target age group.",    isAnonymous: false, authorName: "Nguyen Van An",  createdAt: "2025-02-11T09:00:00" },
+    { commentId: 8,  content: "What budget are we allocating? This needs a proper media plan.",                            isAnonymous: true,  authorName: null,              createdAt: "2025-02-11T11:30:00" },
+    { commentId: 9,  content: "Retargeting is the right call. Our click-through on retargeted ads is 4% vs 0.8% cold.",   isAnonymous: false, authorName: "Bui Thi Lan",    createdAt: "2025-02-12T15:00:00" },
+  ],
+};
+
+const MOCK_DOCUMENTS = {
+  "1": [{ docId: 1, fileName: "onboarding_proposal.pdf",   filePath: "#", fileSizeKb: 1240 }],
+  "2": [],
+  "3": [{ docId: 3, fileName: "cost_analysis.xlsx",        filePath: "#", fileSizeKb: 870  }],
+  "4": [{ docId: 4, fileName: "q1_campaign_deck.pptx",     filePath: "#", fileSizeKb: 5120 }],
+};
+
+const MOCK_VOTES = {
+  "1": { ideaId: 1, upvotes: 24, downvotes: 2, userVote: null },
+  "2": { ideaId: 2, upvotes: 18, downvotes: 1, userVote: null },
+  "3": { ideaId: 3, upvotes: 12, downvotes: 4, userVote: null },
+  "4": { ideaId: 4, upvotes: 31, downvotes: 3, userVote: null },
+};
+
 const IdeaDetail = () => {
   const { id }   = useParams();
   const navigate = useNavigate();
@@ -35,22 +79,32 @@ const IdeaDetail = () => {
       setLoading(true);
       setError(null);
       try {
-        const [ideaData, commentData, docsData] = await Promise.all([
-          getIdeaById(id),
-          getCommentsByIdea(id),
-          getDocumentsByIdea(id),
-        ]);
-        setIdea(ideaData);
-        setComments(commentData ?? []);
-        setDocuments(docsData ?? []);
+        if (USE_MOCK) {
+          // Dùng mock data — xóa block này khi API sẵn sàng
+          await new Promise((r) => setTimeout(r, 350));
+          const ideaData = MOCK_IDEAS[id] ?? MOCK_IDEAS["1"];
+          setIdea(ideaData);
+          setComments(MOCK_COMMENTS[id] ?? []);
+          setDocuments(MOCK_DOCUMENTS[id] ?? []);
+          if (user) setVote(MOCK_VOTES[id] ?? null);
+        } else {
+          const [ideaData, commentData, docsData] = await Promise.all([
+            getIdeaById(id),
+            getCommentsByIdea(id),
+            getDocumentsByIdea(id),
+          ]);
+          setIdea(ideaData);
+          setComments(commentData ?? []);
+          setDocuments(docsData ?? []);
 
-        // Vote chỉ fetch khi đã đăng nhập
-        if (user) {
-          try {
-            const voteData = await getIdeaVotes(id);
-            setVote(voteData);
-          } catch {
-            // Chưa vote → bỏ qua lỗi
+          // Vote chỉ fetch khi đã đăng nhập
+          if (user) {
+            try {
+              const voteData = await getIdeaVotes(id);
+              setVote(voteData);
+            } catch {
+              // Chưa vote → bỏ qua lỗi
+            }
           }
         }
       } catch (err) {

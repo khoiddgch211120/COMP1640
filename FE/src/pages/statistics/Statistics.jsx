@@ -6,6 +6,66 @@ import { getStatisticsReport, exportToCSV, exportAttachmentsAsZip } from "../../
 
 const { Option } = Select;
 
+// ─────────────────────────────────────────────────────────────
+// 🔧 Toggle this to switch between mock data and real API
+const USE_MOCK = true;
+// ─────────────────────────────────────────────────────────────
+
+/* ── Mock data ─────────────────────────────────────────────── */
+const MOCK_ACADEMIC_YEARS = [
+  { yearId: 1, yearLabel: "2024 – 2025", ideaClosureDate: "2025-03-31", finalClosureDate: "2025-04-30", commentOpen: false },
+  { yearId: 2, yearLabel: "2023 – 2024", ideaClosureDate: "2024-03-31", finalClosureDate: "2024-04-30", commentOpen: false },
+  { yearId: 3, yearLabel: "2022 – 2023", ideaClosureDate: "2023-03-31", finalClosureDate: "2023-04-30", commentOpen: false },
+];
+
+const MOCK_STATISTICS = [
+  { deptId: 1, deptName: "Engineering",       ideaCount: 42, percentageOfTotal: 32, contributorCount: 18 },
+  { deptId: 2, deptName: "Marketing",         ideaCount: 28, percentageOfTotal: 21, contributorCount: 11 },
+  { deptId: 3, deptName: "Human Resources",   ideaCount: 19, percentageOfTotal: 14, contributorCount:  9 },
+  { deptId: 4, deptName: "Finance",           ideaCount: 16, percentageOfTotal: 12, contributorCount:  7 },
+  { deptId: 5, deptName: "Product",           ideaCount: 14, percentageOfTotal: 11, contributorCount:  6 },
+  { deptId: 6, deptName: "Customer Support",  ideaCount: 12, percentageOfTotal: 10, contributorCount:  5 },
+];
+
+/* ── Mock service wrappers ─────────────────────────────────── */
+const mockGetAcademicYears = async () => {
+  await new Promise((r) => setTimeout(r, 400));
+  return MOCK_ACADEMIC_YEARS;
+};
+
+const mockGetStatisticsReport = async (yearId, deptId) => {
+  await new Promise((r) => setTimeout(r, 500));
+  if (deptId) return MOCK_STATISTICS.filter((s) => s.deptId === deptId);
+  return MOCK_STATISTICS;
+};
+
+const mockExportToCSV = async () => {
+  await new Promise((r) => setTimeout(r, 800));
+  // Simulate file download with a Blob
+  const csv = ["Department,Ideas,% of Total,Contributors",
+    ...MOCK_STATISTICS.map((s) =>
+      `${s.deptName},${s.ideaCount},${s.percentageOfTotal}%,${s.contributorCount}`),
+  ].join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url; a.download = "statistics_mock.csv"; a.click();
+  URL.revokeObjectURL(url);
+};
+
+const mockExportAttachmentsAsZip = async () => {
+  await new Promise((r) => setTimeout(r, 800));
+  // No-op in mock — just simulates the delay
+};
+
+/* ── Resolved service calls ────────────────────────────────── */
+const svcGetAcademicYears     = USE_MOCK ? mockGetAcademicYears     : getAcademicYears;
+const svcGetStatisticsReport  = USE_MOCK ? mockGetStatisticsReport  : getStatisticsReport;
+const svcExportToCSV          = USE_MOCK ? mockExportToCSV          : exportToCSV;
+const svcExportAttachmentsAsZip = USE_MOCK ? mockExportAttachmentsAsZip : exportAttachmentsAsZip;
+
+/* ═══════════════════════════════════════════════════════════ */
+
 const Statistics = () => {
   const [academicYears,  setAcademicYears]  = useState([]);
   const [selectedYearId, setSelectedYearId] = useState(null);
@@ -19,7 +79,7 @@ const Statistics = () => {
     const fetch = async () => {
       setFetchingYears(true);
       try {
-        const data = await getAcademicYears();
+        const data = await svcGetAcademicYears();
         setAcademicYears(data ?? []);
         if (data?.length > 0) setSelectedYearId(data[0].yearId);
       } catch {
@@ -37,7 +97,7 @@ const Statistics = () => {
     const fetch = async () => {
       setLoading(true);
       try {
-        const data = await getStatisticsReport(selectedYearId, selectedDeptId);
+        const data = await svcGetStatisticsReport(selectedYearId, selectedDeptId);
         setStatistics(data ?? []);
       } catch {
         message.error("Failed to load statistics");
@@ -86,7 +146,7 @@ const Statistics = () => {
 
   const handleExportCSV = async () => {
     try {
-      await exportToCSV(selectedYearId);
+      await svcExportToCSV(selectedYearId);
       message.success("CSV exported successfully");
     } catch {
       message.error("Failed to export CSV");
@@ -95,7 +155,7 @@ const Statistics = () => {
 
   const handleExportZip = async () => {
     try {
-      await exportAttachmentsAsZip(selectedYearId);
+      await svcExportAttachmentsAsZip(selectedYearId);
       message.success("ZIP exported successfully");
     } catch {
       message.error("Failed to export ZIP");

@@ -3,36 +3,67 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { getTermsConditions } from "../../services/termsconditionsService";
 import "../../styles/terms-modal.css";
 
+/* ✅ Toggle mock */
+const USE_MOCK = true;
+
+/* ✅ Mock data */
+const MOCK_TERMS = [
+  {
+    id: 1,
+    version: 3,
+    effectiveDate: "2025-01-01",
+    content: `Terms & Conditions (Version 3)
+
+1. All submitted ideas become the intellectual property of the university.
+2. Staff must not submit content that violates copyright, law, or internal policy.
+3. The university reserves the right to use, modify, or reject ideas without prior notice.
+4. All submitted content must align with the university's ethical and cultural standards.
+5. Staff must accept the latest Terms & Conditions version before submitting any subsequent ideas.
+`
+  },
+  {
+    id: 2,
+    version: 2,
+    effectiveDate: "2024-01-01",
+    content: "Old version of terms..."
+  }
+];
+
 const TermsAccept = () => {
   const navigate  = useNavigate();
   const location  = useLocation();
   const returnTo  = location.state?.from ?? "/submit-idea";
 
   const [checked,  setChecked]  = useState(false);
-  const [terms,    setTerms]    = useState(null);   // current terms từ BE
+  const [terms,    setTerms]    = useState(null);
   const [loading,  setLoading]  = useState(true);
 
-  /* ── Load current terms từ BE ────────────────────────────── */
+  /* ── Load terms (mock hoặc BE) ───────────────────────── */
   useEffect(() => {
     const fetch = async () => {
       setLoading(true);
       try {
-        // termsconditionsService.js gọi /terms-conditions/current
-        // nhưng file hiện tại gọi /terms-conditions/active (sai) → dùng getTermsConditions()
-        // và lấy version mới nhất (sort by version desc, lấy [0])
-        const data = await getTermsConditions();
+        let data;
+
+        if (USE_MOCK) {
+          console.log("👉 Using MOCK data");
+          data = MOCK_TERMS;
+        } else {
+          console.log("👉 Fetching from API");
+          data = await getTermsConditions();
+        }
+
         if (Array.isArray(data) && data.length > 0) {
-          // Lấy version cao nhất
           const latest = [...data].sort((a, b) => b.version - a.version)[0];
           setTerms(latest);
         }
       } catch (err) {
         console.error("Failed to load terms:", err);
-        // Vẫn cho hiển thị trang với fallback text
       } finally {
         setLoading(false);
       }
     };
+
     fetch();
   }, []);
 
@@ -45,7 +76,6 @@ const TermsAccept = () => {
 
   return (
     <div className="ta-page">
-      {/* ── Header ─────────────────────────────────────────── */}
       <div className="ta-header">
         <div className="ta-header-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -63,7 +93,6 @@ const TermsAccept = () => {
         </div>
       </div>
 
-      {/* ── Content ────────────────────────────────────────── */}
       <div className="ta-card">
         <div className="ta-card-head">University Idea Management — Policy Agreement</div>
         <div className="ta-card-body">
@@ -72,12 +101,10 @@ const TermsAccept = () => {
               Loading terms...
             </div>
           ) : terms ? (
-            /* Render content từ BE (plain text hoặc markdown) */
             <div style={{ whiteSpace: "pre-wrap", lineHeight: 1.7, color: "#374151", fontSize: 14 }}>
               {terms.content}
             </div>
           ) : (
-            /* Fallback nếu BE không trả về terms */
             <ul className="ta-rules">
               {[
                 "All submitted ideas become the intellectual property of the university.",
@@ -109,7 +136,6 @@ const TermsAccept = () => {
         </div>
       </div>
 
-      {/* ── Actions ────────────────────────────────────────── */}
       <div className="ta-actions">
         <button className="ta-btn-cancel" onClick={handleCancel}>
           Cancel

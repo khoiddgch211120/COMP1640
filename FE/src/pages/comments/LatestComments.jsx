@@ -2,13 +2,60 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { getLatestComments } from "../../services/commentService";
 
+// ─────────────────────────────────────────────────────────────
+// 🔧 Toggle this to switch between mock data and real API
+const USE_MOCK = true;
+// ─────────────────────────────────────────────────────────────
+
+/* ── Mock data ─────────────────────────────────────────────── */
+const MOCK_COMMENTS_PAGE_0 = [
+  { commentId: 1,  ideaId: 10, isAnonymous: false, authorName: "Alice Nguyen",  content: "Great idea! I think implementing this quarterly would double engagement rates across all departments.",                                createdAt: "2025-03-20T09:45:00Z" },
+  { commentId: 2,  ideaId:  3, isAnonymous: true,  authorName: null,            content: "I strongly support a four-day workweek trial. Many companies have seen no drop in productivity when tested properly.",              createdAt: "2025-03-19T14:30:00Z" },
+  { commentId: 3,  ideaId:  5, isAnonymous: false, authorName: "Bob Tran",      content: "The green commute subsidy is long overdue. We should also add a cycling allowance to encourage more sustainable options.",          createdAt: "2025-03-18T11:10:00Z" },
+  { commentId: 4,  ideaId:  1, isAnonymous: false, authorName: "Carol Le",      content: "Automating status reports would save our team at least three hours a week. We've been requesting this for over a year.",            createdAt: "2025-03-17T10:00:00Z" },
+  { commentId: 5,  ideaId:  8, isAnonymous: false, authorName: "David Pham",    content: "Knowledge-sharing sessions work best when they're recorded and made available asynchronously for remote team members.",             createdAt: "2025-03-16T15:20:00Z" },
+  { commentId: 6,  ideaId:  2, isAnonymous: true,  authorName: null,            content: "The peer-recognition bot concept is excellent — it builds culture without requiring manager involvement.",                           createdAt: "2025-03-15T09:00:00Z" },
+  { commentId: 7,  ideaId:  6, isAnonymous: false, authorName: "Eva Hoang",     content: "Mentorship programmes need proper structure, clear goals, and commitment from senior staff to actually deliver value.",             createdAt: "2025-03-14T13:45:00Z" },
+  { commentId: 8,  ideaId:  4, isAnonymous: false, authorName: "Frank Vu",      content: "Standardising API documentation will reduce onboarding time for new developers significantly — great initiative.",                  createdAt: "2025-03-13T08:30:00Z" },
+  { commentId: 9,  ideaId:  9, isAnonymous: false, authorName: "Grace Dinh",    content: "An anonymous feedback channel is valuable but only if leadership genuinely acts on the input received.",                            createdAt: "2025-03-12T11:00:00Z" },
+  { commentId: 10, ideaId:  7, isAnonymous: false, authorName: "Henry Bui",     content: "Centralising vendor invoicing would eliminate the confusion we currently have with duplicate payments and missing approvals.",       createdAt: "2025-03-11T14:00:00Z" },
+];
+
+const MOCK_COMMENTS_PAGE_1 = [
+  { commentId: 11, ideaId: 10, isAnonymous: false, authorName: "Irene Lam",     content: "Hackathons are a great way to surface hidden talent and cross-team collaboration. Monthly cadence might be too frequent though.",  createdAt: "2025-03-10T10:15:00Z" },
+  { commentId: 12, ideaId:  3, isAnonymous: false, authorName: "James Nguyen",  content: "I'm sceptical about the four-day week — our client SLAs are based on five-day availability.",                                      createdAt: "2025-03-09T09:30:00Z" },
+  { commentId: 13, ideaId: 11, isAnonymous: true,  authorName: null,            content: "The onboarding checklist redesign is way overdue. New joiners are consistently confused by the current process.",                  createdAt: "2025-03-08T16:00:00Z" },
+  { commentId: 14, ideaId:  5, isAnonymous: false, authorName: "Karen Ho",      content: "If the subsidy covers e-scooters as well as public transit, it would be even more impactful for those living further out.",         createdAt: "2025-03-07T11:45:00Z" },
+  { commentId: 15, ideaId:  2, isAnonymous: false, authorName: "Leo Phan",      content: "We tried something similar at my last company. The key is keeping the rewards meaningful but not financial.",                      createdAt: "2025-03-06T08:00:00Z" },
+];
+
+/* ── Mock service wrapper ──────────────────────────────────── */
+const MOCK_PAGES = [MOCK_COMMENTS_PAGE_0, MOCK_COMMENTS_PAGE_1];
+
+const mockGetLatestComments = async (page, size) => {
+  await new Promise((r) => setTimeout(r, 450));
+  const pageData = MOCK_PAGES[page] ?? [];
+  return {
+    content:       pageData,
+    totalPages:    MOCK_PAGES.length,
+    totalElements: MOCK_PAGES.flat().length,
+    page,
+    size,
+  };
+};
+
+/* ── Resolved service call ─────────────────────────────────── */
+const svcGetLatestComments = USE_MOCK ? mockGetLatestComments : getLatestComments;
+
+/* ═══════════════════════════════════════════════════════════ */
+
 const LatestComments = () => {
   const navigate = useNavigate();
 
   const [comments,   setComments]   = useState([]);
   const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState(null);
-  const [page,       setPage]       = useState(0);       // 0-based (BE)
+  const [page,       setPage]       = useState(0);
   const [totalPages, setTotalPages] = useState(0);
 
   const PAGE_SIZE = 10;
@@ -17,7 +64,7 @@ const LatestComments = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getLatestComments(p, PAGE_SIZE);
+      const data = await svcGetLatestComments(p, PAGE_SIZE);
       setComments(data?.content ?? []);
       setTotalPages(data?.totalPages ?? 0);
     } catch (err) {

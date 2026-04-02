@@ -15,6 +15,32 @@ const FILTERS = [
   { key: "all",     label: "All Ideas"    },
 ];
 
+// ── MOCK DATA (dùng khi API chưa sẵn sàng) ──────────────────────────────────
+const USE_MOCK = true; // đổi thành true để dùng mock, false để gọi API thật
+
+const MOCK_IDEAS = [
+  { ideaId: 1, title: "Improve Onboarding Process",       content: "Streamline the onboarding workflow by creating interactive guides and automated email sequences for new staff.",                              isAnonymous: false, authorName: "Nguyen Van An",  submittedAt: "2025-01-15T09:00:00", viewCount: 142, commentCount: 8,  upvotes: 24, downvotes: 2,  categories: ["HR"]         },
+  { ideaId: 2, title: "Shift Management Mobile App",       content: "Develop a mobile app so staff can view and swap shifts easily without needing to contact their manager directly.",                          isAnonymous: true,  authorName: null,             submittedAt: "2025-01-20T11:30:00", viewCount: 98,  commentCount: 5,  upvotes: 18, downvotes: 1,  categories: ["Technology"] },
+  { ideaId: 3, title: "Operational Cost Optimisation",     content: "Audit recurring vendor contracts and renegotiate terms to reduce operational spend by an estimated 15% this fiscal year.",                  isAnonymous: false, authorName: "Le Van Cuong",   submittedAt: "2025-02-01T08:45:00", viewCount: 76,  commentCount: 3,  upvotes: 12, downvotes: 4,  categories: ["Finance"]    },
+  { ideaId: 4, title: "Q1 Marketing Campaign Strategy",    content: "Launch a targeted social-media campaign during Q1 focusing on brand awareness among the 18-35 demographic in three key markets.",          isAnonymous: false, authorName: "Pham Thi Dung",  submittedAt: "2025-02-10T14:20:00", viewCount: 201, commentCount: 12, upvotes: 31, downvotes: 3,  categories: ["Marketing"]  },
+  { ideaId: 5, title: "Employee Satisfaction Survey 2025", content: "Run an anonymous pulse survey every quarter to track morale and measure the impact of HR initiatives.",                                    isAnonymous: false, authorName: "Hoang Minh Duc", submittedAt: "2025-02-14T10:00:00", viewCount: 54,  commentCount: 2,  upvotes: 9,  downvotes: 0,  categories: ["HR"]         },
+  { ideaId: 6, title: "CI/CD Pipeline Upgrade",            content: "Migrate our build pipeline to GitHub Actions to cut deployment time from 40 min to under 10 min.",                                         isAnonymous: false, authorName: "Vu Thi Huong",   submittedAt: "2025-02-20T16:10:00", viewCount: 167, commentCount: 9,  upvotes: 27, downvotes: 1,  categories: ["Technology"] },
+  { ideaId: 7, title: "Dashboard Redesign Initiative",     content: "Redesign the internal analytics dashboard with improved data visualisation and role-based widget customisation.",                           isAnonymous: true,  authorName: null,             submittedAt: "2025-02-28T13:00:00", viewCount: 88,  commentCount: 6,  upvotes: 15, downvotes: 2,  categories: ["Design"]     },
+  { ideaId: 8, title: "Internal Communication Platform",   content: "Consolidate Slack, email, and project tools into a single internal communication hub to reduce context-switching.",                        isAnonymous: false, authorName: "Bui Thi Lan",    submittedAt: "2025-03-01T09:30:00", viewCount: 113, commentCount: 7,  upvotes: 20, downvotes: 5,  categories: ["Operations"] },
+];
+
+function buildMockPage(filter, page, pageSize) {
+  const sorted = [...MOCK_IDEAS];
+  if (filter === "popular") {
+    sorted.sort((a, b) => (b.upvotes - b.downvotes) - (a.upvotes - a.downvotes));
+  } else {
+    sorted.sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt));
+  }
+  const total = sorted.length;
+  const start = page * pageSize;
+  return { content: sorted.slice(start, start + pageSize), totalPages: Math.ceil(total / pageSize), totalElements: total };
+}
+
 const EyeIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -47,7 +73,11 @@ const IdeaList = () => {
     setError(null);
     try {
       let data;
-      if (f === "latest") {
+      if (USE_MOCK) {
+        // Dùng mock data — xóa block này khi API sẵn sàng
+        await new Promise((r) => setTimeout(r, 300));
+        data = buildMockPage(f, page, PAGE_SIZE);
+      } else if (f === "latest") {
         data = await getLatestIdeas(page, PAGE_SIZE);
       } else if (f === "popular") {
         data = await getMostPopularIdeas(page, PAGE_SIZE);

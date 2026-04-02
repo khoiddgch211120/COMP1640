@@ -8,6 +8,53 @@ import { getAllIdeas } from "../../services/ideaService";
 import { getCurrentAcademicYear } from "../../services/academicYearService";
 import "../../styles/coordinator.css";
 
+// ─────────────────────────────────────────────────────────────
+// 🔧 Toggle this to switch between mock data and real API
+const USE_MOCK = true;
+// ─────────────────────────────────────────────────────────────
+
+/* ── Mock data ─────────────────────────────────────────────── */
+const MOCK_CURRENT_YEAR = {
+  yearId: 1,
+  yearLabel: "2024 – 2025",
+  ideaClosureDate: "2025-03-31",
+  finalClosureDate: "2025-04-30",
+  ideaOpen: true,
+  commentOpen: true,
+};
+
+const MOCK_IDEAS = [
+  { ideaId: 1,  title: "Automate weekly status reports",        authorId: "u1", authorName: "Alice Nguyen",  isAnonymous: false, submittedAt: "2025-01-05T08:00:00Z", upvotes: 12, downvotes: 1 },
+  { ideaId: 2,  title: "Introduce peer-recognition bot",        authorId: "u2", authorName: "Bob Tran",      isAnonymous: false, submittedAt: "2025-01-12T09:30:00Z", upvotes:  8, downvotes: 0 },
+  { ideaId: 3,  title: "Four-day workweek pilot",               authorId: "u3", authorName: "Carol Le",      isAnonymous: true,  submittedAt: "2025-01-18T10:00:00Z", upvotes: 22, downvotes: 4 },
+  { ideaId: 4,  title: "Standardise API documentation",         authorId: "u1", authorName: "Alice Nguyen",  isAnonymous: false, submittedAt: "2025-01-25T11:15:00Z", upvotes:  6, downvotes: 1 },
+  { ideaId: 5,  title: "Green commute subsidy",                 authorId: "u4", authorName: "David Pham",    isAnonymous: false, submittedAt: "2025-02-03T08:45:00Z", upvotes: 15, downvotes: 2 },
+  { ideaId: 6,  title: "Cross-department mentorship programme", authorId: "u5", authorName: "Eva Hoang",     isAnonymous: false, submittedAt: "2025-02-10T13:00:00Z", upvotes:  9, downvotes: 0 },
+  { ideaId: 7,  title: "Centralise vendor invoicing",           authorId: "u2", authorName: "Bob Tran",      isAnonymous: false, submittedAt: "2025-02-17T09:00:00Z", upvotes:  5, downvotes: 1 },
+  { ideaId: 8,  title: "Internal knowledge-sharing sessions",   authorId: "u3", authorName: "Carol Le",      isAnonymous: false, submittedAt: "2025-02-24T10:30:00Z", upvotes: 11, downvotes: 0 },
+  { ideaId: 9,  title: "Anonymous feedback channel",            authorId: "u6", authorName: "Frank Vu",      isAnonymous: true,  submittedAt: "2025-03-03T14:00:00Z", upvotes:  7, downvotes: 3 },
+  { ideaId: 10, title: "Quarterly hackathon events",            authorId: "u4", authorName: "David Pham",    isAnonymous: false, submittedAt: "2025-03-10T08:00:00Z", upvotes: 18, downvotes: 1 },
+  { ideaId: 11, title: "Redesign onboarding checklist",         authorId: "u5", authorName: "Eva Hoang",     isAnonymous: false, submittedAt: "2025-03-15T11:00:00Z", upvotes:  4, downvotes: 0 },
+  { ideaId: 12, title: "Flexible remote-work policy update",    authorId: "u1", authorName: "Alice Nguyen",  isAnonymous: false, submittedAt: "2025-03-20T09:45:00Z", upvotes: 20, downvotes: 2 },
+];
+
+/* ── Mock service wrappers ─────────────────────────────────── */
+const mockGetCurrentAcademicYear = async () => {
+  await new Promise((r) => setTimeout(r, 300));
+  return MOCK_CURRENT_YEAR;
+};
+
+const mockGetAllIdeas = async () => {
+  await new Promise((r) => setTimeout(r, 500));
+  return { content: MOCK_IDEAS, totalElements: MOCK_IDEAS.length, totalPages: 1 };
+};
+
+/* ── Resolved service calls ────────────────────────────────── */
+const svcGetCurrentAcademicYear = USE_MOCK ? mockGetCurrentAcademicYear : getCurrentAcademicYear;
+const svcGetAllIdeas            = USE_MOCK ? mockGetAllIdeas            : getAllIdeas;
+
+/* ═══════════════════════════════════════════════════════════ */
+
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
@@ -34,11 +81,8 @@ const CoordinatorDashboard = () => {
       setLoading(true);
       try {
         const [year, ideasData] = await Promise.all([
-          getCurrentAcademicYear(),
-          getAllIdeas({
-            deptId: user?.deptId,
-            size: 100,  // lấy đủ để tính stats
-          }),
+          svcGetCurrentAcademicYear(),
+          svcGetAllIdeas({ deptId: user?.deptId, size: 100 }),
         ]);
         setCurrentYear(year);
         setIdeas(ideasData?.content ?? []);
@@ -56,7 +100,7 @@ const CoordinatorDashboard = () => {
   const totalContributors = new Set(ideas.map((i) => i.authorId).filter(Boolean)).size;
   const anonymousCount    = ideas.filter((i) => i.isAnonymous).length;
 
-  /* ── Monthly trend từ submittedAt ────────────────────────── */
+  /* ── Monthly trend ───────────────────────────────────────── */
   const monthlyData = (() => {
     const map = {};
     ideas.forEach((idea) => {
@@ -67,7 +111,7 @@ const CoordinatorDashboard = () => {
     });
     return Object.entries(map)
       .map(([month, count]) => ({ month, count }))
-      .slice(-6); // 6 tháng gần nhất
+      .slice(-6);
   })();
 
   /* ── Recent 5 ideas ──────────────────────────────────────── */
@@ -75,7 +119,7 @@ const CoordinatorDashboard = () => {
     .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))
     .slice(0, 5);
 
-  const deptName  = user?.deptName || "Department";
+  const deptName  = user?.deptName || (USE_MOCK ? "Engineering" : "Department");
   const yearLabel = currentYear?.yearLabel || "N/A";
 
   const formatDate = (d) => d ? new Date(d).toLocaleDateString("vi-VN") : "—";
@@ -85,7 +129,9 @@ const CoordinatorDashboard = () => {
       {/* ── Header ─────────────────────────────────────────── */}
       <div className="co-page-header">
         <div>
-          <h1 className="co-page-title">Dashboard — {deptName}</h1>
+          <h1 className="co-page-title">
+            Dashboard — {deptName}
+          </h1>
           <p className="co-page-sub">Tổng quan ý tưởng trong phạm vi department của bạn</p>
         </div>
         <span style={{
@@ -168,14 +214,12 @@ const CoordinatorDashboard = () => {
             </div>
           </div>
 
-          {/* ── Chart ──────────────────────────────────────── */}
+          {/* ── Chart + top contributors ────────────────────── */}
           <div className="co-row">
             <div className="co-card">
               <div className="co-card-head">
                 <span className="co-card-title">Ý tưởng theo tháng</span>
-                <span style={{ fontSize: 12, color: "#94a3b8" }}>
-                  {monthlyData.length} tháng
-                </span>
+                <span style={{ fontSize: 12, color: "#94a3b8" }}>{monthlyData.length} tháng</span>
               </div>
               {monthlyData.length === 0 ? (
                 <div style={{ padding: "40px 0", textAlign: "center", color: "#94a3b8" }}>
@@ -197,7 +241,6 @@ const CoordinatorDashboard = () => {
               )}
             </div>
 
-            {/* Top contributors */}
             <div className="co-card">
               <div className="co-card-head">
                 <span className="co-card-title">Top đóng góp</span>

@@ -9,6 +9,25 @@ import { uploadDocument } from "../../services/documentService";
 import "../../styles/ideas.css";
 import "../../styles/terms-modal.css";
 
+// ── MOCK DATA (dùng khi API chưa sẵn sàng) ──────────────────────────────────
+const USE_MOCK = true; // đổi thành true để dùng mock, false để gọi API thật
+
+const MOCK_CATEGORIES = [
+  { categoryId: 1, categoryName: "HR"         },
+  { categoryId: 2, categoryName: "Technology" },
+  { categoryId: 3, categoryName: "Finance"    },
+  { categoryId: 4, categoryName: "Marketing"  },
+  { categoryId: 5, categoryName: "Operations" },
+  { categoryId: 6, categoryName: "Design"     },
+  { categoryId: 7, categoryName: "Other"      },
+];
+
+const MOCK_CURRENT_YEAR = {
+  yearId: 4, yearLabel: "2024-2025",
+  ideaClosureDate: "2025-03-31", finalClosureDate: "2025-04-30",
+  ideaOpen: true, commentOpen: true,
+};
+
 /* ── Terms gate modal ─────────────────────────────────────── */
 const TermsGateModal = ({ onConfirm }) => (
   <div className="tg-backdrop">
@@ -62,12 +81,19 @@ const SubmitIdea = () => {
   useEffect(() => {
     const init = async () => {
       try {
-        const [cats, year] = await Promise.all([
-          getCategories(),
-          getCurrentAcademicYear(),
-        ]);
-        setCategories(cats ?? []);
-        setCurrentYear(year);
+        if (USE_MOCK) {
+          // Dùng mock data — xóa block này khi API sẵn sàng
+          await new Promise((r) => setTimeout(r, 300));
+          setCategories(MOCK_CATEGORIES);
+          setCurrentYear(MOCK_CURRENT_YEAR);
+        } else {
+          const [cats, year] = await Promise.all([
+            getCategories(),
+            getCurrentAcademicYear(),
+          ]);
+          setCategories(cats ?? []);
+          setCurrentYear(year);
+        }
       } catch (err) {
         console.error("Init error:", err);
       } finally {
@@ -134,6 +160,14 @@ const SubmitIdea = () => {
 
     setSubmitting(true);
     try {
+      if (USE_MOCK) {
+        // Dùng mock data — xóa block này khi API sẵn sàng
+        await new Promise((r) => setTimeout(r, 600));
+        console.log("[MOCK] Idea submitted:", form);
+        navigate("/ideas");
+        return;
+      }
+
       // 1. Submit idea
       const payload = {
         yearId:       currentYear.yearId,
