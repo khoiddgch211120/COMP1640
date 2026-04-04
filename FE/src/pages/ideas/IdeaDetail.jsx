@@ -9,7 +9,7 @@ import { getDocumentsByIdea } from "../../services/documentService";
 import "../../styles/ideas.css";
 
 // ── MOCK DATA (dùng khi API chưa sẵn sàng) ──────────────────────────────────
-const USE_MOCK = true; // đổi thành true để dùng mock, false để gọi API thật
+const USE_MOCK = false; // đổi thành true để dùng mock, false để gọi API thật
 
 const MOCK_IDEAS = {
   "1": { ideaId: 1, title: "Improve Onboarding Process",       content: "Streamline the onboarding workflow by creating interactive guides, automated email sequences, and a buddy-system pairing new staff with experienced mentors. This reduces time-to-productivity from 3 weeks to under 1 week.", isAnonymous: false, authorName: "Nguyen Van An",  authorId: 1, submittedAt: "2025-01-15T09:00:00", viewCount: 142, upvotes: 24, downvotes: 2, termsAccepted: true, isDisabled: false, categories: ["HR"]         },

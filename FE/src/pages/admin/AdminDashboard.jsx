@@ -196,7 +196,7 @@ var EMPTY_DATA = {
 };
 
 // ── MOCK DATA (dùng khi API chưa sẵn sàng) ──────────────────────────────────
-var USE_MOCK = true; // đổi thành true để dùng mock, false để gọi API thật
+var USE_MOCK = false; // đổi thành true để dùng mock, false để gọi API thật
 
 var MOCK_ACADEMIC_YEARS = [
   { year_id: 1, year_label: "2023-2024" },

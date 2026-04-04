@@ -17,7 +17,7 @@ import "../../styles/category-management.css";
 
 // ─────────────────────────────────────────────────────────────
 // 🔧 Toggle this to switch between mock data and real API
-const USE_MOCK = true;
+const USE_MOCK = false;
 // ─────────────────────────────────────────────────────────────
 
 /* ── Mock data store (mutated in place to simulate DB) ─────── */

@@ -4,7 +4,7 @@ import { getTermsConditions } from "../../services/termsconditionsService";
 import "../../styles/terms-modal.css";
 
 /* ✅ Toggle mock */
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 /* ✅ Mock data */
 const MOCK_TERMS = [

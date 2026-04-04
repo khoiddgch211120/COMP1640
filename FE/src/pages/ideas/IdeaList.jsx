@@ -16,7 +16,7 @@ const FILTERS = [
 ];
 
 // ── MOCK DATA (dùng khi API chưa sẵn sàng) ──────────────────────────────────
-const USE_MOCK = true; // đổi thành true để dùng mock, false để gọi API thật
+const USE_MOCK = false; // đổi thành true để dùng mock, false để gọi API thật
 
 const MOCK_IDEAS = [
   { ideaId: 1, title: "Improve Onboarding Process",       content: "Streamline the onboarding workflow by creating interactive guides and automated email sequences for new staff.",                              isAnonymous: false, authorName: "Nguyen Van An",  submittedAt: "2025-01-15T09:00:00", viewCount: 142, commentCount: 8,  upvotes: 24, downvotes: 2,  categories: ["HR"]         },

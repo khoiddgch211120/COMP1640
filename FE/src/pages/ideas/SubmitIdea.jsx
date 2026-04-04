@@ -10,7 +10,7 @@ import "../../styles/ideas.css";
 import "../../styles/terms-modal.css";
 
 // ── MOCK DATA (dùng khi API chưa sẵn sàng) ──────────────────────────────────
-const USE_MOCK = true; // đổi thành true để dùng mock, false để gọi API thật
+const USE_MOCK = false; // đổi thành true để dùng mock, false để gọi API thật
 
 const MOCK_CATEGORIES = [
   { categoryId: 1, categoryName: "HR"         },
