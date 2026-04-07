@@ -2,8 +2,6 @@ import { useState } from "react";
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../redux/slices/authSlice";
-import { Avatar, Dropdown } from "antd";
-import { UserOutlined, LogoutOutlined } from "@ant-design/icons";
 import { ROLES } from "../constants/roles";
 import "../styles/main-layout.css";
 
@@ -73,7 +71,7 @@ const NAV_ITEMS_COORDINATOR = [
   },
   {
     key: "coordinator-notifications",
-    label: "Thông báo",
+    label: "Notifications",
     path: "/coordinator/notifications",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
@@ -145,19 +143,14 @@ const NAV_ITEMS_QA_MANAGER = [
   },
 ];
 
-/* 🔥 FIX DUY NHẤT Ở ĐÂY */
 function getNavItems(role) {
   switch (role) {
     case ROLES.QA_COORDINATOR:
       return NAV_ITEMS_COORDINATOR;
-
     case ROLES.QA_MANAGER:
       return NAV_ITEMS_QA_MANAGER;
-
     case ROLES.ACADEMIC:
     case ROLES.SUPPORT:
-      return NAV_ITEMS_STAFF;
-
     default:
       return NAV_ITEMS_STAFF;
   }
@@ -169,37 +162,63 @@ const MainLayout = () => {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
 
   const handleLogout = () => {
     dispatch(logout());
     navigate("/");
   };
 
-  const openModal = (path) => {
-    navigate(path); // ❌ bỏ background
+  const displayName    = user?.fullName    || user?.full_name    || "User";
+  const displayEmail   = user?.email                             || "";
+  const displayRole    = user?.role        || user?.role_name    || "";
+  const displayInitial = displayName[0]?.toUpperCase()          || "U";
+
+  const navItems = getNavItems(displayRole);
+  const location = useLocation();
+
+  const openAuthModal = (path) => {
+    navigate(path, {
+    state: { background: location },
+    });
   };
 
-  const displayName = user?.fullName || user?.full_name || "User";
-  const displayInitial = displayName[0]?.toUpperCase() || "U";
-  const displayRole = user?.role || user?.role_name || "";
-  const navItems = getNavItems(displayRole);
-
-  const dropdownItems = [
-    {
-      key: "logout",
-      icon: <LogoutOutlined />,
-      label: "Logout",
-      onClick: handleLogout,
-      danger: true,
-    },
-  ];
-
   return (
-    <div className={`main-layout${collapsed ? " sidebar-collapsed" : ""}`}>
+    <div className={`main-shell${collapsed ? " sidebar-collapsed" : ""}`}>
+
+      {/* ── SIDEBAR ── */}
       <aside className="main-sidebar">
-        {/* UI giữ nguyên */}
-        {/* ... (toàn bộ JSX của bạn không đổi) */}
+
+        {/* Brand */}
+        <div className="main-sidebar-brand">
+          <div className="main-brand-icon">
+            <svg viewBox="0 0 32 32" fill="none">
+              <rect width="32" height="32" rx="8" fill="#6366f1"/>
+              <path d="M8 16l5 5 11-11" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          {!collapsed && (
+            <div className="main-brand-text">
+              <span className="main-brand-title">IdeaHub</span>
+              <span className="main-brand-sub">Staff Portal</span>
+            </div>
+          )}
+        </div>
+
+        {/* Collapse toggle */}
+        <button
+          className="main-collapse-btn"
+          onClick={() => setCollapsed((c) => !c)}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            {collapsed
+              ? <path d="M9 18l6-6-6-6"/>
+              : <path d="M15 18l-6-6 6-6"/>
+            }
+          </svg>
+        </button>
+
+        {/* Nav */}
         <nav className="main-sidebar-nav">
           {!collapsed && <span className="main-nav-section-label">NAVIGATION</span>}
           {navItems.map((item) => (
@@ -215,28 +234,86 @@ const MainLayout = () => {
             </NavLink>
           ))}
         </nav>
+
+        {/* Sidebar footer — user chip */}
+        <div className="main-sidebar-footer">
+          <div className="main-user-chip">
+            <div className="main-user-avatar">{displayInitial}</div>
+            {!collapsed && (
+              <div className="main-user-info">
+                <span className="main-user-name">{displayName}</span>
+                <span className="main-user-role">{displayEmail || displayRole}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
       </aside>
 
-      <div className="main-content">
-        <header className="main-header">
-          <div className="header-right">
+      {/* ── MAIN ── */}
+      <main className="main-body">
+
+        {/* Topbar */}
+        <div className="main-topbar">
+          <div className="main-topbar-breadcrumb">
+            <span className="main-topbar-title">Staff Panel</span>
+          </div>
+
+          <div className="main-topbar-actions">
             {isAuthenticated ? (
-              <Dropdown menu={{ items: dropdownItems }}>
-                <Avatar icon={<UserOutlined />} />
-              </Dropdown>
+              <>
+                {/* Role + name badge */}
+                <div className="main-topbar-user-badge">
+                  <span className="main-topbar-role-chip">{displayRole}</span>
+                  <span className="main-topbar-username">{displayName}</span>
+                </div>
+
+                {/* Notification */}
+                <button className="main-topbar-notif" title="Notifications">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="20" height="20">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                  </svg>
+                </button>
+
+                {/* Sign Out */}
+                <button className="main-topbar-logout" onClick={handleLogout} title="Sign out">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="16" height="16">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                    <polyline points="16 17 21 12 16 7"/>
+                    <line x1="21" y1="12" x2="9" y2="12"/>
+                  </svg>
+                  Sign Out
+                </button>
+              </>
             ) : (
               <>
-                <button onClick={() => openModal("/login")}>Đăng nhập</button>
-                <button onClick={() => openModal("/register")}>Đăng ký</button>
+                <>
+                  <button
+                    className="main-btn-ghost"
+                    onClick={() => openAuthModal("/login")}
+                  >
+                    Đăng nhập
+                  </button>
+
+                  <button
+                    className="main-btn-primary"
+                    onClick={() => openAuthModal("/register")}
+                  >
+                    Đăng ký
+                  </button>
+                </>
               </>
             )}
           </div>
-        </header>
+        </div>
 
-        <main className="main-content-area">
+        {/* Page content */}
+        <div className="main-content">
           <Outlet />
-        </main>
-      </div>
+        </div>
+
+      </main>
     </div>
   );
 };

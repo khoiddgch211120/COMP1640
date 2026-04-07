@@ -1,12 +1,17 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/auth-modal.css";
 
 const AuthModal = ({ children }) => {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // 🔥 FIX Ở ĐÂY
-  const handleClose = () => navigate("/");
+  const background = location.state?.background;
+  const fallbackPath = background?.pathname || "/";
+
+  const handleClose = () => {
+    navigate(fallbackPath, { replace: true });
+  };
 
   useEffect(() => {
     const onKey = (e) => {

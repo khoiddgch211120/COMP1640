@@ -4,11 +4,35 @@ import { useSelector } from "react-redux";
 import { getAllIdeas } from "../../services/ideaService";
 import "../../styles/coordinator.css";
 
-/*
-  NOTE: BE hiện chưa có endpoint notification riêng cho coordinator.
-  Trang này tự build notifications từ các ideas mới nhất trong dept.
-  Khi BE có NotificationLog API → thay fetchNotifications() bằng API call thật.
-*/
+// ─────────────────────────────────────────────────────────────
+// 🔧 Toggle this to switch between mock data and real API
+const USE_MOCK = false;
+// ─────────────────────────────────────────────────────────────
+
+/* ── Mock data ─────────────────────────────────────────────── */
+const MOCK_IDEAS = [
+  { ideaId: 1,  title: "Automate weekly status reports",        authorId: "u1", authorName: "Alice Nguyen",  isAnonymous: false, submittedAt: "2025-03-20T09:45:00Z" },
+  { ideaId: 2,  title: "Introduce peer-recognition bot",        authorId: "u2", authorName: "Bob Tran",      isAnonymous: false, submittedAt: "2025-03-18T08:30:00Z" },
+  { ideaId: 3,  title: "Four-day workweek pilot",               authorId: "u3", authorName: "Carol Le",      isAnonymous: true,  submittedAt: "2025-03-15T11:00:00Z" },
+  { ideaId: 4,  title: "Standardise API documentation",         authorId: "u1", authorName: "Alice Nguyen",  isAnonymous: false, submittedAt: "2025-03-12T10:15:00Z" },
+  { ideaId: 5,  title: "Green commute subsidy",                 authorId: "u4", authorName: "David Pham",    isAnonymous: false, submittedAt: "2025-03-10T08:00:00Z" },
+  { ideaId: 6,  title: "Cross-department mentorship programme", authorId: "u5", authorName: "Eva Hoang",     isAnonymous: false, submittedAt: "2025-03-08T13:30:00Z" },
+  { ideaId: 7,  title: "Centralise vendor invoicing",           authorId: "u2", authorName: "Bob Tran",      isAnonymous: false, submittedAt: "2025-03-05T09:00:00Z" },
+  { ideaId: 8,  title: "Internal knowledge-sharing sessions",   authorId: "u3", authorName: "Carol Le",      isAnonymous: false, submittedAt: "2025-03-01T10:00:00Z" },
+  { ideaId: 9,  title: "Anonymous feedback channel",            authorId: "u6", authorName: "Frank Vu",      isAnonymous: true,  submittedAt: "2025-02-25T14:00:00Z" },
+  { ideaId: 10, title: "Quarterly hackathon events",            authorId: "u4", authorName: "David Pham",    isAnonymous: false, submittedAt: "2025-02-20T08:00:00Z" },
+];
+
+/* ── Mock service wrapper ──────────────────────────────────── */
+const mockGetAllIdeas = async () => {
+  await new Promise((r) => setTimeout(r, 450));
+  return { content: MOCK_IDEAS, totalElements: MOCK_IDEAS.length, totalPages: 1 };
+};
+
+/* ── Resolved service call ─────────────────────────────────── */
+const svcGetAllIdeas = USE_MOCK ? mockGetAllIdeas : getAllIdeas;
+
+/* ═══════════════════════════════════════════════════════════ */
 
 const FILTERS = [
   { key: "all",    label: "Tất cả"      },
@@ -23,7 +47,6 @@ const IdeaIcon = () => (
   </svg>
 );
 
-/* Lưu trạng thái "đã đọc" trong localStorage theo ideaId */
 const READ_KEY = "coord_read_notifications";
 const getReadSet  = () => new Set(JSON.parse(localStorage.getItem(READ_KEY) || "[]"));
 const saveReadSet = (set) => localStorage.setItem(READ_KEY, JSON.stringify([...set]));
@@ -41,10 +64,7 @@ const CoordinatorNotifications = () => {
     const fetch = async () => {
       setLoading(true);
       try {
-        const data = await getAllIdeas({
-          deptId: user?.deptId,
-          size: 50,
-        });
+        const data = await svcGetAllIdeas({ deptId: user?.deptId, size: 50 });
         setIdeas(data?.content ?? []);
       } catch (err) {
         console.error(err);
@@ -55,7 +75,6 @@ const CoordinatorNotifications = () => {
     fetch();
   }, [user]);
 
-  /* Chuyển ideas → notification items */
   const notifications = useMemo(() =>
     ideas.map((idea) => ({
       id:     idea.ideaId,

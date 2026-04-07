@@ -1,22 +1,26 @@
 import { useSelector } from "react-redux";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 
 const ProtectedRoute = ({ children, roles }) => {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const location = useLocation();
 
-  // ❗ chưa login
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ background: location, from: location.pathname }}
+      />
+    );
   }
 
-  // ❗ chưa load user xong → KHÔNG redirect
   if (!user) {
-    return null; // hoặc loading
+    return null;
   }
 
-  // ❗ check role
   if (roles && !roles.includes(user.role)) {
-    return <Navigate to="/unauthorized" replace />; // ❌ KHÔNG redirect về "/"
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return children;
