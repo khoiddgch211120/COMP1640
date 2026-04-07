@@ -64,8 +64,12 @@ public class AcademicYearServiceImpl implements AcademicYearService {
 
     @Override
     public AcademicYearResponse getCurrent() {
-        AcademicYear year = academicYearRepo.findCurrent(LocalDate.now())
-                .orElseThrow(() -> new ResourceNotFoundException("Không có năm học đang hoạt động"));
+        LocalDate today = LocalDate.now();
+        AcademicYear year = academicYearRepo.findCurrentActive(today)
+                .orElseGet(() -> {
+                    return academicYearRepo.findLatest()
+                            .orElseThrow(() -> new ResourceNotFoundException("Không có năm học nào"));
+                });
         return toResponse(year);
     }
 

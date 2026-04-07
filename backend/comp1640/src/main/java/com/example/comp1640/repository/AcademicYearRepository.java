@@ -13,11 +13,16 @@ public interface AcademicYearRepository extends JpaRepository<AcademicYear, Inte
 
     boolean existsByYearLabel(String yearLabel);
 
-    // Lấy năm học hiện tại: hôm nay nằm trong khoảng trước final_closure_date
-@Query("""
-    SELECT a FROM AcademicYear a
-    WHERE :today BETWEEN a.ideaClosureDate AND a.finalClosureDate
-    ORDER BY a.ideaClosureDate DESC
-""")
-Optional<AcademicYear> findCurrent(@Param("today") LocalDate today);
+    // Lấy năm học hiện tại (active) hoặc nearest upcoming year
+    @Query("""
+                SELECT a FROM AcademicYear a
+                WHERE :today BETWEEN a.ideaClosureDate AND a.finalClosureDate
+                ORDER BY a.ideaClosureDate DESC
+                LIMIT 1
+            """)
+    Optional<AcademicYear> findCurrentActive(@Param("today") LocalDate today);
+
+    // Lấy năm học gần nhất (newest) nếu không có active year
+    @Query("SELECT a FROM AcademicYear a ORDER BY a.ideaClosureDate DESC LIMIT 1")
+    Optional<AcademicYear> findLatest();
 }

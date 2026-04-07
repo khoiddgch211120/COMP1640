@@ -41,14 +41,14 @@ public class AcademicYearController {
         return ResponseEntity.ok(academicYearService.getAll());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<AcademicYearResponse> getById(@PathVariable Integer id) {
-        return ResponseEntity.ok(academicYearService.getById(id));
-    }
-
     @GetMapping("/current")
     public ResponseEntity<AcademicYearResponse> getCurrent() {
         return ResponseEntity.ok(academicYearService.getCurrent());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<AcademicYearResponse> getById(@PathVariable Integer id) {
+        return ResponseEntity.ok(academicYearService.getById(id));
     }
 
     // PUT giữ nguyên để tương thích
