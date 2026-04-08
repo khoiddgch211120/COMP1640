@@ -35,11 +35,11 @@ public class AcademicYearSeeder implements CommandLineRunner {
         }
 
         yearRepo.saveAll(java.util.List.of(
-                createYear("2022-2023", LocalDate.of(2023, 5, 20), LocalDate.of(2023, 7, 5), adminOrQa),
-                createYear("2023-2024", LocalDate.of(2024, 5, 15), LocalDate.of(2024, 6, 30), adminOrQa),
-                createYear("2024-2025", LocalDate.of(2025, 5, 10), LocalDate.of(2025, 6, 25), adminOrQa),
-                createYear("2025-2026", LocalDate.of(2026, 5, 1), LocalDate.of(2026, 6, 15), adminOrQa),
-                createYear("2026-2027", LocalDate.of(2027, 5, 20), LocalDate.of(2027, 7, 10), adminOrQa)));
+                createYear("2024-2025", LocalDate.of(2025, 3, 31), LocalDate.of(2025, 4, 30), adminOrQa),
+                createYear("2023-2024", LocalDate.of(2024, 3, 31), LocalDate.of(2024, 4, 30), adminOrQa),
+                createYear("2025-2026", LocalDate.of(2026, 3, 31), LocalDate.of(2026, 4, 30), adminOrQa),
+                createYear("2022-2023", LocalDate.of(2023, 3, 31), LocalDate.of(2023, 4, 30), adminOrQa),
+                createYear("2026-2027", LocalDate.of(2027, 3, 31), LocalDate.of(2027, 4, 30), adminOrQa)));
 
         System.out.println("Seeded 5 academic years.");
     }

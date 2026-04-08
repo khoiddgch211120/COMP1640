@@ -3,6 +3,7 @@ package com.example.comp1640.service;
 import com.example.comp1640.dto.response.AnonymousContentResponse;
 import com.example.comp1640.dto.response.IdeaNoCommentResponse;
 import com.example.comp1640.dto.response.StatisticsReportResponse;
+import com.example.comp1640.dto.response.ComprehensiveStatisticsResponse;
 
 import java.util.List;
 
@@ -32,4 +33,14 @@ public interface ReportService {
     * @return List of anonymous content with author details
     */
    List<AnonymousContentResponse> getAnonymousContent(Integer yearId);
+
+   /**
+    * Get comprehensive statistics for dashboard
+    * 
+    * @param yearId The academic year ID
+    * @param deptId Optional department filter
+    * @return Comprehensive statistics including totals, trends, contributors, and
+    *         breakdown
+    */
+   ComprehensiveStatisticsResponse getComprehensiveStatistics(Integer yearId, Integer deptId);
 }

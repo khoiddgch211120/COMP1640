@@ -22,4 +22,11 @@ public interface CommentRepository extends JpaRepository<Comment, Integer> {
 
     @Query("SELECT c FROM Comment c WHERE c.idea.academicYear.yearId = :yearId AND c.isAnonymous = true")
     List<Comment> findAnonymousCommentsByYear(@Param("yearId") Integer yearId);
+
+    // Anonymous comments (all years)
+    @Query("SELECT c FROM Comment c WHERE c.isAnonymous = true")
+    List<Comment> findAllAnonymousComments();
+
+    @Query("SELECT c FROM Comment c WHERE c.idea.academicYear.yearId = :yearId")
+    List<Comment> findByIdea_AcademicYear_YearId(@Param("yearId") Integer yearId);
 }

@@ -42,10 +42,19 @@ public class IdeaSeeder implements CommandLineRunner {
                 }
 
                 List<Department> depts = deptRepo.findAll();
-                Department computingDept = findDept(depts, "School of Computing");
-                Department businessDept = findDept(depts, "School of Business");
-                Department engineeringDept = findDept(depts, "School of Engineering");
-                Department healthDept = findDept(depts, "School of Health");
+                // Get departments by index (from DepartmentSeeder: 0=Business, 1=Computing,
+                // 2=Engineering, 3=Health)
+                Department businessDept = depts.size() > 0 ? depts.get(0) : null;
+                Department computingDept = depts.size() > 1 ? depts.get(1) : null;
+                Department engineeringDept = depts.size() > 2 ? depts.get(2) : null;
+                Department healthDept = depts.size() > 3 ? depts.get(3) : null;
+
+                // Debug: log departments found
+                System.out.println("Business: " + (businessDept != null ? businessDept.getDeptName() : "NOT FOUND"));
+                System.out.println("Computing: " + (computingDept != null ? computingDept.getDeptName() : "NOT FOUND"));
+                System.out.println("Engineering: "
+                                + (engineeringDept != null ? engineeringDept.getDeptName() : "NOT FOUND"));
+                System.out.println("Health: " + (healthDept != null ? healthDept.getDeptName() : "NOT FOUND"));
 
                 List<AcademicYear> years = yearRepo.findAll();
                 if (years.isEmpty()) {

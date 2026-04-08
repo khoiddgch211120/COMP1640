@@ -3,6 +3,7 @@ package com.example.comp1640.controller;
 import com.example.comp1640.dto.response.AnonymousContentResponse;
 import com.example.comp1640.dto.response.IdeaNoCommentResponse;
 import com.example.comp1640.dto.response.StatisticsReportResponse;
+import com.example.comp1640.dto.response.ComprehensiveStatisticsResponse;
 import com.example.comp1640.service.ExportService;
 import com.example.comp1640.service.ReportService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,9 +32,22 @@ public class ReportController {
    @GetMapping("/statistics")
    @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER', 'DEPT_MANAGER', 'HR_MANAGER', 'QA_COORDINATOR')")
    public ResponseEntity<List<StatisticsReportResponse>> getStatisticsReport(
-         @RequestParam Integer yearId,
+         @RequestParam(required = false) Integer yearId,
          @RequestParam(required = false) Integer deptId) {
       return ResponseEntity.ok(reportService.getStatisticsReport(yearId, deptId));
+   }
+
+   /**
+    * Get comprehensive statistics for dashboard including totals, trends, and
+    * contributors
+    * Accessible by: ADMIN, QA_MANAGER, DEPT_MANAGER, HR_MANAGER, QA_COORDINATOR
+    */
+   @GetMapping("/statistics/comprehensive")
+   @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER', 'DEPT_MANAGER', 'HR_MANAGER', 'QA_COORDINATOR')")
+   public ResponseEntity<ComprehensiveStatisticsResponse> getComprehensiveStatistics(
+         @RequestParam(required = false) Integer yearId,
+         @RequestParam(required = false) Integer deptId) {
+      return ResponseEntity.ok(reportService.getComprehensiveStatistics(yearId, deptId));
    }
 
    /**
@@ -43,7 +57,7 @@ public class ReportController {
    @GetMapping("/no-comments")
    @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER', 'DEPT_MANAGER', 'HR_MANAGER', 'QA_COORDINATOR')")
    public ResponseEntity<List<IdeaNoCommentResponse>> getIdeasWithoutComments(
-         @RequestParam Integer yearId) {
+         @RequestParam(required = false) Integer yearId) {
       return ResponseEntity.ok(reportService.getIdeasWithoutComments(yearId));
    }
 
@@ -54,7 +68,7 @@ public class ReportController {
    @GetMapping("/anonymous-content")
    @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER', 'DEPT_MANAGER', 'HR_MANAGER', 'QA_COORDINATOR')")
    public ResponseEntity<List<AnonymousContentResponse>> getAnonymousContent(
-         @RequestParam Integer yearId) {
+         @RequestParam(required = false) Integer yearId) {
       return ResponseEntity.ok(reportService.getAnonymousContent(yearId));
    }
 
@@ -66,7 +80,7 @@ public class ReportController {
    @GetMapping("/export/csv")
    @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER', 'DEPT_MANAGER', 'HR_MANAGER', 'QA_COORDINATOR')")
    public void exportToCSV(
-         @RequestParam Integer yearId,
+         @RequestParam(required = false) Integer yearId,
          HttpServletResponse response) {
       exportService.exportIdeasAndCommentsToCSV(yearId, response);
    }
@@ -79,7 +93,7 @@ public class ReportController {
    @GetMapping("/export/attachments-zip")
    @PreAuthorize("hasAnyRole('ADMIN', 'QA_MANAGER', 'DEPT_MANAGER', 'HR_MANAGER', 'QA_COORDINATOR')")
    public void exportAttachmentsAsZip(
-         @RequestParam Integer yearId,
+         @RequestParam(required = false) Integer yearId,
          HttpServletResponse response) {
       exportService.exportAttachmentsAsZip(yearId, response);
    }
