@@ -87,8 +87,9 @@ public class AuthServiceImpl implements AuthService {
 
                 String token = jwtUtil.generateToken(user);
                 String role = user.getRole() != null ? user.getRole().getRoleName().name() : null;
+                Integer departmentId = user.getDepartment() != null ? user.getDepartment().getDeptId() : null;
 
-                return new LoginResponse(token, user.getEmail(), role);
+                return new LoginResponse(token, user.getEmail(), role, departmentId);
         }
 
         @Override

@@ -47,7 +47,7 @@ const Login = ({ isModal = false }) => {
       setLoading(true);
 
       // Gọi BE — apiClient tự gắn token + convert snake_case
-      // BE trả về: { token, email, role }
+      // BE trả về: { token, email, role, departmentId}
       const data = await loginApi({ email, password });
 
       const role = normalizeRole(data.role);
@@ -57,6 +57,7 @@ const Login = ({ isModal = false }) => {
         user: {
           email:    data.email,
           role,
+          deptId: data.departmentId,
           fullName: data.fullName || data.email, // BE login không trả fullName → fallback email
         },
       }));

@@ -61,7 +61,33 @@ public class ReportServiceImpl implements ReportService {
       Map<Integer, List<Idea>> ideaByDept = ideas.stream()
             .collect(Collectors.groupingBy(i -> i.getDepartment() != null ? i.getDepartment().getDeptId() : -1));
 
-      // Get all departments
+      // If deptId is specified, only return statistics for that department
+      if (deptId != null) {
+         List<Idea> deptIdeas = ideaByDept.getOrDefault(deptId, new ArrayList<>());
+         long deptIdeaCount = deptIdeas.size();
+         double percentage = totalIdeas > 0 ? (deptIdeaCount * 100.0) / totalIdeas : 0;
+
+         // Count unique contributors
+         long contributorCount = deptIdeas.stream()
+               .map(idea -> idea.getUser() != null ? idea.getUser().getUserId() : null)
+               .distinct()
+               .count();
+
+         Department dept = departmentRepository.findById(deptId).orElse(null);
+         if (dept == null) {
+            return new ArrayList<>();
+         }
+
+         return List.of(StatisticsReportResponse.builder()
+               .deptId(dept.getDeptId())
+               .deptName(dept.getDeptName())
+               .ideaCount((int) deptIdeaCount)
+               .percentageOfTotal(Math.round(percentage * 100.0) / 100.0)
+               .contributorCount((int) contributorCount)
+               .build());
+      }
+
+      // Get all departments and build statistics
       List<Department> departments = departmentRepository.findAll();
 
       // Build statistics
