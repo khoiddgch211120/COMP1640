@@ -65,6 +65,9 @@ public class SecurityConfig {
                                 "/academic-years/current")
                         .permitAll()
 
+                        // Reports và export chỉ dành cho ADMIN, QA_MGR, QA_COORD (xử lý bằng @PreAuthorize)
+                        .requestMatchers("/reports/**").authenticated()
+
                         // Tất cả request còn lại phải xác thực
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

@@ -1,10 +1,12 @@
 package com.example.comp1640.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Entity
@@ -14,30 +16,21 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@IdClass(UserTermsAcceptance.UserTermsId.class)
 public class UserTermsAcceptance {
 
-    @Id
+    @EmbeddedId
+    private UserTermsAcceptanceId id;
+
     @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("userId")
     @JoinColumn(name = "user_id")
     private User user;
 
-    @Id
     @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("tcId")
     @JoinColumn(name = "tc_id")
-    private TermsConditions termsCondition;
+    private TermsConditions termsConditions;
 
-    @CreationTimestamp
+    @Column(name = "accepted_at")
     private LocalDateTime acceptedAt;
-
-    // ── Composite Key class ──────────────────────────────────
-    @Getter
-    @Setter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @EqualsAndHashCode
-    public static class UserTermsId implements Serializable {
-        private Integer user;
-        private Integer termsCondition;
-    }
 }
