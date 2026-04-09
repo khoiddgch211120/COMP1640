@@ -64,4 +64,23 @@ public class JwtTokenUtil {
             return false;
         }
     }
+
+    // Lấy userId từ token
+    public Integer getUserIdFromToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+
+            Object userIdObj = claims.get("userId");
+            if (userIdObj instanceof Number) {
+                return ((Number) userIdObj).intValue();
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
 }

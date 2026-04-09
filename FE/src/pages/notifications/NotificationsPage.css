@@ -1,0 +1,378 @@
+/* ==========================================
+   NOTIFICATIONS PAGE STYLES
+========================================== */
+
+.notifications-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+/* Header */
+.notifications-header {
+  margin-bottom: 32px;
+}
+
+.notifications-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.notifications-header .subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Toolbar */
+.notifications-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 16px;
+  padding: 16px;
+  background-color: #f9fafb;
+  border-radius: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #374151;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.filter-btn.active {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.action-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.sort-select {
+  padding: 8px 12px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #374151;
+  transition: all 0.2s ease;
+}
+
+.sort-select:hover {
+  border-color: #3b82f6;
+}
+
+.action-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.action-btn.primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.action-btn.primary:hover {
+  background: #1d4ed8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.action-btn.danger {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.action-btn.danger:hover {
+  background: #fecaca;
+}
+
+/* Notifications Container & List */
+.notifications-container {
+  margin-bottom: 24px;
+}
+
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Notification Card */
+.notification-card {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  border-left: 4px solid #8b5cf6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.notification-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.notification-card.unread {
+  background: #f0f9ff;
+}
+
+/* Card Icon */
+.card-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #f3f4f6;
+  border-radius: 8px;
+}
+
+/* Card Content */
+.card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.4;
+}
+
+.unread-dot {
+  color: #ef4444;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.card-message {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+.card-meta {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: #6b7280;
+  padding: 6px 10px;
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+.card-footer {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.card-time {
+  cursor: help;
+}
+
+.card-type {
+  background: #e0e7ff;
+  color: #4338ca;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* Card Actions */
+.card-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.notification-card:hover .card-actions {
+  opacity: 1;
+}
+
+.action-icon {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #e5e7eb;
+  color: #374151;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-icon:hover {
+  background: #d1d5db;
+  color: #1f2937;
+  transform: scale(1.05);
+}
+
+.action-icon.remove:hover {
+  background: #ef4444;
+  color: white;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border: 2px dashed #e5e7eb;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.empty-state h2 {
+  margin: 0 0 8px 0;
+  font-size: 20px;
+  color: #111827;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Load More */
+.load-more {
+  text-align: center;
+  margin-top: 24px;
+}
+
+.load-more-btn {
+  padding: 12px 32px;
+  border: 2px solid #3b82f6;
+  background: white;
+  color: #3b82f6;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.load-more-btn:hover {
+  background: #3b82f6;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .notifications-page {
+    padding: 16px;
+  }
+
+  .notifications-header h1 {
+    font-size: 24px;
+  }
+
+  .notifications-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-group {
+    width: 100%;
+  }
+
+  .filter-btn {
+    flex: 1;
+  }
+
+  .action-group {
+    width: 100%;
+  }
+
+  .sort-select,
+  .action-btn {
+    flex: 1;
+  }
+
+  .notification-card {
+    flex-wrap: wrap;
+  }
+
+  .card-actions {
+    width: 100%;
+    justify-content: flex-end;
+    margin-top: 8px;
+  }
+
+  .notification-card:hover .card-actions {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-header {
+    flex-direction: column;
+  }
+
+  .card-footer {
+    flex-direction: column;
+  }
+}

@@ -1,11 +1,18 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { jwtDecode } from "jwt-decode"; 
 
 /* =========================
-   NORMALIZE ROLE (🔥 FIX)
+   NORMALIZE ROLE
 ========================= */
 export const normalizeRole = (role = "") => {
   const r = role.replace("ROLE_", "").toUpperCase();
 
+  if (r.includes("ADMIN")) return "ADMIN";
+  if (r.includes("QA_MANAGER")) return "QA_MANAGER";
+  if (r.includes("QA_COORDINATOR")) return "QA_COORDINATOR";
+  if (r.includes("DEPT_MANAGER")) return "DEPT_MANAGER";
+  if (r.includes("HR")) return "HR_MANAGER";
+  if (r.includes("HEAD")) return "HEAD";
   if (r.includes("ACADEMIC")) return "ACADEMIC";
   if (r.includes("SUPPORT")) return "SUPPORT";
 
@@ -34,43 +41,50 @@ const savedAuth = (() => {
   }
 })();
 
-/* =========================
-   INITIAL STATE
-========================= */
 const initialState = {
   user: savedAuth?.user || null,
   token: savedAuth?.token || null,
+  userId: savedAuth?.userId || null, // ← LẤY TỪ DECODED TOKEN
   isAuthenticated: !!savedAuth?.token,
 };
 
-/* =========================
-   SLICE
-========================= */
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
     loginSuccess: (state, action) => {
-      const { user, token } = action.payload;
+      const { token, ...userData } = action.payload;
+
+      // 🔥 DECODE JWT để lấy userId
+      let userId = null;
+      try {
+        const decoded = jwtDecode(token);
+        userId = decoded.userId; // ← Backend lưu userId trong JWT
+      } catch (err) {
+        console.error('JWT decode error:', err);
+      }
 
       const normalizedUser = {
-        ...user,
-        role: normalizeRole(user.role), // 🔥 FIX
+        ...userData,
+        role: normalizeRole(userData.role),
+        id: userId, // ← Lưu vào user object
       };
 
       state.user = normalizedUser;
       state.token = token;
+      state.userId = userId; // ← SET userId từ JWT
       state.isAuthenticated = true;
 
       localStorage.setItem(
         "auth",
-        JSON.stringify({ user: normalizedUser, token })
+        JSON.stringify({ user: normalizedUser, token, userId })
       );
     },
 
     logout: (state) => {
       state.user = null;
       state.token = null;
+      state.userId = null;
       state.isAuthenticated = false;
       localStorage.removeItem("auth");
     },

@@ -15,24 +15,36 @@ import { getDepartments } from "../../services/departmentService";
 // ── Schema: department { dept_id, dept_name, dept_type, created_at }
 
 var ROLE_OPTIONS = [
-  { role_id: 1, role_name: "STAFF" },
+  { role_id: 1, role_name: "ADMIN" },
   { role_id: 2, role_name: "QA_MANAGER" },
   { role_id: 3, role_name: "QA_COORDINATOR" },
-  { role_id: 4, role_name: "ADMIN" },
+  { role_id: 4, role_name: "DEPT_MANAGER" },
+  { role_id: 5, role_name: "HR_MANAGER" },
+  { role_id: 6, role_name: "HEAD" },
+  { role_id: 7, role_name: "ACADEMIC_STAFF" },
+  { role_id: 8, role_name: "SUPPORT_STAFF" },
 ];
 
 var ROLE_LABEL = {
-  STAFF: "Staff",
+  ADMIN: "Admin",
   QA_MANAGER: "QA Manager",
   QA_COORDINATOR: "QA Coordinator",
-  ADMIN: "Admin",
+  DEPT_MANAGER: "Department Manager",
+  HR_MANAGER: "HR Manager",
+  HEAD: "Head",
+  ACADEMIC_STAFF: "Academic Staff",
+  SUPPORT_STAFF: "Support Staff",
 };
 
 var ROLE_BADGE = {
-  STAFF: "badge--staff",
+  ADMIN: "badge--admin",
   QA_MANAGER: "badge--manager",
   QA_COORDINATOR: "badge--coordinator",
-  ADMIN: "badge--admin",
+  DEPT_MANAGER: "badge--dept-manager",
+  HR_MANAGER: "badge--hr-manager",
+  HEAD: "badge--head",
+  ACADEMIC_STAFF: "badge--academic-staff",
+  SUPPORT_STAFF: "badge--support-staff",
 };
 
 var STAFF_TYPES = ["Full-time", "Part-time", "Intern", "Contractor"];
@@ -44,7 +56,7 @@ var EMPTY_FORM = {
   full_name: "",
   email: "",
   password_hash: "",
-  role_name: "STAFF",
+  role_name: "ACADEMIC_STAFF",
   staff_type: "Full-time",
   dept_id: "",
 };
@@ -60,7 +72,7 @@ function normalizeUser(u, deptList) {
     dept_id: u.deptId ?? u.dept_id ?? "",
     full_name: u.fullName ?? u.full_name ?? "",
     email: u.email ?? "",
-    role_name: u.roleName ?? u.role_name ?? "STAFF",
+    role_name: u.roleName ?? u.role_name ?? "ACADEMIC_STAFF",
     staff_type: u.staffType ?? u.staff_type ?? "Full-time",
     is_active: u.isActive !== undefined ? u.isActive : u.is_active !== false,
     created_at: u.createdAt
