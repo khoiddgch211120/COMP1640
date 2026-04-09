@@ -3,6 +3,7 @@ package com.example.comp1640.repository;
 import java.util.List;
 import java.util.Optional;
 
+import com.example.comp1640.enums.RoleName;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,4 +18,8 @@ public interface UserRepository extends JpaRepository<User, Integer> {
     boolean existsByEmail(String email);
 
     List<User> findByDepartment_DeptId(Integer deptId);
+
+    @Query("SELECT u FROM User u WHERE u.department.deptId = :deptId AND u.role.roleName = :roleName")
+    List<User> findByDepartment_DeptIdAndRole_RoleName(@Param("deptId") Integer deptId,
+            @Param("roleName") RoleName roleName);
 }

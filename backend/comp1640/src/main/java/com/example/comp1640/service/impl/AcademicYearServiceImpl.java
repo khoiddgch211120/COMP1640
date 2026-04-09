@@ -135,28 +135,24 @@ public class AcademicYearServiceImpl implements AcademicYearService {
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy user hiện tại"));
     }
 
-    /**
-     * Tính status theo logic:
-     *  - upcoming : hôm nay TRƯỚC idea_closure_date
-     *  - active   : hôm nay SAU idea_closure_date nhưng TRƯỚC final_closure_date
-     *  - closed   : hôm nay SAU final_closure_date
-     *
-     * Thêm createdBy (Integer user_id) và status (String) vào response
-     * để frontend AcademicYearManagement.jsx hiển thị đúng badge.
-     */
     private AcademicYearResponse toResponse(AcademicYear a) {
         LocalDate today = LocalDate.now();
+        LocalDate createdDate = a.getCreatedAt().toLocalDate();
 
-        boolean ideaOpen    = !today.isAfter(a.getIdeaClosureDate());
-        boolean commentOpen = !today.isAfter(a.getFinalClosureDate());
+        // ideaOpen: createdAt → ideaClosureDate
+        boolean ideaOpen = !today.isBefore(createdDate) &&
+                !today.isAfter(a.getIdeaClosureDate());
+
+        // commentOpen: createdAt → finalClosureDate
+        boolean commentOpen = !today.isBefore(createdDate) &&
+                !today.isAfter(a.getFinalClosureDate());
 
         String status;
-        if (today.isBefore(a.getIdeaClosureDate())) {
-            status = "upcoming";
-        } else if (!today.isAfter(a.getFinalClosureDate())) {
-            status = "active";
-        } else {
+
+        if (today.isAfter(a.getFinalClosureDate())) {
             status = "closed";
+        } else {
+            status = "active";
         }
 
         AcademicYearResponse resp = new AcademicYearResponse();
@@ -170,6 +166,7 @@ public class AcademicYearServiceImpl implements AcademicYearService {
         resp.setIdeaOpen(ideaOpen);
         resp.setCommentOpen(commentOpen);
         resp.setStatus(status);
+
         return resp;
     }
 }

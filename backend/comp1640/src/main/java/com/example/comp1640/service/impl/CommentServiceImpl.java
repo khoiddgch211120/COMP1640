@@ -11,6 +11,7 @@ import com.example.comp1640.repository.CommentRepository;
 import com.example.comp1640.repository.IdeaRepository;
 import com.example.comp1640.repository.UserRepository;
 import com.example.comp1640.service.CommentService;
+import com.example.comp1640.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -33,6 +34,7 @@ public class CommentServiceImpl implements CommentService {
     private final CommentRepository commentRepository;
     private final IdeaRepository ideaRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     @Override
     public CommentResponse add(Integer ideaId, CommentRequest request) {
@@ -59,7 +61,12 @@ public class CommentServiceImpl implements CommentService {
         comment.setCreatedAt(LocalDateTime.now());
         comment.setUpdatedAt(LocalDateTime.now());
 
-        return toResponse(commentRepository.save(comment), currentUser);
+        Comment savedComment = commentRepository.save(comment);
+
+        // Gửi thông báo cho tác giả ý tưởng
+        notificationService.notifyCommentToIdeaAuthor(savedComment);
+
+        return toResponse(savedComment, currentUser);
     }
 
     @Override

@@ -32,6 +32,7 @@ import com.example.comp1640.enums.RoleName;
 import com.example.comp1640.service.IdeaService;
 import lombok.RequiredArgsConstructor;
 import com.example.comp1640.repository.CommentRepository;
+import com.example.comp1640.service.NotificationService;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +44,7 @@ public class IdeaServiceImpl implements IdeaService {
     private final CategoryRepository categoryRepo;
     private final VoteRepository voteRepo;
     private final CommentRepository commentRepo;
+    private final NotificationService notificationService;
 
     @Override
     @Transactional
@@ -92,7 +94,12 @@ public class IdeaServiceImpl implements IdeaService {
             categoryRepo.saveAll(categories);
         }
 
-        return toResponse(ideaRepo.save(idea), currentUser);
+        Idea savedIdea = ideaRepo.save(idea);
+
+        // Gửi thông báo cho QA Coordinators
+        notificationService.notifyNewIdeaToCoordinators(savedIdea);
+
+        return toResponse(savedIdea, currentUser);
     }
 
     @Override
