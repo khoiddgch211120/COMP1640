@@ -26,12 +26,26 @@ public class NotificationLog {
     private User recipient;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "idea_id", nullable = false)
+    @JoinColumn(name = "idea_id")
     private Idea idea;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "comment_id")
+    private Comment comment;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private NotifType notifType;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(nullable = false, length = 500)
+    private String message;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean isRead = false;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

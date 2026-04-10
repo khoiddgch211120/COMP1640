@@ -25,7 +25,19 @@ export const normalizeRole = (role = "") => {
 const savedAuth = (() => {
   try {
     const data = JSON.parse(localStorage.getItem("auth"));
-    if (!data) return null;
+    if (!data?.token) return null;
+
+    // Kiểm tra JWT expiry trước khi rehydrate
+    try {
+      const decoded = jwtDecode(data.token);
+      if (decoded.exp && decoded.exp * 1000 < Date.now()) {
+        localStorage.removeItem("auth");
+        return null;
+      }
+    } catch {
+      localStorage.removeItem("auth");
+      return null;
+    }
 
     return {
       ...data,
@@ -87,6 +99,7 @@ const authSlice = createSlice({
       state.userId = null;
       state.isAuthenticated = false;
       localStorage.removeItem("auth");
+      // Note: notification clearing is handled in MainLayout via useEffect cleanup
     },
   },
 });

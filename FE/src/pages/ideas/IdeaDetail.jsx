@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { ROLES } from "../../constants/roles";
@@ -6,6 +6,7 @@ import { getIdeaById } from "../../services/ideaService";
 import { getCommentsByIdea, addComment as addCommentApi } from "../../services/commentService";
 import { getIdeaVotes, voteOnIdea, deleteVote } from "../../services/voteService";
 import { getDocumentsByIdea } from "../../services/documentService";
+import { subscribeTopic, isWebSocketConnected } from "../../services/websocketService";
 import "../../styles/ideas.css";
 
 const IdeaDetail = () => {
@@ -25,6 +26,7 @@ const IdeaDetail = () => {
   const [isAnonymousCmt, setAnonymousCmt]   = useState(false);
   const [postingComment, setPostingComment] = useState(false);
   const [votingLoading,  setVotingLoading]  = useState(false);
+  const addedCommentIds = useRef(new Set()); // track IDs added via API to avoid WS duplication
 
   /* ── Fetch all data at once ──────────────────────────────── */
   useEffect(() => {
@@ -62,6 +64,38 @@ const IdeaDetail = () => {
     };
     fetchAll();
   }, [id, user]);
+
+  /* ── Subscribe to real-time comments via WebSocket ───────── */
+  useEffect(() => {
+    let subscription = null;
+    let retryTimeout = null;
+
+    const trySubscribe = () => {
+      if (isWebSocketConnected()) {
+        subscription = subscribeTopic(`/topic/ideas/${id}/comments`, (newComment) => {
+          // Skip if already added via API response (own comment)
+          if (addedCommentIds.current.has(newComment.commentId)) {
+            addedCommentIds.current.delete(newComment.commentId);
+            return;
+          }
+          setComments((prev) => {
+            if (prev.some((c) => c.commentId === newComment.commentId)) return prev;
+            return [newComment, ...prev];
+          });
+        });
+      } else {
+        // Retry after 2s if WebSocket not yet connected
+        retryTimeout = setTimeout(trySubscribe, 2000);
+      }
+    };
+
+    trySubscribe();
+
+    return () => {
+      if (subscription) subscription.unsubscribe();
+      if (retryTimeout) clearTimeout(retryTimeout);
+    };
+  }, [id]);
 
   /* ── Helpers ─────────────────────────────────────────────── */
   const formatDate = (d) => {
@@ -108,7 +142,12 @@ const IdeaDetail = () => {
         content:     commentText,
         isAnonymous: isAnonymousCmt,
       });
-      setComments((prev) => [newComment, ...prev]);
+      // Mark this ID so WebSocket handler skips it
+      if (newComment.commentId) addedCommentIds.current.add(newComment.commentId);
+      setComments((prev) => {
+        if (prev.some((c) => c.commentId === newComment.commentId)) return prev;
+        return [newComment, ...prev];
+      });
       setCommentText("");
       setAnonymousCmt(false);
     } catch (err) {
@@ -147,7 +186,10 @@ const IdeaDetail = () => {
   const authorName    = idea.isAnonymous ? "Anonymous" : (idea.authorName ?? "—");
   const authorInitial = idea.isAnonymous ? "?" : (authorName[0] ?? "?").toUpperCase();
 
-  const commentClosed = !idea.termsAccepted || idea.isDisabled;
+  const commentClosed = idea.isDisabled ||
+    (idea.academicYear?.finalClosureDate
+      ? new Date() > new Date(idea.academicYear.finalClosureDate)
+      : false);
   const canComment =
   user?.role === ROLES.ACADEMIC_STAFF ||
   user?.role === ROLES.SUPPORT_STAFF ||

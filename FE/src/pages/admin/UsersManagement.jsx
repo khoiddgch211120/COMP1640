@@ -6,6 +6,7 @@ import {
   createUser,
   updateUser,
   toggleUserActive,
+  deleteUser,
 } from "../../services/userService";
 import { getDepartments } from "../../services/departmentService";
 
@@ -118,6 +119,17 @@ var IconClose = function () {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+};
+var IconTrash = function () {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+      <path d="M9 6V4h6v2" />
     </svg>
   );
 };
@@ -412,9 +424,19 @@ var UserManagement = function () {
     setSubmitError("");
     setModalMode("disable");
   }
+  function openDelete(u) {
+    setSelectedUser(u);
+    setSubmitError("");
+    setModalMode("delete");
+  }
   function closeModal() {
     setModalMode(null);
     setSubmitError("");
+  }
+
+  function getRoleId(role_name) {
+    var found = ROLE_OPTIONS.find(function (r) { return r.role_name === role_name; });
+    return found ? found.role_id : 7;
   }
 
   // POST /api/users
@@ -478,6 +500,30 @@ var UserManagement = function () {
         err?.response?.data?.message ||
           err?.message ||
           "Failed to update user."
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  // DELETE /api/users/:id
+  async function handleDelete() {
+    if (!selectedUser) return;
+    setSubmitting(true);
+    setSubmitError("");
+    try {
+      await deleteUser(selectedUser.user_id);
+      setUsers(function (prev) {
+        return prev.filter(function (u) {
+          return u.user_id !== selectedUser.user_id;
+        });
+      });
+      closeModal();
+    } catch (err) {
+      setSubmitError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to delete user."
       );
     } finally {
       setSubmitting(false);
@@ -811,6 +857,15 @@ var UserManagement = function () {
                           >
                             <IconBan />
                           </button>
+                          <button
+                            className="btn-icon btn-icon--delete"
+                            title="Delete account"
+                            onClick={function () {
+                              openDelete(user);
+                            }}
+                          >
+                            <IconTrash />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -1070,6 +1125,52 @@ var UserManagement = function () {
                 }}
               >
                 Edit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE MODAL — DELETE /api/users/:id */}
+      {modalMode === "delete" && selectedUser && (
+        <div className="modal-overlay" onClick={closeModal}>
+          <div
+            className="modal"
+            style={{ maxWidth: 400 }}
+            onClick={function (e) {
+              e.stopPropagation();
+            }}
+          >
+            <div className="confirm-body">
+              <div className="confirm-icon" style={{ color: "var(--danger)" }}>
+                <IconTrash />
+              </div>
+              <h3>Delete Account?</h3>
+              <p>
+                This will <strong>permanently delete</strong>{" "}
+                <strong>{selectedUser.full_name}</strong> and all associated
+                data. This action cannot be undone.
+              </p>
+              {submitError && (
+                <div className="form-error" style={{ marginTop: 8 }}>
+                  {submitError}
+                </div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button
+                className="btn btn-secondary"
+                onClick={closeModal}
+                disabled={submitting}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-danger"
+                onClick={handleDelete}
+                disabled={submitting}
+              >
+                {submitting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

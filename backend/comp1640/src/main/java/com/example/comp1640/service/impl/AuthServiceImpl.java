@@ -8,7 +8,6 @@ import com.example.comp1640.dto.request.RegisterRequest;
 import com.example.comp1640.dto.response.LoginResponse;
 import com.example.comp1640.dto.response.RegisterResponse;
 import com.example.comp1640.exception.BadRequestException;
-import com.example.comp1640.exception.ResourceNotFoundException;
 import com.example.comp1640.exception.UnauthorizedException;
 import com.example.comp1640.entity.Role;
 import com.example.comp1640.entity.User;
@@ -18,6 +17,7 @@ import com.example.comp1640.repository.UserRepository;
 import com.example.comp1640.security.JwtTokenUtil;
 import com.example.comp1640.security.TokenBlacklistService;
 import com.example.comp1640.service.AuthService;
+import java.time.LocalDateTime;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -64,6 +64,8 @@ public class AuthServiceImpl implements AuthService {
                                 .role(defaultRole)
                                 .isActive(true)
                                 .staffType(request.getStaffType() != null ? request.getStaffType().name() : "ACADEMIC")
+                                .createdAt(LocalDateTime.now())
+                                .updatedAt(LocalDateTime.now())
                                 .build();
 
                 userRepo.save(user);
@@ -75,14 +77,14 @@ public class AuthServiceImpl implements AuthService {
         public LoginResponse login(LoginRequest request) {
 
                 User user = userRepo.findByEmail(request.getEmail())
-                                .orElseThrow(() -> new ResourceNotFoundException("Email không tồn tại"));
+                                .orElseThrow(() -> new BadRequestException("Email hoặc mật khẩu không đúng"));
 
                 if (Boolean.FALSE.equals(user.getIsActive())) {
                         throw new UnauthorizedException("Tài khoản đã bị vô hiệu hóa");
                 }
 
                 if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-                        throw new BadRequestException("Sai mật khẩu");
+                        throw new BadRequestException("Email hoặc mật khẩu không đúng");
                 }
 
                 String token = jwtUtil.generateToken(user);

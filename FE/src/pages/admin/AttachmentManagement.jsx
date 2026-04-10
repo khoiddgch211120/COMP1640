@@ -1,19 +1,10 @@
 import { useState, useMemo, useEffect } from "react";
 import "../../styles/admin.shared.css";
 import "../../styles/AttachmentManagement.css";
-import { getAllIdeas } from "../../services/ideaService";
 import {
-  getDocumentsByIdea,
-  deleteDocument,
+  getAllDocuments,
+  deleteDocumentById,
 } from "../../services/documentService";
-import { getDepartments } from "../../services/departmentService";
-
-// ── Schema: document { doc_id, idea_id, file_name, file_path,
-//                      file_type, file_size_kb, uploaded_at }
-// NOTE: Backend does not expose a /documents (list-all) endpoint.
-//       This page fetches all ideas first, then fetches documents per idea in parallel.
-//       For better performance, consider adding GET /documents or GET /reports/attachments
-//       to the backend.
 
 var FILE_STYLE = {
   pdf:  { label: "PDF",  color: "#ef4444", bg: "#fef2f2" },
@@ -39,17 +30,12 @@ function fmtSize(file_size_kb) {
   return (file_size_kb / 1024).toFixed(1) + " MB";
 }
 
-// Normalize document from camelCase API → snake_case UI
-function normalizeDoc(doc, idea, deptList) {
-  var dept =
-    deptList.find(function (d) {
-      return (
-        String(d.dept_id) === String(idea?.deptId ?? idea?.dept_id ?? "")
-      );
-    }) || {};
+// Normalize document from camelCase API response → snake_case used by UI
+// The GET /documents endpoint returns full enriched data directly.
+function normalizeDoc(doc) {
   return {
     doc_id: doc.docId ?? doc.doc_id,
-    idea_id: doc.ideaId ?? doc.idea_id ?? idea?.ideaId ?? idea?.idea_id,
+    idea_id: doc.ideaId ?? doc.idea_id,
     file_name: doc.fileName ?? doc.file_name ?? "",
     file_path: doc.filePath ?? doc.file_path ?? "",
     file_type: doc.fileType ?? doc.file_type ?? "",
@@ -57,11 +43,10 @@ function normalizeDoc(doc, idea, deptList) {
     uploaded_at: doc.uploadedAt
       ? String(doc.uploadedAt).split("T")[0]
       : doc.uploaded_at ?? "",
-    // Enriched from idea
-    idea_title: idea?.title ?? idea?.idea_title ?? "(untitled)",
-    uploader_name: idea?.authorName ?? idea?.author_name ?? "Anonymous",
-    dept_id: idea?.deptId ?? idea?.dept_id ?? "",
-    dept_name: dept.dept_name ?? "",
+    idea_title: doc.ideaTitle ?? doc.idea_title ?? "(untitled)",
+    uploader_name: doc.uploaderName ?? doc.uploader_name ?? "Anonymous",
+    dept_id: doc.deptId ?? doc.dept_id ?? "",
+    dept_name: doc.deptName ?? doc.dept_name ?? "",
   };
 }
 
@@ -91,10 +76,6 @@ var AttachmentManagement = function () {
   var docsState = useState([]);
   var documents = docsState[0];
   var setDocuments = docsState[1];
-
-  var deptsState = useState([]);
-  var departments = deptsState[0];
-  var setDepartments = deptsState[1];
 
   var loadingState = useState(true);
   var loading = loadingState[0];
@@ -145,52 +126,10 @@ var AttachmentManagement = function () {
     setLoading(true);
     setPageError("");
     try {
-      // Step 1: fetch departments for enrichment
-      var deptResponse = await getDepartments().catch(function () {
-        return [];
-      });
-      var normalizedDepts = (Array.isArray(deptResponse) ? deptResponse : []).map(
-        function (d) {
-          return {
-            dept_id: d.deptId ?? d.dept_id,
-            dept_name: d.deptName ?? d.dept_name ?? "",
-          };
-        }
-      );
-      setDepartments(normalizedDepts);
-
-      // Step 2: fetch all ideas (large page to minimize pagination)
-      var ideasResponse = await getAllIdeas({ page: 0, size: 1000 });
-      var ideas = Array.isArray(ideasResponse)
-        ? ideasResponse
-        : ideasResponse?.content ?? ideasResponse?.data ?? [];
-
-      if (ideas.length === 0) {
-        setDocuments([]);
-        return;
-      }
-
-      // Step 3: parallel-fetch documents for each idea
-      var results = await Promise.allSettled(
-        ideas.map(function (idea) {
-          var ideaId = idea.ideaId ?? idea.idea_id;
-          return getDocumentsByIdea(ideaId).then(function (docs) {
-            var docList = Array.isArray(docs) ? docs : docs?.content ?? [];
-            return docList.map(function (doc) {
-              return normalizeDoc(doc, idea, normalizedDepts);
-            });
-          });
-        })
-      );
-
-      // Step 4: flatten successful results
-      var allDocs = [];
-      results.forEach(function (result) {
-        if (result.status === "fulfilled") {
-          allDocs = allDocs.concat(result.value);
-        }
-      });
-      setDocuments(allDocs);
+      // Single API call — GET /documents returns all docs fully enriched
+      var docs = await getAllDocuments();
+      var docList = Array.isArray(docs) ? docs : [];
+      setDocuments(docList.map(normalizeDoc));
     } catch (error) {
       setPageError(
         error?.response?.data?.message ||
@@ -266,13 +205,13 @@ var AttachmentManagement = function () {
     }
   }
 
-  // DELETE /api/ideas/:ideaId/documents/:docId
+  // DELETE /documents/:docId (Admin endpoint)
   async function handleDelete() {
     if (!toDelete) return;
     setDeleting(true);
     setDeleteError("");
     try {
-      await deleteDocument(toDelete.idea_id, toDelete.doc_id);
+      await deleteDocumentById(toDelete.doc_id);
       setDocuments(function (prev) {
         return prev.filter(function (d) {
           return d.doc_id !== toDelete.doc_id;
@@ -305,7 +244,7 @@ var AttachmentManagement = function () {
     try {
       await Promise.all(
         docsToDelete.map(function (doc) {
-          return deleteDocument(doc.idea_id, doc.doc_id);
+          return deleteDocumentById(doc.doc_id);
         })
       );
       var deletedIds = new Set(docsToDelete.map(function (d) { return d.doc_id; }));
@@ -413,7 +352,7 @@ var AttachmentManagement = function () {
             </svg>
           </div>
           <div>
-            <div className="stat-val">{departments.length}</div>
+            <div className="stat-val">{new Set(documents.map(function(d) { return d.dept_id; }).filter(Boolean)).size}</div>
             <div className="stat-label">Departments</div>
           </div>
         </div>
@@ -483,10 +422,16 @@ var AttachmentManagement = function () {
               }}
             >
               <option value="">All Departments</option>
-              {departments.map(function (d) {
+              {Array.from(
+                new Map(
+                  documents
+                    .filter(function(d) { return d.dept_id; })
+                    .map(function(d) { return [d.dept_id, d.dept_name]; })
+                ).entries()
+              ).map(function(entry) {
                 return (
-                  <option key={d.dept_id} value={String(d.dept_id)}>
-                    {d.dept_name}
+                  <option key={entry[0]} value={String(entry[0])}>
+                    {entry[1]}
                   </option>
                 );
               })}

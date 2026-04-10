@@ -5,6 +5,10 @@ import {
   markAllAsRead,
   removeNotification,
   clearNotifications,
+  fetchNotifications,
+  fetchUnreadCount,
+  markOneAsReadAsync,
+  markAllAsReadAsync,
 } from '../redux/slices/notificationSlice';
 
 /**
@@ -20,18 +24,30 @@ export const useNotifications = () => {
     unreadCount: notifications.unreadCount,
     isLoading: notifications.isLoading,
     error: notifications.error,
+    totalPages: notifications.totalPages,
+    currentPage: notifications.currentPage,
 
-    // Actions
+    // Load notifications from database
+    loadNotifications: (page = 0, size = 20) => {
+      dispatch(fetchNotifications({ page, size }));
+    },
+
+    loadUnreadCount: () => {
+      dispatch(fetchUnreadCount());
+    },
+
+    // Actions (local - for WebSocket real-time)
     addNotification: (notification) => {
       dispatch(addNotification(notification));
     },
 
+    // Actions (API - persist to database)
     markAsRead: (notificationId) => {
-      dispatch(markOneAsRead(notificationId));
+      dispatch(markOneAsReadAsync(notificationId));
     },
 
     markAllAsRead: () => {
-      dispatch(markAllAsRead());
+      dispatch(markAllAsReadAsync());
     },
 
     removeNotification: (notificationId) => {
@@ -42,12 +58,11 @@ export const useNotifications = () => {
       dispatch(clearNotifications());
     },
 
-    // Pagination helper
+    // Filter helpers
     getRecentNotifications: (limit = 5) => {
       return notifications.messages.slice(0, limit);
     },
 
-    // Filter helpers
     getUnreadNotifications: () => {
       return notifications.messages.filter((n) => !n.isRead);
     },

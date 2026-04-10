@@ -1,4 +1,6 @@
 import axios from "axios";
+import { store } from "../redux/store";
+import { logout } from "../redux/slices/authSlice";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
@@ -73,6 +75,12 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Handle 401 Unauthorized globally — auto logout and redirect to login
+    if (error.response?.status === 401) {
+      store.dispatch(logout());
+      window.location.href = "/login";
+      return Promise.reject(error);
+    }
     // Also convert error response body to camelCase
     if (error.response?.data && typeof error.response.data === "object") {
       error.response.data = convertKeysToCamelCase(error.response.data);

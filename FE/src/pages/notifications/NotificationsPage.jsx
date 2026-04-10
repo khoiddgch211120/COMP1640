@@ -1,253 +1,164 @@
-import { useState } from 'react';
-import { useNotifications } from '../../services/useNotifications';
+import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import {
+  markOneAsRead,
+  markAllAsRead,
+  clearNotifications,
+} from '../../redux/slices/notificationSlice';
 import './NotificationsPage.css';
 
-/**
- * Notifications Page - Hiển thị tất cả thông báo
- */
+/* ─── Type helpers ─────────────────────────────── */
+const TYPE_CONFIG = {
+  NEW_IDEA: { label: 'New Idea', color: '#3b82f6', bg: '#eff6ff' },
+  NEW_COMMENT: { label: 'New Comment', color: '#6366f1', bg: '#eef2ff' },
+};
+
+const getTypeConfig = (type) =>
+  TYPE_CONFIG[type] || { label: type, color: '#8b5cf6', bg: '#f5f3ff' };
+
+/* ─── Relative time ───────────────────────────── */
+const timeAgo = (dateStr) => {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (mins < 1) return 'Vừa xong';
+  if (mins < 60) return `${mins} phút trước`;
+  if (hours < 24) return `${hours} giờ trước`;
+  if (days < 7) return `${days} ngày trước`;
+  return new Date(dateStr).toLocaleString('vi-VN');
+};
+
+/* ─── Icon by type ─────────────────────────────── */
+const NotifIcon = ({ type }) => {
+  if (type === 'NEW_IDEA') {
+    return (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
+        <path d="M12 2a7 7 0 0 1 7 7c0 3-1.5 5-3.5 6.5V17a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-1.5C6.5 14 5 12 5 9a7 7 0 0 1 7-7z" />
+        <line x1="9" y1="21" x2="15" y2="21" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+};
+
+/* ═══════════════════════════════════════════════════ */
 export default function NotificationsPage() {
-  const {
-    messages,
-    getUnreadNotifications,
-    getReadNotifications,
-    markAsRead,
-    removeNotification,
-    markAllAsRead,
-    clearNotifications,
-  } = useNotifications();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { messages, unreadCount } = useSelector((s) => s.notifications);
+  const { user } = useSelector((s) => s.auth);
 
-  const [filter, setFilter] = useState('all'); // 'all', 'unread', 'read'
-  const [sortBy, setSortBy] = useState('recent'); // 'recent', 'oldest'
+  const readCount = messages.filter((m) => m.isRead).length;
 
-  // Filter notifications
-  const getFilteredNotifications = () => {
-    let notifs = messages;
-
-    if (filter === 'unread') {
-      notifs = getUnreadNotifications();
-    } else if (filter === 'read') {
-      notifs = getReadNotifications();
-    }
-
-    // Sort
-    if (sortBy === 'oldest') {
-      return [...notifs].reverse();
-    }
-    return notifs;
-  };
-
-  const filteredNotifications = getFilteredNotifications();
-  const unreadCount = getUnreadNotifications().length;
-  const readCount = getReadNotifications().length;
-
-  const getNotificationIcon = (type) => {
-    switch (type) {
-      case 'NEW_IDEA':
-        return '💡';
-      case 'NEW_COMMENT':
-        return '💬';
-      case 'COMMENT_LIKED':
-        return '👍';
-      case 'IDEA_COMPLETED':
-        return '✅';
-      case 'IDEA_REJECTED':
-        return '❌';
-      default:
-        return '🔔';
-    }
-  };
-
-  const getNotificationColor = (type) => {
-    switch (type) {
-      case 'NEW_IDEA':
-        return '#3b82f6'; // blue
-      case 'NEW_COMMENT':
-        return '#6366f1'; // indigo
-      case 'IDEA_COMPLETED':
-        return '#10b981'; // green
-      case 'IDEA_REJECTED':
-        return '#ef4444'; // red
-      default:
-        return '#8b5cf6'; // purple
-    }
-  };
-
-  const handleMarkAsRead = (id) => {
-    markAsRead(id);
-  };
-
-  const handleRemove = (id) => {
-    removeNotification(id);
-  };
-
-  const formatTime = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
-  const getRelativeTime = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now - date;
-
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    const days = Math.floor(diff / 86400000);
-
-    if (minutes < 1) return 'Vừa xong';
-    if (minutes < 60) return `${minutes} phút trước`;
-    if (hours < 24) return `${hours} giờ trước`;
-    if (days < 7) return `${days} ngày trước`;
-
-    return formatTime(dateString);
+  const handleClick = (notif) => {
+    if (!notif.isRead) dispatch(markOneAsRead(notif.ideaId));
+    if (notif.ideaId) navigate(`/ideas/${notif.ideaId}`);
   };
 
   return (
-    <div className="notifications-page">
-      {/* Header */}
-      <div className="notifications-header">
-        <h1>🔔 Thông báo ({messages.length})</h1>
-        <p className="subtitle">
-          Chưa đọc: <strong>{unreadCount}</strong> | Đã đọc: <strong>{readCount}</strong>
-        </p>
-      </div>
-
-      {/* Toolbar */}
-      <div className="notifications-toolbar">
-        {/* Filter Buttons */}
-        <div className="filter-group">
-          <button
-            className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
-            onClick={() => setFilter('all')}
-          >
-            Tất cả ({messages.length})
-          </button>
-          <button
-            className={`filter-btn ${filter === 'unread' ? 'active' : ''}`}
-            onClick={() => setFilter('unread')}
-          >
-            Chưa đọc ({unreadCount})
-          </button>
-          <button
-            className={`filter-btn ${filter === 'read' ? 'active' : ''}`}
-            onClick={() => setFilter('read')}
-          >
-            Đã đọc ({readCount})
-          </button>
+    <div className="notif-page">
+      {/* ── Header ─────────────────────────── */}
+      <div className="notif-page-header">
+        <div>
+          <h1 className="notif-page-title">Notifications</h1>
+          <p className="notif-page-subtitle">
+            Thông báo về ý tưởng và bình luận trong department của bạn
+          </p>
         </div>
-
-        {/* Sort & Actions */}
-        <div className="action-group">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="sort-select"
+        {messages.length > 0 && (
+          <button
+            className="notif-page-clear-btn"
+            onClick={() => dispatch(clearNotifications())}
           >
-            <option value="recent">Mới nhất</option>
-            <option value="oldest">Cũ nhất</option>
-          </select>
-
-          {unreadCount > 0 && (
-            <button className="action-btn primary" onClick={markAllAsRead}>
-              ✓ Đánh dấu tất cả đã đọc
-            </button>
-          )}
-
-          {messages.length > 0 && (
-            <button className="action-btn danger" onClick={clearNotifications}>
-              🗑️ Xóa tất cả
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Notifications List */}
-      <div className="notifications-container">
-        {filteredNotifications.length > 0 ? (
-          <div className="notifications-list">
-            {filteredNotifications.map((notification) => (
-              <div
-                key={notification.id}
-                className={`notification-card ${notification.isRead ? 'read' : 'unread'}`}
-                style={{
-                  borderLeftColor: getNotificationColor(notification.type),
-                }}
-              >
-                {/* Left: Icon */}
-                <div className="card-icon">
-                  {getNotificationIcon(notification.type)}
-                </div>
-
-                {/* Middle: Content */}
-                <div className="card-content">
-                  <div className="card-header">
-                    <h3 className="card-title">{notification.title}</h3>
-                    {!notification.isRead && <span className="unread-dot">●</span>}
-                  </div>
-
-                  <p className="card-message">{notification.message}</p>
-
-                  {notification.ideaTitle && (
-                    <p className="card-meta">
-                      <strong>Ý tưởng:</strong> {notification.ideaTitle}
-                    </p>
-                  )}
-
-                  <div className="card-footer">
-                    <span className="card-time" title={formatTime(notification.createdAt)}>
-                      {getRelativeTime(notification.createdAt)}
-                    </span>
-                    <span className="card-type">{notification.type}</span>
-                  </div>
-                </div>
-
-                {/* Right: Actions */}
-                <div className="card-actions">
-                  {!notification.isRead && (
-                    <button
-                      className="action-icon"
-                      onClick={() => handleMarkAsRead(notification.id)}
-                      title="Đánh dấu đã đọc"
-                    >
-                      ✓
-                    </button>
-                  )}
-                  <button
-                    className="action-icon remove"
-                    onClick={() => handleRemove(notification.id)}
-                    title="Xóa"
-                  >
-                    ✕
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="empty-state">
-            <div className="empty-icon">📭</div>
-            <h2>Không có thông báo</h2>
-            <p>
-              {filter === 'all' && 'Bạn chưa có thông báo nào.'}
-              {filter === 'unread' && 'Bạn đã đọc tất cả thông báo.'}
-              {filter === 'read' && 'Bạn không có thông báo đã đọc nào.'}
-            </p>
-          </div>
+            Xoá tất cả
+          </button>
         )}
       </div>
 
-      {/* Load More */}
-      {filteredNotifications.length > 20 && (
-        <div className="load-more">
-          <button className="load-more-btn">Xem thêm</button>
+      {/* ── Stats bar ──────────────────────── */}
+      <div className="notif-page-stats">
+        <span className="notif-stat">
+          Tổng: <strong>{messages.length}</strong>
+        </span>
+        <span className="notif-stat">
+          Chưa đọc: <strong>{unreadCount}</strong>
+        </span>
+        <span className="notif-stat">
+          Đã đọc: <strong>{readCount}</strong>
+        </span>
+      </div>
+
+      {/* ── Mark all read ──────────────────── */}
+      {unreadCount > 0 && (
+        <div className="notif-page-actions">
+          <button
+            className="notif-mark-all-btn"
+            onClick={() => dispatch(markAllAsRead())}
+          >
+            Đánh dấu tất cả đã đọc
+          </button>
         </div>
       )}
+
+      {/* ── Notification list ──────────────── */}
+      <div className="notif-page-list">
+        {messages.length > 0 ? (
+          messages.map((notif, idx) => {
+            const cfg = getTypeConfig(notif.type);
+            return (
+              <div
+                key={notif.notificationId || notif.ideaId ? `${notif.ideaId}-${idx}` : idx}
+                className={`notif-page-card ${notif.isRead ? 'read' : 'unread'}`}
+                onClick={() => handleClick(notif)}
+              >
+                {/* Icon */}
+                <div
+                  className="notif-page-icon"
+                  style={{ background: cfg.bg, color: cfg.color }}
+                >
+                  <NotifIcon type={notif.type} />
+                </div>
+
+                {/* Content */}
+                <div className="notif-page-content">
+                  <div className="notif-page-content-top">
+                    <span
+                      className="notif-page-type-badge"
+                      style={{ background: cfg.bg, color: cfg.color }}
+                    >
+                      {cfg.label}
+                    </span>
+                  </div>
+                  <h3 className="notif-page-card-title">{notif.title}</h3>
+                  <p className="notif-page-card-message">{notif.message}</p>
+                  <span className="notif-page-card-time">
+                    {timeAgo(notif.createdAt)}
+                  </span>
+                </div>
+
+                {/* Unread indicator */}
+                {!notif.isRead && <span className="notif-page-unread-dot" />}
+              </div>
+            );
+          })
+        ) : (
+          <div className="notif-page-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"
+              width="48" height="48" style={{ opacity: 0.3, marginBottom: 12 }}>
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            <h2>Chưa có thông báo</h2>
+            <p>Thông báo mới sẽ xuất hiện tại đây khi có ý tưởng hoặc bình luận mới.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

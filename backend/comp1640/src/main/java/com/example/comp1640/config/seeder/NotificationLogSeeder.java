@@ -48,10 +48,16 @@ public class NotificationLogSeeder implements CommandLineRunner {
          for (int j = 0; j < numNotifs && j < users.size(); j++) {
             User recipient = users.get((i * 7 + j) % users.size());
             if (!recipient.getUserId().equals(idea.getUser().getUserId())) { // Don't notify submitter
+               NotifType type = i % 2 == 0 ? NotifType.NEW_IDEA : NotifType.NEW_COMMENT;
                logs.add(NotificationLog.builder()
                      .recipient(recipient)
                      .idea(idea)
-                     .notifType(i % 2 == 0 ? NotifType.NEW_IDEA : NotifType.NEW_COMMENT)
+                     .notifType(type)
+                     .title(type == NotifType.NEW_IDEA ? "Ý tưởng mới được nộp" : "Bình luận mới")
+                     .message(type == NotifType.NEW_IDEA
+                           ? String.format("Ý tưởng \"%s\" đã được nộp", idea.getTitle())
+                           : String.format("Có bình luận mới trên \"%s\"", idea.getTitle()))
+                     .isRead(false)
                      .status(NotifStatus.SENT)
                      .build());
             }
@@ -68,6 +74,9 @@ public class NotificationLogSeeder implements CommandLineRunner {
                   .recipient(randomUser)
                   .idea(idea)
                   .notifType(NotifType.NEW_COMMENT)
+                  .title("Bình luận mới")
+                  .message(String.format("Có bình luận mới trên \"%s\"", idea.getTitle()))
+                  .isRead(false)
                   .status(NotifStatus.SENT)
                   .build());
          }
@@ -76,6 +85,9 @@ public class NotificationLogSeeder implements CommandLineRunner {
                   .recipient(randomUser)
                   .idea(idea)
                   .notifType(NotifType.NEW_IDEA)
+                  .title("Ý tưởng mới được nộp")
+                  .message(String.format("Ý tưởng \"%s\" đã được nộp", idea.getTitle()))
+                  .isRead(false)
                   .status(NotifStatus.SENT)
                   .build());
          }
@@ -84,6 +96,9 @@ public class NotificationLogSeeder implements CommandLineRunner {
                   .recipient(randomUser)
                   .idea(idea)
                   .notifType(NotifType.NEW_COMMENT)
+                  .title("Bình luận mới")
+                  .message(String.format("Có bình luận mới trên \"%s\"", idea.getTitle()))
+                  .isRead(false)
                   .status(NotifStatus.SENT)
                   .build());
          }

@@ -6,7 +6,7 @@ const MAX_RECONNECT_ATTEMPTS = 5;
 const RECONNECT_DELAY = 5000;
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
-const WS_URL = API_BASE_URL.replace(/^http/, 'ws') + '/ws/notifications';
+const SOCKJS_URL = API_BASE_URL + '/ws/notifications';
 
 /**
  * Get JWT token from localStorage
@@ -39,15 +39,16 @@ export const connectWebSocket = async (userId, onMessageReceived, onConnect, onE
       return;
     }
 
-    // Import stompjs
+    // Import stompjs and SockJS
     const { Client } = await import('@stomp/stompjs');
+    const SockJS = (await import('sockjs-client')).default;
 
     // Get JWT token for request headers
     const token = getAuthToken();
 
-    // Create STOMP client
+    // Create STOMP client using SockJS (backend uses .withSockJS())
     client = new Client({
-      brokerURL: WS_URL,
+      webSocketFactory: () => new SockJS(SOCKJS_URL),
       connectHeaders: {
         userId: userId,
         'X-User-ID': userId,
@@ -64,8 +65,8 @@ export const connectWebSocket = async (userId, onMessageReceived, onConnect, onE
           reconnectTimeout = null;
         }
 
-        // Subscribe to user-specific notifications
-        client.subscribe(`/user/${userId}/queue/notifications`, (message) => {
+        // Subscribe to user-specific notifications (Spring resolves /user/queue/... based on session principal)
+        client.subscribe('/user/queue/notifications', (message) => {
           try {
             const notification = JSON.parse(message.body);
             console.log('📬 Notification received:', notification);
@@ -127,7 +128,7 @@ export const connectWebSocket = async (userId, onMessageReceived, onConnect, onE
 
     // Activate connection
     client.activate();
-    console.log('�\udce1 Connecting to WebSocket:', WS_URL);
+    console.log('📡 Connecting to WebSocket via SockJS:', SOCKJS_URL);
   } catch (error) {
     console.error('❌ Error initializing WebSocket:', error);
     if (onError) {
@@ -184,9 +185,38 @@ export const sendNotification = (destination, body, headers = {}) => {
   }
 };
 
+/**
+ * Subscribe to a topic (e.g., /topic/ideas/{ideaId}/comments)
+ * @param {string} destination - STOMP destination to subscribe to
+ * @param {function} onMessage - Callback when message received
+ * @returns {object|null} Subscription object (call .unsubscribe() to stop)
+ */
+export const subscribeTopic = (destination, onMessage) => {
+  if (!client || !client.active) {
+    console.error('❌ WebSocket not connected, cannot subscribe to', destination);
+    return null;
+  }
+  try {
+    const subscription = client.subscribe(destination, (message) => {
+      try {
+        const data = JSON.parse(message.body);
+        if (onMessage) onMessage(data);
+      } catch (error) {
+        console.error('❌ Error parsing message from', destination, error);
+      }
+    });
+    console.log('✓ Subscribed to', destination);
+    return subscription;
+  } catch (error) {
+    console.error('❌ Error subscribing to', destination, error);
+    return null;
+  }
+};
+
 export default {
   connectWebSocket,
   disconnectWebSocket,
   isWebSocketConnected,
   sendNotification,
+  subscribeTopic,
 };

@@ -93,7 +93,7 @@ public class DocumentServiceImpl implements DocumentService {
 
         User currentUser = getCurrentUser();
         boolean isAdmin = currentUser.getRole() != null &&
-                "ADMIN".equals(currentUser.getRole().getRoleName());
+                com.example.comp1640.enums.RoleName.ADMIN.equals(currentUser.getRole().getRoleName());
 
         if (!document.getIdea().getUser().getUserId().equals(currentUser.getUserId()) && !isAdmin) {
             throw new AccessDeniedException("Bạn chỉ được xóa file của ý tưởng mình");
@@ -138,6 +138,10 @@ public class DocumentServiceImpl implements DocumentService {
                 ? idea.getDepartment().getDeptId()
                 : null;
 
+        String deptName = (idea.getDepartment() != null)
+                ? idea.getDepartment().getDeptName()
+                : null;
+
         String uploaderName = (idea.getUser() != null)
                 ? idea.getUser().getFullName()
                 : null;
@@ -154,6 +158,7 @@ public class DocumentServiceImpl implements DocumentService {
                 fileSizeKb,
                 uploaderName,
                 deptId,
+                deptName,
                 doc.getUploadedAt());
     }
 }

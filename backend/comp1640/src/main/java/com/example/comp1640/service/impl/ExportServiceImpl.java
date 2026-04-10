@@ -1,8 +1,11 @@
 package com.example.comp1640.service.impl;
 
+import com.example.comp1640.entity.AcademicYear;
 import com.example.comp1640.entity.Comment;
 import com.example.comp1640.entity.Document;
 import com.example.comp1640.entity.Idea;
+import com.example.comp1640.exception.BadRequestException;
+import com.example.comp1640.repository.AcademicYearRepository;
 import com.example.comp1640.repository.CommentRepository;
 import com.example.comp1640.repository.DocumentRepository;
 import com.example.comp1640.repository.IdeaRepository;
@@ -32,16 +35,27 @@ public class ExportServiceImpl implements ExportService {
    private final IdeaRepository ideaRepository;
    private final CommentRepository commentRepository;
    private final DocumentRepository documentRepository;
+   private final AcademicYearRepository academicYearRepository;
 
    public ExportServiceImpl(IdeaRepository ideaRepository, CommentRepository commentRepository,
-         DocumentRepository documentRepository) {
+         DocumentRepository documentRepository, AcademicYearRepository academicYearRepository) {
       this.ideaRepository = ideaRepository;
       this.commentRepository = commentRepository;
       this.documentRepository = documentRepository;
+      this.academicYearRepository = academicYearRepository;
+   }
+
+   private void checkFinalClosure(Integer yearId) {
+      AcademicYear year = academicYearRepository.findById(yearId)
+            .orElseThrow(() -> new BadRequestException("Năm học không tồn tại: " + yearId));
+      if (LocalDate.now().isBefore(year.getFinalClosureDate())) {
+         throw new BadRequestException("Chưa đến ngày đóng cuối (final_closure_date). Không thể xuất dữ liệu.");
+      }
    }
 
    @Override
    public void exportIdeasAndCommentsToCSV(Integer yearId, HttpServletResponse response) {
+      checkFinalClosure(yearId);
       try {
          // Set response headers
          response.setContentType("text/csv;charset=UTF-8");
@@ -70,7 +84,8 @@ public class ExportServiceImpl implements ExportService {
                   "Ý tưởng",
                   String.valueOf(idea.getIdeaId()),
                   idea.getTitle(),
-                  idea.getIsAnonymous() ? "Ẩn danh" : (idea.getUser() != null ? idea.getUser().getFullName() : "Unknown"),
+                  idea.getIsAnonymous() ? "Ẩn danh"
+                        : (idea.getUser() != null ? idea.getUser().getFullName() : "Unknown"),
                   idea.getIsAnonymous() ? "Có" : "Không",
                   idea.getDepartment() != null ? idea.getDepartment().getDeptName() : "N/A",
                   idea.getSubmittedAt().toString()
@@ -84,7 +99,8 @@ public class ExportServiceImpl implements ExportService {
                      "  └─ Bình luận",
                      String.valueOf(comment.getCommentId()),
                      comment.getContent(),
-                     comment.getIsAnonymous() ? "Ẩn danh" : (comment.getUser() != null ? comment.getUser().getFullName() : "Unknown"),
+                     comment.getIsAnonymous() ? "Ẩn danh"
+                           : (comment.getUser() != null ? comment.getUser().getFullName() : "Unknown"),
                      comment.getIsAnonymous() ? "Có" : "Không",
                      idea.getDepartment() != null ? idea.getDepartment().getDeptName() : "N/A",
                      comment.getCreatedAt().toString()
@@ -101,6 +117,7 @@ public class ExportServiceImpl implements ExportService {
 
    @Override
    public void exportAttachmentsAsZip(Integer yearId, HttpServletResponse response) {
+      checkFinalClosure(yearId);
       try {
          // Set response headers
          response.setContentType("application/zip");
@@ -142,8 +159,14 @@ public class ExportServiceImpl implements ExportService {
       }
    }
 
+   private static final List<String> ALLOWED_HOSTS = List.of("res.cloudinary.com", "cloudinary.com");
+
    private void downloadFileToZip(String fileUrl, ZipOutputStream zos) throws Exception {
       URI uri = new URI(fileUrl);
+      String host = uri.getHost();
+      if (host == null || ALLOWED_HOSTS.stream().noneMatch(host::endsWith)) {
+         throw new SecurityException("File URL host is not allowed: " + host);
+      }
       URLConnection connection = uri.toURL().openConnection();
       connection.setConnectTimeout(5000);
       connection.setReadTimeout(5000);

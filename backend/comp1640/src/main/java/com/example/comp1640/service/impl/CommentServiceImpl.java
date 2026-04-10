@@ -13,6 +13,7 @@ import com.example.comp1640.repository.UserRepository;
 import com.example.comp1640.service.CommentService;
 import com.example.comp1640.service.NotificationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -35,11 +36,16 @@ public class CommentServiceImpl implements CommentService {
     private final IdeaRepository ideaRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @Override
     public CommentResponse add(Integer ideaId, CommentRequest request) {
         Idea idea = ideaRepository.findById(ideaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ý tưởng với id: " + ideaId));
+
+        if (Boolean.TRUE.equals(idea.getIsDisabled())) {
+            throw new BadRequestException("Ý tưởng đã bị vô hiệu hóa, không thể bình luận");
+        }
 
         // Chỉ được bình luận trước hoặc đúng ngày final_closure_date
         LocalDate today = LocalDate.now();
@@ -66,7 +72,14 @@ public class CommentServiceImpl implements CommentService {
         // Gửi thông báo cho tác giả ý tưởng
         notificationService.notifyCommentToIdeaAuthor(savedComment);
 
-        return toResponse(savedComment, currentUser);
+        CommentResponse response = toResponse(savedComment, currentUser);
+
+        // Broadcast comment mới tới tất cả người đang xem idea này
+        messagingTemplate.convertAndSend(
+                "/topic/ideas/" + ideaId + "/comments",
+                response);
+
+        return response;
     }
 
     @Override
@@ -152,13 +165,14 @@ public class CommentServiceImpl implements CommentService {
 
     /**
      * Chuyển Comment entity sang DTO.
-     * Nếu comment ẩn danh và người xem không phải ADMIN/QA_MGR → ẩn tên và id tác
+     * Nếu comment ẩn danh và người xem không phải ADMIN/QA_MANAGER → ẩn tên và id
+     * tác
      * giả.
      * Guest (viewer = null) luôn thấy "Ẩn danh".
      */
     private CommentResponse toResponse(Comment comment, User viewer) {
         String role = (viewer != null && viewer.getRole() != null) ? viewer.getRole().getRoleName().name() : "";
-        boolean canSeeIdentity = role.equals("ADMIN") || role.equals("QA_MGR");
+        boolean canSeeIdentity = role.equals("ADMIN") || role.equals("QA_MANAGER");
         boolean anonymous = Boolean.TRUE.equals(comment.getIsAnonymous());
 
         String authorName = (anonymous && !canSeeIdentity) ? "Ẩn danh" : comment.getUser().getFullName();

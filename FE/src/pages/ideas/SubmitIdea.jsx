@@ -75,10 +75,6 @@ const SubmitIdea = () => {
       }
     };
     init();
-
-    // Check terms acceptance
-    const accepted = localStorage.getItem("acceptedTerms");
-    if (!accepted) setShowTermsGate(true);
   }, []);
 
   /* ── Guards ──────────────────────────────────────────────── */
@@ -119,16 +115,16 @@ const SubmitIdea = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!localStorage.getItem("acceptedTerms")) {
-      setShowTermsGate(true);
-      return;
-    }
     if (!form.title.trim() || !form.content.trim()) {
       alert("Title and content are required!");
       return;
     }
     if (!currentYear?.yearId) {
       alert("No active academic year found.");
+      return;
+    }
+    if (!localStorage.getItem(`acceptedTerms_${user?.userId || user?.id}`)) {
+      setShowTermsGate(true);
       return;
     }
 
@@ -188,7 +184,7 @@ const SubmitIdea = () => {
             <h1 className="id-page-title">Submit Idea</h1>
             <p className="id-page-sub">Share your innovation with the organization</p>
           </div>
-          {localStorage.getItem("acceptedTerms") && (
+          {localStorage.getItem(`acceptedTerms_${user?.userId || user?.id}`) && (
             <span style={{
               display: "inline-flex", alignItems: "center", gap: 5,
               fontSize: 12, background: "#ecfdf5", color: "#059669",

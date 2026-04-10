@@ -5,16 +5,20 @@ import com.example.comp1640.enums.NotifType;
 import com.example.comp1640.entity.Idea;
 import com.example.comp1640.entity.Comment;
 import com.example.comp1640.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface NotificationService {
 
-   /**
-    * Gửi thông báo khi có ý tưởng mới được nộp cho QA Coordinator của phòng ban
-    */
    void notifyNewIdeaToCoordinators(Idea idea);
 
-   /**
-    * Gửi thông báo cho tác giả ý tưởng khi có bình luận mới
-    */
    void notifyCommentToIdeaAuthor(Comment comment);
+
+   Page<NotificationEventDto> getNotifications(Integer userId, Pageable pageable);
+
+   long getUnreadCount(Integer userId);
+
+   void markAsRead(Integer logId, Integer userId);
+
+   void markAllAsRead(Integer userId);
 }

@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -58,9 +59,10 @@ public class DashboardServiceImpl implements DashboardService {
                 long totalComments = commentRepository.count();
                 long anonymousIdeas = allIdeas.stream().filter(i -> Boolean.TRUE.equals(i.getIsAnonymous())).count();
 
-                // Ideas with/without comments
+                // Ideas with/without comments — single query, no N+1
+                Set<Integer> ideaIdsWithComments = commentRepository.findDistinctIdeaIdsWithComments();
                 long withComments = allIdeas.stream()
-                                .filter(i -> commentRepository.countByIdeaIdeaId(i.getIdeaId()) > 0)
+                                .filter(i -> ideaIdsWithComments.contains(i.getIdeaId()))
                                 .count();
                 long withoutComments = allIdeas.size() - withComments;
 
@@ -106,9 +108,10 @@ public class DashboardServiceImpl implements DashboardService {
                                 .filter(i -> Boolean.TRUE.equals(i.getIsAnonymous()))
                                 .count();
 
-                long withComments = deptIdeas.stream()
-                                .filter(i -> commentRepository.countByIdeaIdeaId(i.getIdeaId()) > 0)
-                                .count();
+                // Ideas with/without comments — single query, no N+1
+                Set<Integer> ideaIdsWithComments = commentRepository.findDistinctIdeaIdsWithComments();
+                Set<Integer> deptIdeaIds = deptIdeas.stream().map(Idea::getIdeaId).collect(Collectors.toSet());
+                long withComments = deptIdeaIds.stream().filter(ideaIdsWithComments::contains).count();
                 long withoutComments = deptIdeas.size() - withComments;
 
                 List<DashboardResponse.MonthlyTrend> monthlyTrend = buildMonthlyTrend(deptIdeas);
@@ -119,7 +122,17 @@ public class DashboardServiceImpl implements DashboardService {
                 resp.setTotalComments((int) totalComments);
                 resp.setTotalUsers(deptUsers.size());
                 resp.setTotalDepartments(null);
-                resp.setIdeasThisYear(deptIdeas.size()); // trong context dept, hiển thị tổng ideas dept
+                // ideasThisYear = số idea trong năm học hiện tại của phòng ban (không phải tổng)
+                LocalDate today = LocalDate.now();
+                long ideasThisYearLong = academicYearRepository.findCurrentActive(today)
+                        .or(() -> academicYearRepository.findLatest())
+                        .map(y -> deptIdeas.stream()
+                                .filter(i -> i.getAcademicYear() != null
+                                        && i.getAcademicYear().getYearId().equals(y.getYearId()))
+                                .count())
+                        .orElse((long) deptIdeas.size());
+                int ideasThisYear = (int) ideasThisYearLong;
+                resp.setIdeasThisYear(ideasThisYear);
                 resp.setAnonymousIdeas((int) anonymousIdeas);
                 resp.setIdeasWithComments((int) withComments);
                 resp.setIdeasWithoutComments((int) withoutComments);

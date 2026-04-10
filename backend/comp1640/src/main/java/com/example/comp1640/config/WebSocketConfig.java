@@ -18,6 +18,7 @@ import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import com.example.comp1640.security.JwtTokenUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.messaging.MessageDeliveryException;
 
 @Configuration
 @EnableWebSocketMessageBroker
@@ -88,15 +89,21 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
                            accessor.setUser(authentication);
 
                            System.out.println("✓ WebSocket user authenticated: " + email + " (userId: " + userId + ")");
+                        } else {
+                           throw new MessageDeliveryException(message,
+                                 "Invalid token claims — WebSocket connection rejected");
                         }
                      } else {
-                        System.err.println("❌ Invalid token for WebSocket connection");
+                        throw new MessageDeliveryException(message,
+                              "Invalid or expired token — WebSocket connection rejected");
                      }
                   } catch (Exception e) {
-                     System.err.println("❌ Error authenticating WebSocket connection: " + e.getMessage());
+                     throw new MessageDeliveryException(message,
+                           "WebSocket authentication error: " + e.getMessage(), e);
                   }
                } else {
-                  System.err.println("❌ No Authorization header in WebSocket connect");
+                  throw new MessageDeliveryException(message,
+                        "Missing Authorization header — unauthenticated WebSocket connections are not allowed");
                }
             }
 

@@ -5,7 +5,7 @@ import { logout } from "../redux/slices/authSlice";
 import { ROLES } from "../constants/roles";
 import "../styles/main-layout.css";
 import { connectWebSocket, disconnectWebSocket } from "../services/websocketService";
-import { addNotification } from "../redux/slices/notificationSlice";
+import { addNotification, clearNotifications, fetchNotifications, fetchUnreadCount } from "../redux/slices/notificationSlice";
 import NotificationDropdown from "../components/NotificationDropdown";
 /* ═══════════════════════════════════════════════════════════
    NAV ITEM DEFINITIONS theo từng role
@@ -197,6 +197,14 @@ const MainLayout = () => {
   //  WebSocket connection khi component mount
   useEffect(() => {
     if (user?.id) {
+      // Clear old notifications when user changes (account switch)
+      dispatch(clearNotifications());
+      disconnectWebSocket();
+
+      // Load notifications from database
+      dispatch(fetchNotifications({ page: 0, size: 20 }));
+      dispatch(fetchUnreadCount());
+
       console.log('[MainLayout] Connecting WebSocket for userId:', user.id);
       connectWebSocket(
         user.id,

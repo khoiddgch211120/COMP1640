@@ -278,6 +278,8 @@
 /* ── Chart placeholder wrapper ───────────────────────────── */
 .co-chart-wrap {
   padding: 16px 20px 8px;
+  min-height: 0;
+  position: relative;
 }
 
 /* ── NOTIFICATIONS PAGE ──────────────────────────────────── */

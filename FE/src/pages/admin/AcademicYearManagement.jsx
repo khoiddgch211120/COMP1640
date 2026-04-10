@@ -11,7 +11,7 @@ var EMPTY_FORM = { year_label: "", idea_closure_date: "", final_closure_date: ""
 
 function mapStatus(year) {
   if (year.ideaOpen === true) return "active";
-  if (year.ideaOpen === false && year.commentOpen === true) return "upcoming";
+  if (year.ideaOpen === false && year.commentOpen === true) return "final_closure";
   return "closed";
 }
 
@@ -28,7 +28,7 @@ function normalizeAcademicYear(year) {
 
 function getStatusInfo(status) {
   if (status === "active") return { label: "Active", cls: "badge--active" };
-  if (status === "upcoming") return { label: "Upcoming", cls: "badge--manager" };
+  if (status === "final_closure") return { label: "Final Closure", cls: "badge--manager" };
   return { label: "Closed", cls: "badge--inactive" };
 }
 
@@ -249,7 +249,7 @@ var AcademicYearManagement = function() {
           <div className="stat-icon stat-icon--amber">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
           </div>
-          <div><div className="stat-val">{years.filter(function(y) { return y.status === "upcoming"; }).length}</div><div className="stat-label">Upcoming</div></div>
+          <div><div className="stat-val">{years.filter(function(y) { return y.status === "final_closure"; }).length}</div><div className="stat-label">Final Closure</div></div>
         </div>
         <div className="stat-card">
           <div className="stat-icon stat-icon--sky">

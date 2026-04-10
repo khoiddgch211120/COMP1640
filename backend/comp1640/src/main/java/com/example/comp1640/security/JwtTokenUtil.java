@@ -83,4 +83,18 @@ public class JwtTokenUtil {
             return null;
         }
     }
+
+    // Lấy expiry date từ token
+    public Date getExpirationFromToken(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return claims.getExpiration();
+        } catch (Exception e) {
+            return new Date(System.currentTimeMillis() + expiration);
+        }
+    }
 }

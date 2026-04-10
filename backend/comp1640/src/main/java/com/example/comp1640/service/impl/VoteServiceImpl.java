@@ -1,6 +1,7 @@
 package com.example.comp1640.service.impl;
 
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Optional;
 
 import org.springframework.security.core.Authentication;
@@ -41,6 +42,12 @@ public class VoteServiceImpl implements VoteService {
         User currentUser = getCurrentUser();
         Idea idea = ideaRepo.findById(ideaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy ý tưởng id: " + ideaId));
+
+        // Kiểm tra deadline: không vote sau finalClosureDate
+        if (idea.getAcademicYear() != null
+                && LocalDate.now().isAfter(idea.getAcademicYear().getFinalClosureDate())) {
+            throw new BadRequestException("Năm học đã đóng, không thể vote ý tưởng này");
+        }
 
         if (idea.getUser().getUserId().equals(currentUser.getUserId())) {
             throw new BadRequestException("Không thể vote ý tưởng của chính mình");

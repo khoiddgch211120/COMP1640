@@ -55,7 +55,7 @@ const CoordinatorNotifications = () => {
   const { messages, unreadCount } = useSelector((s) => s.notifications);
 
   const handleClick = (notif) => {
-    if (!notif.isRead) dispatch(markOneAsRead(notif.ideaId));
+    if (!notif.isRead) dispatch(markOneAsRead(notif.notificationId));
     if (notif.ideaId) navigate(`/ideas/${notif.ideaId}`);
   };
 

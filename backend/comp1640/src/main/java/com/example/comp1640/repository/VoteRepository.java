@@ -8,6 +8,9 @@ import org.springframework.data.repository.query.Param;
 
 import com.example.comp1640.entity.Vote;
 import com.example.comp1640.entity.Vote.VoteType;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface VoteRepository extends JpaRepository<Vote, Integer> {
 
@@ -22,4 +25,12 @@ public interface VoteRepository extends JpaRepository<Vote, Integer> {
     default long countDownvotes(Integer ideaId) {
         return countByIdea_IdeaIdAndVoteType(ideaId, VoteType.DOWNVOTE);
     }
+
+    @Modifying
+    @Query("DELETE FROM Vote v WHERE v.user.userId = :userId")
+    void deleteByUserUserId(@Param("userId") Integer userId);
+
+    @Modifying
+    @Query("DELETE FROM Vote v WHERE v.idea.user.userId = :userId")
+    void deleteByIdeaAuthorUserId(@Param("userId") Integer userId);
 }

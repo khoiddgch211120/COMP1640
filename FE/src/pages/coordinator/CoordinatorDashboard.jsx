@@ -189,8 +189,8 @@ const CoordinatorDashboard = () => {
                   Chưa có dữ liệu
                 </div>
               ) : (
-                <div className="co-chart-wrap" style={{ height: 220 }}>
-                  <ResponsiveContainer width="100%" height="100%">
+                <div className="co-chart-wrap" style={{ height: 250, minWidth: 0 }}>
+                  <ResponsiveContainer width="100%" height={220}>
                     <BarChart data={monthlyData} barSize={28}
                       margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />

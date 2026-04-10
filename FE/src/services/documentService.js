@@ -23,8 +23,20 @@ export const getDocumentsByIdea = async (ideaId) => {
   return response.data;
 };
 
+// Get all documents (Admin only — GET /documents)
+export const getAllDocuments = async () => {
+  const response = await apiClient.get('/documents');
+  return response.data;
+};
+
 // Delete a document
 export const deleteDocument = async (ideaId, documentId) => {
   const response = await apiClient.delete(`/ideas/${ideaId}/documents/${documentId}`);
+  return response.data;
+};
+
+// Delete a document by id only (Admin — DELETE /documents/:id)
+export const deleteDocumentById = async (documentId) => {
+  const response = await apiClient.delete(`/documents/${documentId}`);
   return response.data;
 };

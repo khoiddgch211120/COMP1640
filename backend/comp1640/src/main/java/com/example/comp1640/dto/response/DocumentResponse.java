@@ -22,5 +22,6 @@ public class DocumentResponse {
     private Long fileSizeKb;        // thêm — frontend hiển thị kích thước
     private String uploaderName;    // thêm — frontend hiển thị tên người upload
     private Integer deptId;         // thêm — frontend dùng để filter theo phòng ban
+    private String deptName;        // thêm — frontend hiển thị tên phòng ban
     private LocalDateTime uploadedAt;
 }

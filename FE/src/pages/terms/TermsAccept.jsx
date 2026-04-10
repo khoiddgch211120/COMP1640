@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { getTermsConditions } from "../../services/termsconditionsService";
 import "../../styles/terms-modal.css";
 
@@ -7,6 +8,7 @@ const TermsAccept = () => {
   const navigate  = useNavigate();
   const location  = useLocation();
   const returnTo  = location.state?.from ?? "/submit-idea";
+  const { user }  = useSelector((state) => state.auth);
 
   const [checked,  setChecked]  = useState(false);
   const [terms,    setTerms]    = useState(null);
@@ -34,7 +36,8 @@ const TermsAccept = () => {
   }, []);
 
   const handleAccept = () => {
-    localStorage.setItem("acceptedTerms", "true");
+    const userKey = user?.userId || user?.id || "guest";
+    localStorage.setItem(`acceptedTerms_${userKey}`, "true");
     navigate(returnTo);
   };
 

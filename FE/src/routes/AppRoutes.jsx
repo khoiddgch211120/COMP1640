@@ -27,6 +27,8 @@ import TermsConditions from "../pages/admin/TermsConditions";
 import AttachmentManagement from "../pages/admin/AttachmentManagement";
 import CoordinatorDashboard from "../pages/coordinator/CoordinatorDashboard";
 import CoordinatorNotifications from "../pages/coordinator/CoordinatorNotifications";
+import NotificationsPage from "../pages/notifications/NotificationsPage";
+import Forbidden from "../pages/error/Forbidden";
 
 // Roles allowed to submit ideas (Academic & Support staff)
 const SUBMIT_ROLES = [ROLES.ACADEMIC_STAFF, ROLES.SUPPORT_STAFF];
@@ -106,6 +108,15 @@ const AppRoutes = () => {
         />
 
         <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute roles={[ROLES.ACADEMIC_STAFF, ROLES.SUPPORT_STAFF, ROLES.QA_COORDINATOR, ROLES.DEPT_MANAGER, ROLES.HR_MANAGER, ROLES.HEAD, ROLES.ADMIN, ROLES.QA_MANAGER]}>
+              <NotificationsPage />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/statistics"
           element={
             <ProtectedRoute roles={STATS_ROLES}>
@@ -159,6 +170,7 @@ const AppRoutes = () => {
         <Route path="attachments" element={<AttachmentManagement />} />
       </Route>
 
+      <Route path="/403" element={<Forbidden />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );

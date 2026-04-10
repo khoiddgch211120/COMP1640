@@ -106,13 +106,13 @@ public class IdeaServiceImpl implements IdeaService {
     public Page<IdeaResponse> getAll(Integer yearId, Integer deptId, Pageable pageable) {
         Page<Idea> ideas;
         if (yearId != null && deptId != null) {
-            ideas = ideaRepo.findByAcademicYear_YearIdAndDepartment_DeptId(yearId, deptId, pageable);
+            ideas = ideaRepo.findByAcademicYear_YearIdAndDepartment_DeptIdAndIsDisabledFalse(yearId, deptId, pageable);
         } else if (yearId != null) {
-            ideas = ideaRepo.findByAcademicYear_YearId(yearId, pageable);
+            ideas = ideaRepo.findByAcademicYear_YearIdAndIsDisabledFalse(yearId, pageable);
         } else if (deptId != null) {
-            ideas = ideaRepo.findByDepartment_DeptId(deptId, pageable);
+            ideas = ideaRepo.findByDepartment_DeptIdAndIsDisabledFalse(deptId, pageable);
         } else {
-            ideas = ideaRepo.findAll(pageable);
+            ideas = ideaRepo.findByIsDisabledFalse(pageable);
         }
 
         // Cho phép guest xem (không cần đăng nhập)
@@ -136,6 +136,9 @@ public class IdeaServiceImpl implements IdeaService {
     @Transactional
     public IdeaResponse getById(Integer id) {
         Idea idea = findOrThrow(id);
+        if (Boolean.TRUE.equals(idea.getIsDisabled())) {
+            throw new ResourceNotFoundException("Không tìm thấy ý tưởng với id: " + id);
+        }
         // Tăng view count
         idea.setViewCount(idea.getViewCount() + 1);
         ideaRepo.save(idea);
