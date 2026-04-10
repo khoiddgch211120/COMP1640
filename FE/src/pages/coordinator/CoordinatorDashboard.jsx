@@ -9,11 +9,8 @@ import { getCurrentAcademicYear } from "../../services/academicYearService";
 import "../../styles/coordinator.css";
 
 
-const mockGetCurrentAcademicYear = async () => { await new Promise((r) => setTimeout(r, 300)); return MOCK_CURRENT_YEAR; };
-const mockGetAllIdeas            = async () => { await new Promise((r) => setTimeout(r, 500)); return { content: MOCK_IDEAS, totalElements: MOCK_IDEAS.length, totalPages: 1 }; };
-
-const svcGetCurrentAcademicYear = USE_MOCK ? mockGetCurrentAcademicYear : getCurrentAcademicYear;
-const svcGetAllIdeas            = USE_MOCK ? mockGetAllIdeas            : getAllIdeas;
+const svcGetCurrentAcademicYear = getCurrentAcademicYear;
+const svcGetAllIdeas            = getAllIdeas;
 
 /* ── Custom Tooltip ── */
 const CustomTooltip = ({ active, payload, label }) => {
@@ -44,8 +41,8 @@ const CoordinatorDashboard = () => {
       try {
         const [year, ideasData] = await Promise.all([
           svcGetCurrentAcademicYear(),
-          // QA_COORDINATOR chỉ xem ideas trong dept của mình
-          // Truyền deptId vào params để BE filter
+          // QA_COORDINATOR can only view ideas in their own department
+          // Pass deptId as a param so BE filters accordingly
           svcGetAllIdeas({
             deptId: user?.deptId,
             size: 100,
@@ -86,7 +83,7 @@ const CoordinatorDashboard = () => {
     .sort((a, b) => new Date(b.submittedAt) - new Date(a.submittedAt))
     .slice(0, 5);
 
-  const deptName  = user?.deptName || (USE_MOCK ? "Engineering" : "Department");
+  const deptName  = user?.deptName || "Department";
   const yearLabel = currentYear?.yearLabel || "N/A";
   const formatDate = (d) => d ? new Date(d).toLocaleDateString("vi-VN") : "—";
 
@@ -269,7 +266,7 @@ const CoordinatorDashboard = () => {
                         }}>
                           {idea.title}
                         </td>
-                        {/* QA_COORDINATOR không được xem danh tính ẩn danh */}
+                        {/* QA_COORDINATOR must not see anonymous identities */}
                         <td>{idea.isAnonymous ? "Ẩn danh" : (idea.authorName ?? "—")}</td>
                         <td style={{ whiteSpace: "nowrap" }}>{formatDate(idea.submittedAt)}</td>
                         <td>{idea.upvotes ?? 0}</td>

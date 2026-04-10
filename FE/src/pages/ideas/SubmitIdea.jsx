@@ -9,25 +9,6 @@ import { uploadDocument } from "../../services/documentService";
 import "../../styles/ideas.css";
 import "../../styles/terms-modal.css";
 
-// ── MOCK DATA (dùng khi API chưa sẵn sàng) ──────────────────────────────────
-const USE_MOCK = false; // đổi thành true để dùng mock, false để gọi API thật
-
-const MOCK_CATEGORIES = [
-  { categoryId: 1, categoryName: "HR"         },
-  { categoryId: 2, categoryName: "Technology" },
-  { categoryId: 3, categoryName: "Finance"    },
-  { categoryId: 4, categoryName: "Marketing"  },
-  { categoryId: 5, categoryName: "Operations" },
-  { categoryId: 6, categoryName: "Design"     },
-  { categoryId: 7, categoryName: "Other"      },
-];
-
-const MOCK_CURRENT_YEAR = {
-  yearId: 4, yearLabel: "2024-2025",
-  ideaClosureDate: "2025-03-31", finalClosureDate: "2025-04-30",
-  ideaOpen: true, commentOpen: true,
-};
-
 /* ── Terms gate modal ─────────────────────────────────────── */
 const TermsGateModal = ({ onConfirm }) => (
   <div className="tg-backdrop">
@@ -70,8 +51,8 @@ const SubmitIdea = () => {
   /* ── Form state ──────────────────────────────────────────── */
   const [form, setForm] = useState({
     title:        "",
-    content:      "",        // BE dùng "content", không phải "description"
-    categoryIds:  [],        // mảng ID
+    content:      "",        // BE uses "content", not "description"
+    categoryIds:  [],
     isAnonymous:  false,
     termsAccepted: false,
   });
@@ -81,19 +62,12 @@ const SubmitIdea = () => {
   useEffect(() => {
     const init = async () => {
       try {
-        if (USE_MOCK) {
-          // Dùng mock data — xóa block này khi API sẵn sàng
-          await new Promise((r) => setTimeout(r, 300));
-          setCategories(MOCK_CATEGORIES);
-          setCurrentYear(MOCK_CURRENT_YEAR);
-        } else {
-          const [cats, year] = await Promise.all([
-            getCategories(),
-            getCurrentAcademicYear(),
-          ]);
-          setCategories(cats ?? []);
-          setCurrentYear(year);
-        }
+        const [cats, year] = await Promise.all([
+          getCategories(),
+          getCurrentAcademicYear(),
+        ]);
+        setCategories(cats ?? []);
+        setCurrentYear(year);
       } catch (err) {
         console.error("Init error:", err);
       } finally {
@@ -102,13 +76,13 @@ const SubmitIdea = () => {
     };
     init();
 
-    // Kiểm tra terms
+    // Check terms acceptance
     const accepted = localStorage.getItem("acceptedTerms");
     if (!accepted) setShowTermsGate(true);
   }, []);
 
   /* ── Guards ──────────────────────────────────────────────── */
-  if (!user || (user.role !== ROLES.ACADEMIC && user.role !== ROLES.SUPPORT)) {
+  if (!user || (user.role !== ROLES.ACADEMIC_STAFF && user.role !== ROLES.SUPPORT_STAFF)) {
     return (
       <div className="id-page">
         <div className="id-access-denied">🚫 You do not have permission to access this page.</div>
@@ -160,14 +134,6 @@ const SubmitIdea = () => {
 
     setSubmitting(true);
     try {
-      if (USE_MOCK) {
-        // Dùng mock data — xóa block này khi API sẵn sàng
-        await new Promise((r) => setTimeout(r, 600));
-        console.log("[MOCK] Idea submitted:", form);
-        navigate("/ideas");
-        return;
-      }
-
       // 1. Submit idea
       const payload = {
         yearId:       currentYear.yearId,
@@ -179,13 +145,13 @@ const SubmitIdea = () => {
       };
       const created = await submitIdea(payload);
 
-      // 2. Upload file nếu có
+      // 2. Upload file if attached
       if (attachedFile && created?.ideaId) {
         try {
           await uploadDocument(created.ideaId, attachedFile);
         } catch (uploadErr) {
           console.warn("File upload failed:", uploadErr);
-          // Idea đã tạo thành công, chỉ file lỗi → không block
+          // Idea was created successfully, only file upload failed — don't block
         }
       }
 
@@ -265,7 +231,7 @@ const SubmitIdea = () => {
                   <span className="id-form-hint">{form.title.length}/120 characters</span>
                 </div>
 
-                {/* Categories — multi-select dạng checkbox chips */}
+                {/* Categories — multi-select checkbox chips */}
                 <div className="id-form-group">
                   <label className="id-form-label">Categories</label>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 6 }}>

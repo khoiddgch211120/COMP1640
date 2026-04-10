@@ -14,62 +14,6 @@ import "../../styles/exception-reports.css";
 const { TabPane } = Tabs;
 const { Option }  = Select;
 
-// ─────────────────────────────────────────────────────────────
-// 🔧 Toggle this to switch between mock data and real API
-const USE_MOCK = false;
-// ─────────────────────────────────────────────────────────────
-
-/* ── Mock data ─────────────────────────────────────────────── */
-const MOCK_ACADEMIC_YEARS = [
-  { yearId: 1, yearLabel: "2024 – 2025" },
-  { yearId: 2, yearLabel: "2023 – 2024" },
-  { yearId: 3, yearLabel: "2022 – 2023" },
-];
-
-const MOCK_NO_COMMENT_IDEAS = [
-  { ideaId: 101, title: "Automate weekly status reports",        deptName: "Engineering",     submittedAt: "2025-01-10T08:00:00Z" },
-  { ideaId: 102, title: "Redesign onboarding checklist",        deptName: "Human Resources", submittedAt: "2025-01-18T09:30:00Z" },
-  { ideaId: 103, title: "Introduce quarterly hackathons",        deptName: "Engineering",     submittedAt: "2025-02-03T10:00:00Z" },
-  { ideaId: 104, title: "Centralise vendor invoicing",          deptName: "Finance",         submittedAt: "2024-11-20T14:00:00Z" },
-  { ideaId: 105, title: "Employee mentorship programme",        deptName: "Human Resources", submittedAt: "2024-10-05T11:15:00Z" },
-  { ideaId: 106, title: "Green commute subsidy",                deptName: "Marketing",       submittedAt: "2024-09-01T08:45:00Z" },
-  { ideaId: 107, title: "Standardise API documentation format", deptName: "Engineering",     submittedAt: "2025-02-28T13:00:00Z" },
-];
-
-const MOCK_ANONYMOUS_CONTENTS = [
-  { contentId: 201, contentType: "IDEA",    contentPreview: "We should abolish the mandatory daily stand-up meetings — they waste at least 30 minutes per engineer per day.",  authorRealName: "Alice Nguyen",  createdAt: "2025-01-14T09:00:00Z" },
-  { contentId: 202, contentType: "COMMENT", contentPreview: "The current expense approval process takes far too long. It should be capped at 48 hours maximum.",               authorRealName: "Bob Tran",      createdAt: "2025-01-20T10:30:00Z" },
-  { contentId: 203, contentType: "IDEA",    contentPreview: "Consider a four-day workweek pilot for Q3 to measure productivity and employee satisfaction impact.",              authorRealName: "Carol Le",      createdAt: "2025-02-01T11:00:00Z" },
-  { contentId: 204, contentType: "COMMENT", contentPreview: "HR needs to respond faster to leave requests — two weeks to get an answer is unacceptable.",                     authorRealName: "David Pham",    createdAt: "2025-02-10T14:15:00Z" },
-  { contentId: 205, contentType: "IDEA",    contentPreview: "Introduce a peer-recognition Slack bot that lets colleagues give shout-outs redeemable for small rewards.",      authorRealName: "Eva Hoang",     createdAt: "2025-02-18T08:45:00Z" },
-];
-
-/* ── Mock service wrappers ─────────────────────────────────── */
-const mockGetAcademicYears = async () => {
-  await new Promise((r) => setTimeout(r, 400));
-  return MOCK_ACADEMIC_YEARS;
-};
-
-const mockGetIdeasWithoutComments = async (yearId) => {
-  await new Promise((r) => setTimeout(r, 500));
-  // Return slightly different counts per year to make the mock feel realistic
-  return yearId === 1
-    ? MOCK_NO_COMMENT_IDEAS
-    : MOCK_NO_COMMENT_IDEAS.slice(0, 4);
-};
-
-const mockGetAnonymousContent = async (yearId) => {
-  await new Promise((r) => setTimeout(r, 500));
-  return yearId === 1
-    ? MOCK_ANONYMOUS_CONTENTS
-    : MOCK_ANONYMOUS_CONTENTS.slice(0, 3);
-};
-
-/* ── Resolved service calls ────────────────────────────────── */
-const svcGetAcademicYears        = USE_MOCK ? mockGetAcademicYears        : getAcademicYears;
-const svcGetIdeasWithoutComments = USE_MOCK ? mockGetIdeasWithoutComments : getIdeasWithoutComments;
-const svcGetAnonymousContent     = USE_MOCK ? mockGetAnonymousContent     : getAnonymousContent;
-
 /* ═══════════════════════════════════════════════════════════ */
 
 const DaysOpenBadge = ({ date }) => {
@@ -95,7 +39,7 @@ const ExceptionReports = () => {
     const fetch = async () => {
       setFetchingYears(true);
       try {
-        const data = await svcGetAcademicYears();
+        const data = await getAcademicYears();
         setAcademicYears(data ?? []);
         if (data?.length > 0) setSelectedYearId(data[0].yearId);
       } catch {
@@ -107,15 +51,15 @@ const ExceptionReports = () => {
     fetch();
   }, []);
 
-  /* ── Load reports khi đổi year ───────────────────────────── */
+  /* ── Reload reports when year changes ──────────────────── */
   useEffect(() => {
     if (!selectedYearId) return;
     const fetch = async () => {
       setLoading(true);
       try {
         const [noComment, anon] = await Promise.all([
-          svcGetIdeasWithoutComments(selectedYearId),
-          svcGetAnonymousContent(selectedYearId),
+          getIdeasWithoutComments(selectedYearId),
+          getAnonymousContent(selectedYearId),
         ]);
         setNoCommentIdeas(noComment ?? []);
         setAnonymousContents(anon    ?? []);

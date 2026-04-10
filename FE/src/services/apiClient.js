@@ -2,7 +2,7 @@ import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
-// Helper: chuyển camelCase object → snake_case object (1 level deep đủ dùng)
+// Helper: convert camelCase object → snake_case object (1 level deep is sufficient)
 const toSnakeCase = (str) =>
   str.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 
@@ -17,7 +17,7 @@ const convertKeysToSnakeCase = (obj) => {
   );
 };
 
-// Helper: chuyển snake_case object → camelCase object
+// Helper: convert snake_case object → camelCase object
 const toCamelCase = (str) =>
   str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 
@@ -40,9 +40,9 @@ const apiClient = axios.create({
 });
 
 // ── REQUEST interceptor ──────────────────────────────────────
-// Gắn token + convert body camelCase → snake_case trước khi gửi BE
+// Attach token + convert body camelCase → snake_case before sending to BE
 apiClient.interceptors.request.use((config) => {
-  // Gắn JWT token
+  // Attach JWT token
   const savedAuth = localStorage.getItem("auth");
   if (savedAuth) {
     try {
@@ -55,8 +55,8 @@ apiClient.interceptors.request.use((config) => {
     }
   }
 
-  // Convert request body sang snake_case (vì BE dùng SNAKE_CASE)
-  if (config.data && typeof config.data === "object") {
+  // Convert request body to snake_case (because BE uses SNAKE_CASE)
+  if (config.data && typeof config.data === "object" && !(config.data instanceof FormData)) {
     config.data = convertKeysToSnakeCase(config.data);
   }
 
@@ -64,16 +64,16 @@ apiClient.interceptors.request.use((config) => {
 });
 
 // ── RESPONSE interceptor ─────────────────────────────────────
-// Convert response body snake_case → camelCase trước khi FE dùng
+// Convert response body snake_case → camelCase before FE uses it
 apiClient.interceptors.response.use(
   (response) => {
-    if (response.data && typeof response.data === "object") {
+    if (response.data && typeof response.data === "object" && !(response.data instanceof Blob)) {
       response.data = convertKeysToCamelCase(response.data);
     }
     return response;
   },
   (error) => {
-    // Convert error response body cũng về camelCase
+    // Also convert error response body to camelCase
     if (error.response?.data && typeof error.response.data === "object") {
       error.response.data = convertKeysToCamelCase(error.response.data);
     }

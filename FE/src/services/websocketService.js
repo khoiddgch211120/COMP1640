@@ -9,7 +9,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080
 const WS_URL = API_BASE_URL.replace(/^http/, 'ws') + '/ws/notifications';
 
 /**
- * Lấy JWT token từ localStorage
+ * Get JWT token from localStorage
  */
 const getAuthToken = () => {
   try {
@@ -19,33 +19,33 @@ const getAuthToken = () => {
       return token;
     }
   } catch (error) {
-    console.error('❌ Lỗi lấy token:', error);
+    console.error('❌ Error getting token:', error);
   }
   return null;
 };
 
 /**
- * Kết nối WebSocket STOMP
- * @param {string} userId - ID người dùng
- * @param {function} onMessageReceived - Callback khi nhận thông báo
- * @param {function} onConnect - Callback khi kết nối thành công
- * @param {function} onError - Callback khi có lỗi
+ * Connect to STOMP WebSocket
+ * @param {string} userId - User ID
+ * @param {function} onMessageReceived - Callback when notification received
+ * @param {function} onConnect - Callback on successful connection
+ * @param {function} onError - Callback on error
  */
 export const connectWebSocket = async (userId, onMessageReceived, onConnect, onError) => {
   try {
-    // Nếu đã kết nối, bỏ qua
+    // Already connected, skip
     if (isConnected && client?.active) {
-      console.log('✓ WebSocket đã kết nối');
+      console.log('✓ WebSocket already connected');
       return;
     }
 
     // Import stompjs
     const { Client } = await import('@stomp/stompjs');
 
-    // Lấy JWT token để gửi trong headers
+    // Get JWT token for request headers
     const token = getAuthToken();
 
-    // Tạo client STOMP
+    // Create STOMP client
     client = new Client({
       brokerURL: WS_URL,
       connectHeaders: {
@@ -54,44 +54,44 @@ export const connectWebSocket = async (userId, onMessageReceived, onConnect, onE
         ...(token && { Authorization: `Bearer ${token}` }),
       },
       onConnect: (frame) => {
-        console.log('✓ Đã kết nối đến WebSocket:', frame);
+        console.log('✓ Connected to WebSocket:', frame);
         isConnected = true;
-        reconnectAttempts = 0; // Reset attempts khi kết nối thành công
+        reconnectAttempts = 0; // Reset attempts on successful connection
 
-        // Xóa timeout reconnect nếu có
+        // Clear reconnect timeout if any
         if (reconnectTimeout) {
           clearTimeout(reconnectTimeout);
           reconnectTimeout = null;
         }
 
-        // Subscribe đến user-specific notifications
+        // Subscribe to user-specific notifications
         client.subscribe(`/user/${userId}/queue/notifications`, (message) => {
           try {
             const notification = JSON.parse(message.body);
-            console.log('📬 Nhận thông báo:', notification);
+            console.log('📬 Notification received:', notification);
             if (onMessageReceived) {
               onMessageReceived(notification);
             }
           } catch (error) {
-            console.error('❌ Lỗi parse thông báo:', error);
+            console.error('❌ Error parsing notification:', error);
           }
         });
 
-        // Gọi callback kết nối
+        // Call connection callback
         if (onConnect) {
           onConnect();
         }
       },
 
       onError: (error) => {
-        console.error('❌ Lỗi WebSocket:', error);
+        console.error('❌ WebSocket error:', error);
         isConnected = false;
 
         if (onError) {
           onError(error);
         }
 
-        // Tự động reconnect với giới hạn số lần thử
+        // Auto reconnect with retry limit
         if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS && !reconnectTimeout) {
           reconnectAttempts++;
           const delay = RECONNECT_DELAY * reconnectAttempts; // Exponential backoff
@@ -101,35 +101,35 @@ export const connectWebSocket = async (userId, onMessageReceived, onConnect, onE
             connectWebSocket(userId, onMessageReceived, onConnect, onError);
           }, delay);
         } else if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-          console.error('❌ Đã vượt quá số lần reconnect tối đa');
+          console.error('❌ Max reconnect attempts exceeded');
         }
       },
 
       onStompError: (frame) => {
-        console.error('❌ Lỗi Broker:', frame.body);
+        console.error('❌ Broker error:', frame.body);
         if (onError) {
           onError(frame);
         }
       },
 
       onDisconnect: () => {
-        console.log('⚠️ WebSocket đã disconnect');
+        console.log('⚠️ WebSocket disconnected');
         isConnected = false;
       },
 
-      reconnectDelay: RECONNECT_DELAY,
+      reconnectDelay: 0, // Disable built-in reconnect, using custom logic instead
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
       debug: (str) => {
-        // console.log('STOMP:', str); // Uncomment để debug
+        // console.log('STOMP:', str); // Uncomment to debug
       },
     });
 
-    // Kích hoạt kết nối
+    // Activate connection
     client.activate();
-    console.log('📡 Đang kết nối đến WebSocket:', WS_URL);
+    console.log('�\udce1 Connecting to WebSocket:', WS_URL);
   } catch (error) {
-    console.error('❌ Lỗi khi khởi tạo WebSocket:', error);
+    console.error('❌ Error initializing WebSocket:', error);
     if (onError) {
       onError(error);
     }
@@ -137,17 +137,17 @@ export const connectWebSocket = async (userId, onMessageReceived, onConnect, onE
 };
 
 /**
- * Ngắt kết nối WebSocket
+ * Disconnect WebSocket
  */
 export const disconnectWebSocket = () => {
   if (client && client.active) {
     client.deactivate();
     isConnected = false;
-    reconnectAttempts = 0; // Reset attempts khi ngắt kết nối
-    console.log('✓ WebSocket đã ngắt kết nối');
+    reconnectAttempts = 0; // Reset attempts on disconnect
+    console.log('✓ WebSocket disconnected');
   }
 
-  // Xóa timeout reconnect nếu có
+  // Clear reconnect timeout if any
   if (reconnectTimeout) {
     clearTimeout(reconnectTimeout);
     reconnectTimeout = null;
@@ -155,20 +155,20 @@ export const disconnectWebSocket = () => {
 };
 
 /**
- * Kiểm tra trạng thái kết nối
+ * Check connection status
  * @returns {boolean}
  */
 export const isWebSocketConnected = () => isConnected;
 
 /**
- * Gửi thông báo qua WebSocket
- * @param {string} destination - Đường dẫn đích
- * @param {object} body - Nội dung thông báo
+ * Send notification via WebSocket
+ * @param {string} destination - Target destination
+ * @param {object} body - Notification content
  * @param {object} headers - Headers (optional)
  */
 export const sendNotification = (destination, body, headers = {}) => {
   if (!client || !client.active) {
-    console.error('❌ WebSocket chưa kết nối');
+    console.error('❌ WebSocket not connected');
     return;
   }
 
@@ -178,9 +178,9 @@ export const sendNotification = (destination, body, headers = {}) => {
       body: JSON.stringify(body),
       headers,
     });
-    console.log('✓ Thông báo đã gửi:', destination);
+    console.log('✓ Notification sent:', destination);
   } catch (error) {
-    console.error('❌ Lỗi gửi thông báo:', error);
+    console.error('❌ Error sending notification:', error);
   }
 };
 

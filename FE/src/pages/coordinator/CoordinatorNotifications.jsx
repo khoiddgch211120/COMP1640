@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { markOneAsRead, markAllAsRead, clearNotifications } from '../../redux/slices/notificationSlice';
 import '../../styles/coordinator.css';
 
-/* ─── Format ngày ─────────────────────────────────────────── */
+/* ─── Format date ─────────────────────────────────────────── */
 const formatDate = (d) => {
   if (!d) return '';
   const date = new Date(d);

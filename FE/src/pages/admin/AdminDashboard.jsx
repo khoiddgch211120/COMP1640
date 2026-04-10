@@ -201,63 +201,6 @@ var EMPTY_DATA = {
   monthly_trend: [],
 };
 
-// ── MOCK DATA (dùng khi API chưa sẵn sàng) ──────────────────────────────────
-var USE_MOCK = false; // đổi thành true để dùng mock, false để gọi API thật
-
-var MOCK_ACADEMIC_YEARS = [
-  { year_id: 1, year_label: "2023-2024" },
-  { year_id: 2, year_label: "2024-2025" },
-];
-
-var MOCK_DEPARTMENTS = [
-  { dept_id: 1, dept_name: "Engineering"  },
-  { dept_id: 2, dept_name: "Marketing"    },
-  { dept_id: 3, dept_name: "HR"           },
-  { dept_id: 4, dept_name: "Finance"      },
-  { dept_id: 5, dept_name: "Operations"   },
-  { dept_id: 6, dept_name: "Design"       },
-  { dept_id: 7, dept_name: "Data Science" },
-];
-
-var MOCK_REPORT_OVERALL = {
-  total_ideas: 248, total_comments: 1042, total_users: 87, total_departments: 7,
-  ideas_this_year: 112, anonymous_ideas: 34,
-  ideas_with_comments: 89, ideas_without_comments: 159,
-  dept_name: "",
-  top_contributors: [
-    { full_name: "Nguyen Van An",  dept_name: "Engineering", idea_count: 18, initial: "N" },
-    { full_name: "Tran Thi Binh", dept_name: "Operations",  idea_count: 15, initial: "T" },
-    { full_name: "Le Van Cuong",  dept_name: "Design",      idea_count: 13, initial: "L" },
-    { full_name: "Vu Thi Huong",  dept_name: "Finance",     idea_count: 11, initial: "V" },
-    { full_name: "Pham Quoc Bao", dept_name: "Marketing",   idea_count: 10, initial: "P" },
-  ],
-  by_department: [
-    { dept_id: 1, dept_name: "Engineering",  idea_count: 62, comment_count: 284, user_count: 24, percent: 25 },
-    { dept_id: 2, dept_name: "Marketing",    idea_count: 45, comment_count: 198, user_count: 12, percent: 18 },
-    { dept_id: 5, dept_name: "Operations",   idea_count: 40, comment_count: 176, user_count: 18, percent: 16 },
-    { dept_id: 4, dept_name: "Finance",      idea_count: 35, comment_count: 142, user_count: 10, percent: 14 },
-    { dept_id: 3, dept_name: "HR",           idea_count: 28, comment_count: 110, user_count: 8,  percent: 11 },
-    { dept_id: 6, dept_name: "Design",       idea_count: 24, comment_count: 96,  user_count: 7,  percent: 10 },
-    { dept_id: 7, dept_name: "Data Science", idea_count: 14, comment_count: 36,  user_count: 9,  percent:  6 },
-  ],
-  monthly_trend: [
-    { month: "Aug 24", idea_count: 12 }, { month: "Sep 24", idea_count: 18 },
-    { month: "Oct 24", idea_count: 15 }, { month: "Nov 24", idea_count: 22 },
-    { month: "Dec 24", idea_count: 10 }, { month: "Jan 25", idea_count: 28 },
-    { month: "Feb 25", idea_count: 35 }, { month: "Mar 25", idea_count: 30 },
-  ],
-};
-
-var MOCK_REPORT_BY_DEPT = {
-  1: { dept_name: "Engineering",  total_ideas: 62,  total_comments: 284, total_users: 24, anonymous_ideas: 8,  ideas_with_comments: 41, ideas_without_comments: 21, top_contributors: [{ full_name: "Nguyen Van An",    idea_count: 18, initial: "N" }, { full_name: "Hoang Minh Duc", idea_count: 14, initial: "H" }], monthly_trend: [{ month: "Aug 24", idea_count: 4 }, { month: "Sep 24", idea_count: 6 }, { month: "Oct 24", idea_count: 5 }, { month: "Nov 24", idea_count: 9 }, { month: "Dec 24", idea_count: 3 }, { month: "Jan 25", idea_count: 11 }, { month: "Feb 25", idea_count: 14 }, { month: "Mar 25", idea_count: 10 }] },
-  2: { dept_name: "Marketing",    total_ideas: 45,  total_comments: 198, total_users: 12, anonymous_ideas: 5,  ideas_with_comments: 30, ideas_without_comments: 15, top_contributors: [{ full_name: "Pham Quoc Bao",   idea_count: 10, initial: "P" }, { full_name: "Nguyen Thi Mai",  idea_count: 8,  initial: "N" }], monthly_trend: [{ month: "Aug 24", idea_count: 2 }, { month: "Sep 24", idea_count: 4 }, { month: "Oct 24", idea_count: 3 }, { month: "Nov 24", idea_count: 6 }, { month: "Dec 24", idea_count: 2 }, { month: "Jan 25", idea_count: 8 }, { month: "Feb 25", idea_count: 11 }, { month: "Mar 25", idea_count: 9 }] },
-  3: { dept_name: "HR",           total_ideas: 28,  total_comments: 110, total_users: 8,  anonymous_ideas: 4,  ideas_with_comments: 18, ideas_without_comments: 10, top_contributors: [{ full_name: "Le Thi Hoa",      idea_count: 7,  initial: "L" }, { full_name: "Bui Van Nam",     idea_count: 5,  initial: "B" }], monthly_trend: [{ month: "Aug 24", idea_count: 1 }, { month: "Sep 24", idea_count: 2 }, { month: "Oct 24", idea_count: 2 }, { month: "Nov 24", idea_count: 4 }, { month: "Dec 24", idea_count: 1 }, { month: "Jan 25", idea_count: 5 }, { month: "Feb 25", idea_count: 7 }, { month: "Mar 25", idea_count: 6 }] },
-  4: { dept_name: "Finance",      total_ideas: 35,  total_comments: 142, total_users: 10, anonymous_ideas: 6,  ideas_with_comments: 22, ideas_without_comments: 13, top_contributors: [{ full_name: "Vu Thi Huong",    idea_count: 11, initial: "V" }, { full_name: "Nguyen Duc Anh",  idea_count: 8,  initial: "N" }], monthly_trend: [{ month: "Aug 24", idea_count: 2 }, { month: "Sep 24", idea_count: 3 }, { month: "Oct 24", idea_count: 2 }, { month: "Nov 24", idea_count: 5 }, { month: "Dec 24", idea_count: 1 }, { month: "Jan 25", idea_count: 6 }, { month: "Feb 25", idea_count: 8 }, { month: "Mar 25", idea_count: 8 }] },
-  5: { dept_name: "Operations",   total_ideas: 40,  total_comments: 176, total_users: 18, anonymous_ideas: 7,  ideas_with_comments: 28, ideas_without_comments: 12, top_contributors: [{ full_name: "Tran Thi Binh",  idea_count: 15, initial: "T" }, { full_name: "Le Van Cuong",    idea_count: 10, initial: "L" }], monthly_trend: [{ month: "Aug 24", idea_count: 2 }, { month: "Sep 24", idea_count: 4 }, { month: "Oct 24", idea_count: 3 }, { month: "Nov 24", idea_count: 6 }, { month: "Dec 24", idea_count: 2 }, { month: "Jan 25", idea_count: 7 }, { month: "Feb 25", idea_count: 9 }, { month: "Mar 25", idea_count: 7 }] },
-  6: { dept_name: "Design",       total_ideas: 24,  total_comments: 96,  total_users: 7,  anonymous_ideas: 3,  ideas_with_comments: 15, ideas_without_comments: 9,  top_contributors: [{ full_name: "Le Van Cuong",    idea_count: 13, initial: "L" }, { full_name: "Bui Thi Ngoc",    idea_count: 7,  initial: "B" }], monthly_trend: [{ month: "Aug 24", idea_count: 1 }, { month: "Sep 24", idea_count: 2 }, { month: "Oct 24", idea_count: 1 }, { month: "Nov 24", idea_count: 3 }, { month: "Dec 24", idea_count: 1 }, { month: "Jan 25", idea_count: 4 }, { month: "Feb 25", idea_count: 6 }, { month: "Mar 25", idea_count: 6 }] },
-  7: { dept_name: "Data Science", total_ideas: 14,  total_comments: 36,  total_users: 9,  anonymous_ideas: 1,  ideas_with_comments: 8,  ideas_without_comments: 6,  top_contributors: [{ full_name: "Nguyen Thanh Tu", idea_count: 5,  initial: "N" }, { full_name: "Do Thi Hien",     idea_count: 4,  initial: "D" }], monthly_trend: [{ month: "Aug 24", idea_count: 0 }, { month: "Sep 24", idea_count: 1 }, { month: "Oct 24", idea_count: 1 }, { month: "Nov 24", idea_count: 2 }, { month: "Dec 24", idea_count: 0 }, { month: "Jan 25", idea_count: 3 }, { month: "Feb 25", idea_count: 4 }, { month: "Mar 25", idea_count: 3 }] },
-};
-
 var AdminDashboard = function () {
   var yearsState = useState([]);
   var academicYears = yearsState[0];
@@ -297,18 +240,12 @@ var AdminDashboard = function () {
     setError("");
     try {
       var rawYears, rawDepts;
-      if (USE_MOCK) {
-        await new Promise(function(r) { setTimeout(r, 300); });
-        rawYears = MOCK_ACADEMIC_YEARS;
-        rawDepts = MOCK_DEPARTMENTS;
-      } else {
-        var results = await Promise.all([
-          getAcademicYears().catch(function () { return []; }),
-          getDepartments().catch(function () { return []; }),
-        ]);
-        rawYears = Array.isArray(results[0]) ? results[0] : results[0]?.content ?? [];
-        rawDepts = Array.isArray(results[1]) ? results[1] : [];
-      }
+      var results = await Promise.all([
+        getAcademicYears().catch(function () { return []; }),
+        getDepartments().catch(function () { return []; }),
+      ]);
+      rawYears = Array.isArray(results[0]) ? results[0] : results[0]?.content ?? [];
+      rawDepts = Array.isArray(results[1]) ? results[1] : [];
 
       var normalizedYears = rawYears.map(function (y) {
         return {
@@ -349,28 +286,9 @@ var AdminDashboard = function () {
     setError("");
     try {
       var raw;
-      if (USE_MOCK) {
-        await new Promise(function(r) { setTimeout(r, 200); });
-        if (deptFilter === "overall" || !deptFilter) {
-          raw = MOCK_REPORT_OVERALL;
-        } else {
-          var mockDept = MOCK_REPORT_BY_DEPT[Number(deptFilter)];
-          raw = mockDept ? {
-            total_ideas: mockDept.total_ideas, total_comments: mockDept.total_comments,
-            total_users: mockDept.total_users, anonymous_ideas: mockDept.anonymous_ideas,
-            ideas_with_comments: mockDept.ideas_with_comments,
-            ideas_without_comments: mockDept.ideas_without_comments,
-            dept_name: mockDept.dept_name,
-            top_contributors: mockDept.top_contributors,
-            by_department: [], monthly_trend: mockDept.monthly_trend,
-          } : MOCK_REPORT_OVERALL;
-        }
-        setData(raw);
-      } else {
-        var deptId = deptFilter !== "overall" && deptFilter ? Number(deptFilter) : null;
-        raw = await getComprehensiveStatistics(yearId || undefined, deptId);
-        setData(normalizeReport(raw) || EMPTY_DATA);
-      }
+      var deptId = deptFilter !== "overall" && deptFilter ? Number(deptFilter) : null;
+      raw = await getComprehensiveStatistics(yearId || undefined, deptId);
+      setData(normalizeReport(raw) || EMPTY_DATA);
     } catch (err) {
       setError(err?.response?.data?.message || err?.message || "Failed to load statistics.");
       setData(EMPTY_DATA);

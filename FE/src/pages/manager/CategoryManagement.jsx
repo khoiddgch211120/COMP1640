@@ -15,62 +15,6 @@ import {
 } from "../../services/categoryService";
 import "../../styles/category-management.css";
 
-// ─────────────────────────────────────────────────────────────
-// 🔧 Toggle this to switch between mock data and real API
-const USE_MOCK = false;
-// ─────────────────────────────────────────────────────────────
-
-/* ── Mock data store (mutated in place to simulate DB) ─────── */
-let mockCategoryStore = [
-  { categoryId: 1, categoryName: "Process Improvement",  description: "Ideas to streamline workflows and reduce waste.",           isUsed: true,  createdAt: "2024-09-01T08:00:00Z" },
-  { categoryId: 2, categoryName: "Cost Reduction",       description: "Proposals that help cut operational or material costs.",    isUsed: true,  createdAt: "2024-09-03T09:15:00Z" },
-  { categoryId: 3, categoryName: "Customer Experience",  description: "Improving satisfaction and service quality for clients.",   isUsed: true,  createdAt: "2024-09-05T10:30:00Z" },
-  { categoryId: 4, categoryName: "Employee Well-being",  description: "Initiatives around health, culture, and work-life balance.",isUsed: false, createdAt: "2024-09-10T11:00:00Z" },
-  { categoryId: 5, categoryName: "Technology & Tools",   description: "Suggestions related to new software, hardware, or systems.",isUsed: true,  createdAt: "2024-09-12T13:45:00Z" },
-  { categoryId: 6, categoryName: "Sustainability",       description: "Environmental and green initiatives.",                      isUsed: false, createdAt: "2024-09-15T14:20:00Z" },
-  { categoryId: 7, categoryName: "Training & Development",description: "Learning programs, mentorship, and skill-building.",      isUsed: false, createdAt: "2024-09-18T09:00:00Z" },
-];
-let mockNextId = 8;
-
-/* ── Mock service wrappers ─────────────────────────────────── */
-const mockGetCategories = async () => {
-  await new Promise((r) => setTimeout(r, 400));
-  return [...mockCategoryStore];
-};
-
-const mockCreateCategory = async (payload) => {
-  await new Promise((r) => setTimeout(r, 350));
-  const newCat = {
-    categoryId: mockNextId++,
-    categoryName: payload.categoryName,
-    description: payload.description ?? "",
-    isUsed: false,
-    createdAt: new Date().toISOString(),
-  };
-  mockCategoryStore.push(newCat);
-  return newCat;
-};
-
-const mockUpdateCategory = async (id, payload) => {
-  await new Promise((r) => setTimeout(r, 350));
-  mockCategoryStore = mockCategoryStore.map((c) =>
-    c.categoryId === id ? { ...c, ...payload } : c
-  );
-};
-
-const mockDeleteCategory = async (id) => {
-  await new Promise((r) => setTimeout(r, 300));
-  const target = mockCategoryStore.find((c) => c.categoryId === id);
-  if (target?.isUsed) throw { response: { data: { message: "Cannot delete: category is in use." } } };
-  mockCategoryStore = mockCategoryStore.filter((c) => c.categoryId !== id);
-};
-
-/* ── Resolved service calls ────────────────────────────────── */
-const svcGetCategories  = USE_MOCK ? mockGetCategories  : getCategories;
-const svcCreateCategory = USE_MOCK ? mockCreateCategory : createCategory;
-const svcUpdateCategory = USE_MOCK ? mockUpdateCategory : updateCategory;
-const svcDeleteCategory = USE_MOCK ? mockDeleteCategory : deleteCategory;
-
 /* ═══════════════════════════════════════════════════════════ */
 
 const CategoryManagement = () => {
@@ -86,7 +30,7 @@ const CategoryManagement = () => {
   const fetchCategories = async () => {
     setFetching(true);
     try {
-      const data = await svcGetCategories();
+      const data = await getCategories();
       setCategories(data ?? []);
     } catch {
       message.error("Failed to load categories");
@@ -133,10 +77,10 @@ const CategoryManagement = () => {
       const payload = { categoryName: trimmed, description: values.description || "" };
 
       if (editTarget) {
-        await svcUpdateCategory(editTarget.categoryId, payload);
+        await updateCategory(editTarget.categoryId, payload);
         message.success("Category updated successfully.");
       } else {
-        await svcCreateCategory(payload);
+        await createCategory(payload);
         message.success("Category added successfully.");
       }
 
@@ -160,7 +104,7 @@ const CategoryManagement = () => {
     }
     setLoading(true);
     try {
-      await svcDeleteCategory(record.categoryId);
+      await deleteCategory(record.categoryId);
       message.success("Category deleted.");
       await fetchCategories();
     } catch (err) {

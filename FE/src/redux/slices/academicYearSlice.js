@@ -44,7 +44,7 @@ const academicYearSlice = createSlice({
         state.items[index] = action.payload;
       }
 
-      // Nếu đang edit year active → cập nhật luôn current
+      // If editing the active year, also update current
       if (
         state.currentAcademicYear &&
         state.currentAcademicYear.id === action.payload.id

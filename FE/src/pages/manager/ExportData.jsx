@@ -17,64 +17,6 @@ const STEP_IDLE    = "idle";
 const STEP_LOADING = "loading";
 const STEP_DONE    = "done";
 
-// ─────────────────────────────────────────────────────────────
-// 🔧 Toggle this to switch between mock data and real API
-const USE_MOCK = false;
-// ─────────────────────────────────────────────────────────────
-
-/* ── Mock data ─────────────────────────────────────────────── */
-const MOCK_ACADEMIC_YEARS = [
-  {
-    yearId: 1, yearLabel: "2024 – 2025",
-    ideaClosureDate: "2025-03-31", finalClosureDate: "2025-04-30",
-    commentOpen: false,   // closed → export allowed
-  },
-  {
-    yearId: 2, yearLabel: "2023 – 2024",
-    ideaClosureDate: "2024-03-31", finalClosureDate: "2024-04-30",
-    commentOpen: false,
-  },
-  {
-    yearId: 3, yearLabel: "2025 – 2026",
-    ideaClosureDate: "2026-03-31", finalClosureDate: "2026-04-30",
-    commentOpen: true,    // still open → export locked
-  },
-];
-
-/* ── Mock service wrappers ─────────────────────────────────── */
-const mockGetAcademicYears = async () => {
-  await new Promise((r) => setTimeout(r, 400));
-  return MOCK_ACADEMIC_YEARS;
-};
-
-const mockExportToCSV = async (yearId) => {
-  await new Promise((r) => setTimeout(r, 900));
-  const year = MOCK_ACADEMIC_YEARS.find((y) => y.yearId === yearId);
-  const csv = [
-    "IdeaId,Title,Department,Category,Author,Comments",
-    "1,Automate Reports,Engineering,Technology,Alice Nguyen,3",
-    "2,Green Commute Subsidy,Marketing,Sustainability,Bob Tran,1",
-    "3,Mentorship Programme,HR,Training,Carol Le,5",
-  ].join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement("a");
-  a.href = url;
-  a.download = `ideas_${year?.yearLabel?.replace(/\s/g, "_") ?? yearId}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
-};
-
-const mockExportAttachmentsAsZip = async () => {
-  // Simulate network delay; no real file in mock
-  await new Promise((r) => setTimeout(r, 1000));
-};
-
-/* ── Resolved service calls ────────────────────────────────── */
-const svcGetAcademicYears       = USE_MOCK ? mockGetAcademicYears       : getAcademicYears;
-const svcExportToCSV            = USE_MOCK ? mockExportToCSV            : exportToCSV;
-const svcExportAttachmentsAsZip = USE_MOCK ? mockExportAttachmentsAsZip : exportAttachmentsAsZip;
-
 /* ═══════════════════════════════════════════════════════════ */
 
 const YearStatusTag = ({ year }) => {
@@ -95,7 +37,7 @@ const ExportData = () => {
     const fetch = async () => {
       setFetching(true);
       try {
-        const data = await svcGetAcademicYears();
+        const data = await getAcademicYears();
         setAcademicYears(data ?? []);
         if (data?.length > 0) setSelectedYearId(data[0].yearId);
       } catch {
@@ -114,7 +56,7 @@ const ExportData = () => {
     if (!exportAllowed) return;
     setCsvStep(STEP_LOADING);
     try {
-      await svcExportToCSV(selectedYearId);
+      await exportToCSV(selectedYearId);
       setCsvStep(STEP_DONE);
       message.success("CSV exported successfully!");
       setTimeout(() => setCsvStep(STEP_IDLE), 3000);
@@ -128,7 +70,7 @@ const ExportData = () => {
     if (!exportAllowed) return;
     setZipStep(STEP_LOADING);
     try {
-      await svcExportAttachmentsAsZip(selectedYearId);
+      await exportAttachmentsAsZip(selectedYearId);
       message.success("ZIP downloaded successfully!");
       setZipStep(STEP_DONE);
       setTimeout(() => setZipStep(STEP_IDLE), 3000);

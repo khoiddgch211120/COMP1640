@@ -13,7 +13,7 @@ const Statistics = () => {
   const user = useSelector((state) => state.auth.user);
   const hasFullAccess = FULL_ACCESS_ROLES.includes(user?.role);
 
-  // 1. 🔥 FIX: Khớp chính xác với trường 'departmentId' trong Console của bạn
+  // Match the exact 'departmentId' field from the user object
   const userDeptId = user?.departmentId || user?.deptId || user?.department_id || null;
   const userDeptName = user?.deptName || user?.role || "Department";
 
@@ -23,10 +23,10 @@ const Statistics = () => {
   const [loading, setLoading] = useState(false);
   const [fetchingYears, setFetchingYears] = useState(true);
 
-  // selectedDeptId: Mặc định lấy userDeptId nếu không phải Admin
+  // selectedDeptId: Default to userDeptId if not Admin
   const [selectedDeptId, setSelectedDeptId] = useState(hasFullAccess ? null : userDeptId);
 
-  // Cập nhật lại selectedDeptId nếu ban đầu userDeptId bị null do load chậm
+  // Update selectedDeptId if userDeptId was initially null due to slow loading
   useEffect(() => {
     if (!hasFullAccess && userDeptId && !selectedDeptId) {
       setSelectedDeptId(userDeptId);
@@ -51,7 +51,7 @@ const Statistics = () => {
   useEffect(() => {
     if (!selectedYearId) return;
     
-    // Nếu là Manager mà vẫn chưa lấy được ID thì không gọi API
+    // If non-admin user and dept ID not yet loaded, skip API call
     if (!hasFullAccess && !userDeptId) return;
 
     const fetchReport = async () => {
@@ -66,18 +66,18 @@ const Statistics = () => {
     fetchReport();
   }, [selectedYearId, selectedDeptId, hasFullAccess, userDeptId]);
 
-  /* ─── LOGIC LỌC DỮ LIỆU (Chỉ hiện 1 dòng cho Manager) ─── */
+  /* ─── DATA FILTERING LOGIC (Show single row for Manager) ─── */
   const filteredData = useMemo(() => {
     if (!statistics || statistics.length === 0) return [];
 
     if (hasFullAccess) {
       if (!selectedDeptId) return statistics; 
-      // So sánh linh hoạt các tên trường ID trong mảng trả về
+      // Flexible ID field comparison across the returned array
       return statistics.filter(s => String(s.deptId || s.dept_id || s.departmentId) === String(selectedDeptId));
     }
 
-    // Đối với Manager: Chỉ hiện duy nhất dòng phòng ban của mình
-    // String() để tránh lỗi so sánh 1 (number) với "1" (string)
+    // For non-admin: Show only own department's row
+    // String() to avoid type mismatch when comparing 1 (number) with "1" (string)
     return statistics.filter(s => String(s.deptId || s.dept_id || s.departmentId) === String(userDeptId));
   }, [statistics, hasFullAccess, selectedDeptId, userDeptId]);
 
@@ -107,7 +107,7 @@ const Statistics = () => {
           {hasFullAccess ? "University-wide Dashboard" : `Department Dashboard: ${userDeptName}`}
         </p>
 
-        {/* 2. 🔥 CẢNH BÁO LỖI: Chỉ hiện khi thực sự không tìm thấy ID sau khi đã load xong */}
+        {/* Warning: Only show when dept ID truly not found after loading */}
         {!hasFullAccess && !userDeptId && !fetchingYears && (
           <Alert
             message="Error: Department ID not found"

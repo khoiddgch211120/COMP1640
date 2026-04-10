@@ -2,9 +2,8 @@ import { useRef, useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { markAllAsRead, markOneAsRead, clearNotifications, addNotification } from '../redux/slices/notificationSlice';
-import { connectWebSocket, disconnectWebSocket } from '../services/websocketService';
 
-/* ─── Format thời gian tương đối ────────────────────────── */
+/* ─── Format relative time ────────────────────────── */
 const timeAgo = (dateStr) => {
   if (!dateStr) return '';
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -17,7 +16,7 @@ const timeAgo = (dateStr) => {
   return `${days}d ago`;
 };
 
-/* ─── Icon theo type ─────────────────────────────────────── */
+/* ─── Icon by type ─────────────────────────────────────── */
 const NotifIcon = ({ type }) => {
   if (type === 'NEW_IDEA') {
     return (
@@ -43,31 +42,9 @@ const NotificationDropdown = () => {
   const { user, isAuthenticated } = useSelector((s) => s.auth); // ← Get user object
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
-    /* ── WebSocket Connection ────────────────────────────── */
-    useEffect(() => {
-        if (!isAuthenticated || !user?.id) {
-          console.warn('[Notif] No user authenticated or userId not found');
-          return;
-        }
-    
-        console.log('[Notif] Connecting WebSocket for userId:', user.id);
-        
-        connectWebSocket(
-          user.id,
-          (notification) => {
-            console.log('[Notif] Received:', notification);
-            dispatch(addNotification(notification));
-          },
-          () => console.log('[Notif] ✓ WebSocket connected'),
-          (error) => console.error('[Notif] ❌ WebSocket error:', error)
-        );
-    
-        return () => {
-          disconnectWebSocket();
-        };
-      }, [dispatch, user?.id, isAuthenticated]);
 
-  /* ── Đóng khi click ngoài ─────────────────────────────── */
+
+  /* ── Close on outside click ───────────────────────────── */
   useEffect(() => {
     const handler = (e) => {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
@@ -76,7 +53,7 @@ const NotificationDropdown = () => {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  /* ── Click vào notification ───────────────────────────── */
+  /* ── Handle notification click ───────────────────────────── */
   const handleClick = (notif) => {
     if (!notif.isRead) dispatch(markOneAsRead(notif.ideaId));
     setOpen(false);

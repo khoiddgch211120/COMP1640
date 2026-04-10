@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"; // ✅ FIX: thêm useEffect
+import { useState, useEffect } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../redux/slices/authSlice";
@@ -11,7 +11,7 @@ import NotificationDropdown from "../components/NotificationDropdown";
    NAV ITEM DEFINITIONS theo từng role
 ═══════════════════════════════════════════════════════════ */
 
-/* ── Icons dùng chung ── */
+/* ── Shared Icons ── */
 const IconIdea = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
     <path d="M12 2a7 7 0 0 1 7 7c0 3-1.5 5-3.5 6.5V17a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-1.5C6.5 14 5 12 5 9a7 7 0 0 1 7-7z"/>
@@ -91,15 +91,15 @@ const IconAdmin = () => (
 );
 
 /* ═══════════════════════════════════════════════════════════
-   NAV ITEMS THEO ROLE
-   Dựa theo bảng phân quyền:
+   NAV ITEMS BY ROLE
+   Based on the permissions table:
    - ACADEMIC / SUPPORT  : Ideas, Submit Idea, Terms
-   - QA_COORDINATOR      : Ideas, Dashboard, Notifications, Statistics (dept mình)
-   - QA_MANAGER          : Ideas, Statistics (toàn trường), Categories, Exceptions, Export
-   - DEPT_MANAGER        : Ideas, Statistics (dept mình)
+   - QA_COORDINATOR      : Ideas, Dashboard, Notifications, Statistics (own dept)
+   - QA_MANAGER          : Ideas, Statistics (university-wide), Categories, Exceptions, Export
+   - DEPT_MANAGER        : Ideas, Statistics (own dept)
    - HR_MANAGER          : Ideas, Statistics (HR dept)
    - HEAD                : Ideas, Statistics (Faculty)
-   - ADMIN               : link sang /admin
+   - ADMIN               : link to /admin
 ═══════════════════════════════════════════════════════════ */
 
 const NAV_ITEMS_STAFF = [
@@ -123,19 +123,19 @@ const NAV_ITEMS_QA_MANAGER = [
   { key: "export",     label: "Export Data",path: "/manager/export",      icon: <IconExport />  },
 ];
 
-// DEPT_MANAGER và HEAD: xem ideas + statistics (giới hạn dept/faculty ở component)
+// DEPT_MANAGER and HEAD: view ideas + statistics (scoped to dept/faculty in component)
 const NAV_ITEMS_DEPT_MANAGER = [
   { key: "ideas",      label: "Ideas",      path: "/ideas",      icon: <IconIdea />  },
   { key: "statistics", label: "Statistics", path: "/statistics", icon: <IconStats /> },
 ];
 
-// HR_MANAGER: xem ideas + statistics (giới hạn HR dept ở component)
+// HR_MANAGER: view ideas + statistics (scoped to HR dept in component)
 const NAV_ITEMS_HR_MANAGER = [
   { key: "ideas",      label: "Ideas",      path: "/ideas",      icon: <IconIdea />  },
   { key: "statistics", label: "Statistics", path: "/statistics", icon: <IconStats /> },
 ];
 
-// ADMIN: link shortcut sang admin panel (thường ADMIN dùng AdminLayout, nhưng nếu vào MainLayout thì có link)
+// ADMIN: shortcut link to admin panel (ADMIN typically uses AdminLayout, but if entering MainLayout this link is available)
 const NAV_ITEMS_ADMIN = [
   { key: "admin",      label: "Admin Panel",path: "/admin",      icon: <IconAdmin />  },
   { key: "ideas",      label: "Ideas",      path: "/ideas",      icon: <IconIdea />   },
@@ -173,8 +173,8 @@ function getNavItems(role) {
         { key: "ideas", label: "Ideas", path: "/ideas", icon: <IconIdea /> },
         { key: "statistics", label: "Statistics", path: "/statistics", icon: <IconStats /> },
       ];
-    case ROLES.ACADEMIC:
-    case ROLES.SUPPORT:
+    case ROLES.ACADEMIC_STAFF:
+    case ROLES.SUPPORT_STAFF:
       return [
         { key: "ideas", label: "Ideas", path: "/ideas", icon: <IconIdea /> },
         { key: "submit-idea", label: "Submit Idea", path: "/submit-idea", icon: <IconSubmit /> },
@@ -194,7 +194,7 @@ const MainLayout = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // ✅ WebSocket connection khi component mount
+  //  WebSocket connection khi component mount
   useEffect(() => {
     if (user?.id) {
       console.log('[MainLayout] Connecting WebSocket for userId:', user.id);
@@ -213,7 +213,7 @@ const MainLayout = () => {
       console.log('[MainLayout] Disconnecting WebSocket');
       disconnectWebSocket();
     };
-  }, [user?.id, dispatch]); // ← Thêm dispatch vào dependency
+  }, [user?.id, dispatch]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -305,7 +305,7 @@ const MainLayout = () => {
               <span className="main-topbar-role-chip">{displayRole}</span>
               <span className="main-topbar-username">{displayName}</span>
             </div>
-            {/* ── Notification Bell (thay thế button cũ) ── */}
+            {/* ── Notification Bell ── */}
             <NotificationDropdown />
  
             <button className="main-topbar-logout" onClick={handleLogout} title="Sign out">

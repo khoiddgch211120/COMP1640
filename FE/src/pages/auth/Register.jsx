@@ -81,7 +81,7 @@ const Register = () => {
     try {
       setLoading(true);
 
-      // 🔥 FIX: chỉ gửi 2 role hợp lệ
+      // Only send valid staff types
       const payload = {
         fullName: formData.fullName,
         email: formData.email,

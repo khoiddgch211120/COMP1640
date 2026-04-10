@@ -47,7 +47,7 @@ const IdeaList = () => {
 
   const PAGE_SIZE = 6;
 
-  // Quyền xem danh tính (Admin/QA Manager)
+  // Permission to see identity (Admin/QA Manager)
   const canSeeIdentity = CAN_SEE_IDENTITY_ROLES.includes(user?.role);
 
   /* ─── Fetch ideas ────────────────────────────────────────── */
@@ -58,9 +58,9 @@ const IdeaList = () => {
       let data;
       const params = { page, size: PAGE_SIZE };
 
-      /* Logic theo yêu cầu: Tất cả xem Full Idea.
-         Nếu cần giới hạn riêng Admin, bạn có thể thêm logic params.deptId ở đây.
-         Hiện tại mình để mặc định là xem Full toàn hệ thống cho tất cả.
+      /* All users can view full ideas.
+         If you need to restrict by Admin, you can add params.deptId logic here.
+         Currently defaults to viewing all ideas system-wide.
       */
 
       if (f === "latest") {
@@ -71,7 +71,7 @@ const IdeaList = () => {
         data = await getAllIdeas(params, user);
       }
 
-      // Đảm bảo lấy đúng cấu trúc data từ API
+      // Ensure correct data structure from API
       setIdeas(data?.content || data?.data || []);
       setTotalPages(data?.totalPages ?? 0);
       setTotalElements(data?.totalElements ?? 0);
@@ -112,7 +112,7 @@ const IdeaList = () => {
           <h1 className="id-page-title">Idea List</h1>
           <p className="id-page-sub">Explore and manage submitted ideas from all departments</p>
         </div>
-        {[ROLES.ACADEMIC, ROLES.SUPPORT].includes(user?.role) && (
+        {[ROLES.ACADEMIC_STAFF, ROLES.SUPPORT_STAFF].includes(user?.role) && (
           <Link to="/submit-idea" className="id-btn id-btn--primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" width="14" height="14">
               <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>

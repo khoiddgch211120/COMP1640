@@ -9,16 +9,6 @@ import {
 
 var EMPTY_FORM = { year_label: "", idea_closure_date: "", final_closure_date: "" };
 
-// ── MOCK DATA (dùng khi API chưa sẵn sàng) ──────────────────────────────────
-var USE_MOCK = false; // đổi thành true để dùng mock, false để gọi API thật
-
-var MOCK_ACADEMIC_YEARS = [
-  { year_id: 1, year_label: "2021-2022", idea_closure_date: "2022-03-31", final_closure_date: "2022-04-30", created_at: "2021-08-01", status: "closed"   },
-  { year_id: 2, year_label: "2022-2023", idea_closure_date: "2023-03-31", final_closure_date: "2023-04-30", created_at: "2022-08-01", status: "closed"   },
-  { year_id: 3, year_label: "2023-2024", idea_closure_date: "2024-03-31", final_closure_date: "2024-04-30", created_at: "2023-08-01", status: "closed"   },
-  { year_id: 4, year_label: "2024-2025", idea_closure_date: "2025-03-31", final_closure_date: "2025-04-30", created_at: "2024-08-01", status: "active"   },
-];
-
 function mapStatus(year) {
   if (year.ideaOpen === true) return "active";
   if (year.ideaOpen === false && year.commentOpen === true) return "upcoming";
@@ -98,14 +88,8 @@ var AcademicYearManagement = function() {
     setLoading(true);
     setPageError("");
     try {
-      if (USE_MOCK) {
-        // Dùng mock data — xóa block này khi API sẵn sàng
-        await new Promise(function(r) { setTimeout(r, 300); });
-        setYears(MOCK_ACADEMIC_YEARS);
-      } else {
-        var response = await getAcademicYears();
-        setYears(Array.isArray(response) ? response.map(normalizeAcademicYear) : []);
-      }
+      var response = await getAcademicYears();
+      setYears(Array.isArray(response) ? response.map(normalizeAcademicYear) : []);
     } catch (error) {
       setPageError(error?.response?.data?.message || error?.message || "Failed to load academic years.");
       setYears([]);

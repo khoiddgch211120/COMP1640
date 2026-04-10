@@ -13,9 +13,9 @@ export const submitIdea = async (payload) => {
   return response.data;
 };
 
-// 2. Get all ideas (Dùng cho filter "All Ideas")
+// 2. Get all ideas (used for "All Ideas" filter)
 export const getAllIdeas = async (params = {}) => {
-  // Params thường chứa { page, size, deptId... }
+  // Params typically contain { page, size, deptId... }
   const response = await apiClient.get('/ideas', { params });
   return response.data; 
 };
@@ -42,7 +42,7 @@ export const getIdeaById = async (id) => {
   return response.data;
 };
 
-// 6. Like/Dislike hoặc các hành động khác (nếu bạn có)
+// 6. Like/Dislike or other actions
 export const voteIdea = async (ideaId, voteType) => {
   const response = await apiClient.post(`/ideas/${ideaId}/vote`, { type: voteType });
   return response.data;

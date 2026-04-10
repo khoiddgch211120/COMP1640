@@ -3,32 +3,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { getTermsConditions } from "../../services/termsconditionsService";
 import "../../styles/terms-modal.css";
 
-/* ✅ Toggle mock */
-const USE_MOCK = false;
-
-/* ✅ Mock data */
-const MOCK_TERMS = [
-  {
-    id: 1,
-    version: 3,
-    effectiveDate: "2025-01-01",
-    content: `Terms & Conditions (Version 3)
-
-1. All submitted ideas become the intellectual property of the university.
-2. Staff must not submit content that violates copyright, law, or internal policy.
-3. The university reserves the right to use, modify, or reject ideas without prior notice.
-4. All submitted content must align with the university's ethical and cultural standards.
-5. Staff must accept the latest Terms & Conditions version before submitting any subsequent ideas.
-`
-  },
-  {
-    id: 2,
-    version: 2,
-    effectiveDate: "2024-01-01",
-    content: "Old version of terms..."
-  }
-];
-
 const TermsAccept = () => {
   const navigate  = useNavigate();
   const location  = useLocation();
@@ -38,20 +12,12 @@ const TermsAccept = () => {
   const [terms,    setTerms]    = useState(null);
   const [loading,  setLoading]  = useState(true);
 
-  /* ── Load terms (mock hoặc BE) ───────────────────────── */
+  /* ── Load terms from API ──────────────────────────────── */
   useEffect(() => {
     const fetch = async () => {
       setLoading(true);
       try {
-        let data;
-
-        if (USE_MOCK) {
-          console.log("👉 Using MOCK data");
-          data = MOCK_TERMS;
-        } else {
-          console.log("👉 Fetching from API");
-          data = await getTermsConditions();
-        }
+        const data = await getTermsConditions();
 
         if (Array.isArray(data) && data.length > 0) {
           const latest = [...data].sort((a, b) => b.version - a.version)[0];

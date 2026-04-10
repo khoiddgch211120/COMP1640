@@ -23,8 +23,8 @@ const ROLE_ROUTE = {
   [ROLES.DEPT_MANAGER]: "/statistics",
   [ROLES.HEAD]: "/statistics",
   [ROLES.HR_MANAGER]: "/statistics",
-  [ROLES.ACADEMIC]: "/ideas",
-  [ROLES.SUPPORT]: "/ideas",
+  [ROLES.ACADEMIC_STAFF]: "/ideas",
+  [ROLES.SUPPORT_STAFF]: "/ideas",
 };
 
 const Login = () => {
@@ -50,21 +50,21 @@ const Login = () => {
     try {
       setLoading(true);
 
-      // 1. Gọi API login (Dữ liệu trả về từ Swagger có department_id)
+      // 1. Call login API (response from Swagger includes department_id)
       const data = await loginApi({ email, password });
 
-      // 2. Chuẩn hóa Role để lấy route chuyển trang
+      // 2. Normalize Role for routing
       const role = normalizeRole(data.role);
 
-      // 3. 🔥 Cập nhật quan trọng: Truyền nguyên cục 'data' vào loginSuccess
-      // authSlice mới sẽ tự tách token và gom các trường còn lại (department_id, email...) vào user
+      // 3. Pass full 'data' object to loginSuccess
+      // authSlice will split token and group remaining fields (department_id, email...) into user
       dispatch(loginSuccess(data));
 
       notification.success({
-        message: "Đăng nhập thành công",
+        message: "Login successful",
       });
 
-      // 4. Chuyển hướng đúng trang theo role
+      // 4. Navigate to the correct page based on role
       const targetPath = ROLE_ROUTE[role] || "/ideas";
       navigate(targetPath);
 
@@ -72,7 +72,7 @@ const Login = () => {
       const msg =
         err?.response?.data?.message ||
         err?.response?.data ||
-        "Email hoặc mật khẩu không đúng";
+        "Invalid email or password";
 
       notification.error({
         message: "Đăng nhập thất bại",

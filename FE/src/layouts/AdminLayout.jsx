@@ -87,7 +87,7 @@ const AdminLayout = () => {
 
   const { user } = useSelector((state) => state.auth);
 
-  // Hỗ trợ cả schema mới (full_name, role_name) lẫn mock cũ (fullName, role)
+  // Support both new schema (full_name, role_name) and legacy (fullName, role)
   const displayName    = user?.full_name    || user?.fullName    || "Admin";
   const displayEmail   = user?.email                             || "administrator";
   const displayRole    = user?.role_name    || user?.role        || "ADMIN";
@@ -95,9 +95,9 @@ const AdminLayout = () => {
 
   const handleLogout = () => {
     dispatch(logout());
-    // Sau khi logout → về trang chủ và mở modal Login ngay lập tức
+    // After logout -> go to home page and open Login modal immediately
     navigate("/", { state: { background: { pathname: "/" } } });
-    // Delay nhỏ để navigate hoàn thành rồi mới push modal route
+    // Small delay to let navigate complete before pushing modal route
     setTimeout(() => {
       navigate("/login", { state: { background: { pathname: "/" } } });
     }, 50);
@@ -181,7 +181,7 @@ const AdminLayout = () => {
           </div>
 
           <div className="topbar-actions">
-            {/* Badge role + tên */}
+            {/* Badge role + name */}
             <div className="topbar-user-badge">
               <span className="topbar-role-chip">{displayRole}</span>
               <span className="topbar-username">{displayName}</span>

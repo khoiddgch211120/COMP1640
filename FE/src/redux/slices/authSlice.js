@@ -13,8 +13,8 @@ export const normalizeRole = (role = "") => {
   if (r.includes("DEPT_MANAGER")) return "DEPT_MANAGER";
   if (r.includes("HR")) return "HR_MANAGER";
   if (r.includes("HEAD")) return "HEAD";
-  if (r.includes("ACADEMIC")) return "ACADEMIC";
-  if (r.includes("SUPPORT")) return "SUPPORT";
+  if (r.includes("ACADEMIC")) return "ACADEMIC_STAFF";
+  if (r.includes("SUPPORT")) return "SUPPORT_STAFF";
 
   return r;
 };
@@ -44,7 +44,7 @@ const savedAuth = (() => {
 const initialState = {
   user: savedAuth?.user || null,
   token: savedAuth?.token || null,
-  userId: savedAuth?.userId || null, // ← LẤY TỪ DECODED TOKEN
+  userId: savedAuth?.userId || null, // From decoded JWT token
   isAuthenticated: !!savedAuth?.token,
 };
 
@@ -55,11 +55,11 @@ const authSlice = createSlice({
     loginSuccess: (state, action) => {
       const { token, ...userData } = action.payload;
 
-      // 🔥 DECODE JWT để lấy userId
+      // Decode JWT to extract userId
       let userId = null;
       try {
         const decoded = jwtDecode(token);
-        userId = decoded.userId; // ← Backend lưu userId trong JWT
+        userId = decoded.userId; // Backend stores userId in JWT
       } catch (err) {
         console.error('JWT decode error:', err);
       }
@@ -67,12 +67,12 @@ const authSlice = createSlice({
       const normalizedUser = {
         ...userData,
         role: normalizeRole(userData.role),
-        id: userId, // ← Lưu vào user object
+        id: userId, // Store in user object
       };
 
       state.user = normalizedUser;
       state.token = token;
-      state.userId = userId; // ← SET userId từ JWT
+      state.userId = userId; // Set userId from JWT
       state.isAuthenticated = true;
 
       localStorage.setItem(

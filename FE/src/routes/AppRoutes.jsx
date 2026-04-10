@@ -28,10 +28,10 @@ import AttachmentManagement from "../pages/admin/AttachmentManagement";
 import CoordinatorDashboard from "../pages/coordinator/CoordinatorDashboard";
 import CoordinatorNotifications from "../pages/coordinator/CoordinatorNotifications";
 
-// Roles được submit idea (Cột Academic & Support)
-const SUBMIT_ROLES = [ROLES.ACADEMIC, ROLES.SUPPORT];
+// Roles allowed to submit ideas (Academic & Support staff)
+const SUBMIT_ROLES = [ROLES.ACADEMIC_STAFF, ROLES.SUPPORT_STAFF];
 
-// Roles được xem statistics (Theo bảng)
+// Roles allowed to view statistics
 const STATS_ROLES = [
   ROLES.ADMIN,
   ROLES.QA_MANAGER,
