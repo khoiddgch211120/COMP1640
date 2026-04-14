@@ -37,33 +37,33 @@ const Register = () => {
   const validate = () => {
     if (!formData.fullName || !formData.email || !formData.password) {
       notification.warning({
-        title: "Thiếu thông tin",
-        description: "Vui lòng điền đầy đủ các trường bắt buộc",
+        title: "Missing information",
+        description: "Please fill in all required fields",
       });
       return false;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      notification.error({ title: "Email không hợp lệ" });
+      notification.error({ title: "Invalid email" });
       return false;
     }
 
     if (formData.password.length < 6) {
       notification.error({
-        title: "Mật khẩu quá ngắn",
-        description: "Tối thiểu 6 ký tự",
+        title: "Password too short",
+        description: "Minimum 6 characters",
       });
       return false;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      notification.error({ title: "Mật khẩu không khớp" });
+      notification.error({ title: "Passwords do not match" });
       return false;
     }
 
     if (!formData.agree) {
-      notification.warning({ title: "Bạn phải đồng ý với Điều khoản & Điều kiện" });
+      notification.warning({ title: "You must agree to the Terms & Conditions" });
       return false;
     }
 
@@ -93,8 +93,8 @@ const Register = () => {
       await registerApi(payload);
 
       notification.success({
-        title: "Đăng ký thành công",
-        description: "Bạn có thể đăng nhập ngay bây giờ",
+        title: "Registration successful",
+        description: "You can now log in",
       });
 
       setFormData({
@@ -111,10 +111,10 @@ const Register = () => {
       const msg =
         err?.response?.data?.message ||
         err?.response?.data ||
-        "Đăng ký thất bại, vui lòng thử lại";
+        "Registration failed, please try again";
 
       notification.error({
-        title: "Đăng ký thất bại",
+        title: "Registration failed",
         description: msg,
       });
     } finally {
@@ -123,7 +123,7 @@ const Register = () => {
   };
 
   /* =========================
-     UI GIỮ NGUYÊN 100%
+     UI UNCHANGED 100%
   ========================= */
 
   /* ===== PAGE VERSION ===== */

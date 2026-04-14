@@ -186,3 +186,20 @@
   margin: 0;
   line-height: 1.5;
 }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .cat-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .cat-page-title { font-size: 17px; }
+  .cat-summary-row { gap: 8px; }
+  .cat-pill { font-size: 12px; padding: 5px 10px; }
+  .cat-search-input { max-width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .cat-page-icon { font-size: 22px; padding: 8px; }
+  .cat-page-title { font-size: 15px; }
+}

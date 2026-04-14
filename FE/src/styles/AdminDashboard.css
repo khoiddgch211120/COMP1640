@@ -409,3 +409,22 @@
 }
 
 .table-wrapper { overflow-x: auto; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .kpi-card { padding: 14px 16px; }
+  .kpi-val { font-size: 24px; }
+  .kpi-label { font-size: 12px; }
+  .dashboard-filter-row { flex-wrap: wrap; gap: 8px; }
+  .dept-bar-name { width: 80px; font-size: 11.5px; }
+}
+
+@media (max-width: 480px) {
+  .kpi-grid { grid-template-columns: 1fr; }
+  .kpi-val { font-size: 28px; }
+  .mini-bar-chart { height: 80px; }
+}

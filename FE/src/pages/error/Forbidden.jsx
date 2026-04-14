@@ -9,7 +9,7 @@ const Forbidden = () => {
       background: "#f9fafb", color: "#111827",
     }}>
       <div style={{ fontSize: 64, fontWeight: 800, color: "#ef4444" }}>403</div>
-      <div style={{ fontSize: 20, fontWeight: 600 }}>Bạn không có quyền truy cập trang này</div>
+      <div style={{ fontSize: 20, fontWeight: 600 }}>You do not have permission to access this page</div>
       <button
         onClick={() => navigate(-1)}
         style={{
@@ -18,7 +18,7 @@ const Forbidden = () => {
           cursor: "pointer", fontSize: 14, fontWeight: 600,
         }}
       >
-        ← Quay lại
+        ← Go Back
       </button>
     </div>
   );

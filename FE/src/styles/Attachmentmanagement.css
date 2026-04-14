@@ -64,3 +64,15 @@
   color: var(--text-secondary);
   max-width: 200px;
 }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .attach-mgmt { max-width: 100%; }
+  .file-name { max-width: 120px; }
+  .idea-title-cell { max-width: 140px; }
+}
+
+@media (max-width: 480px) {
+  .file-icon { width: 30px; height: 30px; font-size: 14px; }
+  .file-name { max-width: 100px; font-size: 12.5px; }
+}

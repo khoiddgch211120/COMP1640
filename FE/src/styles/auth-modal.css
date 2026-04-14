@@ -187,3 +187,18 @@
     transform: translateY(0) scale(1);
   }
 }
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .am-backdrop { padding: 12px; }
+  .am-box {
+    max-width: 100%;
+    padding: 24px 18px;
+    border-radius: 18px;
+  }
+  .am-title { font-size: 22px; }
+  .am-desc { font-size: 13px; }
+  .am-input { height: 46px; font-size: 13px; border-radius: 12px; }
+  .am-btn-primary { height: 46px; font-size: 14px; border-radius: 12px; }
+  .am-logo { width: 56px; }
+}

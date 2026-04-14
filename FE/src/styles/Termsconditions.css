@@ -199,3 +199,18 @@
   border-radius: var(--radius-sm);
   padding: 16px 18px;
 }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .terms-mgmt { max-width: 100%; }
+  .active-term-card { padding: 16px; }
+  .active-term-badge { font-size: 13px; }
+  .timeline-item { gap: 10px; }
+  .timeline-card { padding: 12px; }
+  .timeline-actions { flex-wrap: wrap; }
+}
+
+@media (max-width: 480px) {
+  .active-term-content { padding: 10px 12px; font-size: 13px; }
+  .version-tag { font-size: 13px; }
+}

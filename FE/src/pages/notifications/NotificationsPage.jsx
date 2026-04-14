@@ -23,11 +23,11 @@ const timeAgo = (dateStr) => {
   const mins = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days = Math.floor(diff / 86400000);
-  if (mins < 1) return 'Vừa xong';
-  if (mins < 60) return `${mins} phút trước`;
-  if (hours < 24) return `${hours} giờ trước`;
-  if (days < 7) return `${days} ngày trước`;
-  return new Date(dateStr).toLocaleString('vi-VN');
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins} minutes ago`;
+  if (hours < 24) return `${hours} hours ago`;
+  if (days < 7) return `${days} days ago`;
+  return new Date(dateStr).toLocaleString('en-GB');
 };
 
 /* ─── Icon by type ─────────────────────────────── */
@@ -68,7 +68,7 @@ export default function NotificationsPage() {
         <div>
           <h1 className="notif-page-title">Notifications</h1>
           <p className="notif-page-subtitle">
-            Thông báo về ý tưởng và bình luận trong department của bạn
+            Notifications about ideas and comments in your department
           </p>
         </div>
         {messages.length > 0 && (
@@ -76,7 +76,7 @@ export default function NotificationsPage() {
             className="notif-page-clear-btn"
             onClick={() => dispatch(clearNotifications())}
           >
-            Xoá tất cả
+            Clear all
           </button>
         )}
       </div>
@@ -84,13 +84,13 @@ export default function NotificationsPage() {
       {/* ── Stats bar ──────────────────────── */}
       <div className="notif-page-stats">
         <span className="notif-stat">
-          Tổng: <strong>{messages.length}</strong>
+          Total: <strong>{messages.length}</strong>
         </span>
         <span className="notif-stat">
-          Chưa đọc: <strong>{unreadCount}</strong>
+          Unread: <strong>{unreadCount}</strong>
         </span>
         <span className="notif-stat">
-          Đã đọc: <strong>{readCount}</strong>
+          Read: <strong>{readCount}</strong>
         </span>
       </div>
 
@@ -101,7 +101,7 @@ export default function NotificationsPage() {
             className="notif-mark-all-btn"
             onClick={() => dispatch(markAllAsRead())}
           >
-            Đánh dấu tất cả đã đọc
+            Mark all as read
           </button>
         </div>
       )}
@@ -154,8 +154,8 @@ export default function NotificationsPage() {
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
-            <h2>Chưa có thông báo</h2>
-            <p>Thông báo mới sẽ xuất hiện tại đây khi có ý tưởng hoặc bình luận mới.</p>
+            <h2>No notifications</h2>
+            <p>New notifications will appear here when there are new ideas or comments.</p>
           </div>
         )}
       </div>

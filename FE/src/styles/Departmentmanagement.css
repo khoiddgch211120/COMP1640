@@ -110,3 +110,22 @@
   color: var(--text-primary);
   margin-bottom: 8px;
 }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .dept-mgmt { max-width: 100%; }
+  .dept-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    padding: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dept-grid {
+    grid-template-columns: 1fr;
+    padding: 10px;
+  }
+  .dept-detail-icon { width: 48px; height: 48px; font-size: 20px; }
+  .dept-detail-name { font-size: 17px; }
+}

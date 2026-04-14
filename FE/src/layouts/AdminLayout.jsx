@@ -80,6 +80,7 @@ const NAV_ITEMS = [
 
 const AdminLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -104,7 +105,10 @@ const AdminLayout = () => {
   };
 
   return (
-    <div className={collapsed ? "admin-shell sidebar-collapsed" : "admin-shell"}>
+    <div className={`admin-shell${collapsed ? " sidebar-collapsed" : ""}${mobileOpen ? " sidebar-mobile-open" : ""}`}>
+
+      {/* ── Sidebar overlay (mobile) ── */}
+      {mobileOpen && <div className="admin-sidebar-overlay" onClick={() => setMobileOpen(false)} />}
 
       {/* ── SIDEBAR ── */}
       <aside className="admin-sidebar">
@@ -149,6 +153,7 @@ const AdminLayout = () => {
               className={({ isActive }) =>
                 `nav-item${isActive ? " nav-item--active" : ""}`
               }
+              onClick={() => setMobileOpen(false)}
             >
               <span className="nav-icon">{item.icon}</span>
               {!collapsed && <span className="nav-label">{item.label}</span>}
@@ -177,6 +182,11 @@ const AdminLayout = () => {
         {/* Topbar */}
         <div className="admin-topbar">
           <div className="topbar-breadcrumb">
+            <button className="admin-mobile-menu-btn" onClick={() => setMobileOpen(true)} title="Open menu">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+              </svg>
+            </button>
             <span className="topbar-title">Admin Panel</span>
           </div>
 

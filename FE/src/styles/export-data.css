@@ -264,3 +264,24 @@
   border-color: #16a34a !important;
   color: #fff !important;
 }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .exp-options-grid {
+    grid-template-columns: 1fr;
+  }
+  .exp-page-title { font-size: 17px; }
+  .exp-year-summary {
+    padding: 12px 16px;
+    gap: 12px;
+  }
+  .exp-year-stat { min-width: 70px; }
+  .exp-year-stat-val { font-size: 15px; }
+  .exp-year-divider { display: none; }
+}
+
+@media (max-width: 480px) {
+  .exp-page-icon { font-size: 22px; padding: 8px; }
+  .exp-option-icon-wrap { width: 44px; height: 44px; font-size: 20px; }
+  .exp-option-title { font-size: 15px; }
+}
