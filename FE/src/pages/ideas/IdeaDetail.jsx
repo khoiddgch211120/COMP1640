@@ -27,6 +27,7 @@ const IdeaDetail = () => {
   const [postingComment, setPostingComment] = useState(false);
   const [votingLoading,  setVotingLoading]  = useState(false);
   const addedCommentIds = useRef(new Set()); // track IDs added via API to avoid WS duplication
+  const postingRef = useRef(false); // flag to prevent WS duplicate during posting
 
   /* ── Fetch all data at once ──────────────────────────────── */
   useEffect(() => {
@@ -73,6 +74,11 @@ const IdeaDetail = () => {
     const trySubscribe = () => {
       if (isWebSocketConnected()) {
         subscription = subscribeTopic(`/topic/ideas/${id}/comments`, (newComment) => {
+          // Skip if currently posting (API response will handle it)
+          if (postingRef.current) {
+            if (newComment.commentId) addedCommentIds.current.add(newComment.commentId);
+            return;
+          }
           // Skip if already added via API response (own comment)
           if (addedCommentIds.current.has(newComment.commentId)) {
             addedCommentIds.current.delete(newComment.commentId);
@@ -109,7 +115,7 @@ const IdeaDetail = () => {
 
   /* ── Vote handler ────────────────────────────────────────── */
   const handleVote = async (voteType) => {
-    if (!user || (user.role !== ROLES.ACADEMIC_STAFF && user.role !== ROLES.SUPPORT_STAFF)) return;
+    if (!user || user.role === ROLES.ADMIN || user.role === ROLES.QA_MANAGER) return;
     if (idea?.authorId === user?.id) {
       alert("You cannot vote on your own idea");
       return;
@@ -137,6 +143,7 @@ const IdeaDetail = () => {
   const handleComment = async () => {
     if (!commentText.trim()) return;
     setPostingComment(true);
+    postingRef.current = true;
     try {
       const newComment = await addCommentApi(id, {
         content:     commentText,
@@ -153,6 +160,7 @@ const IdeaDetail = () => {
     } catch (err) {
       alert(err?.response?.data?.message || "Failed to post comment");
     } finally {
+      postingRef.current = false;
       setPostingComment(false);
     }
   };
@@ -190,14 +198,9 @@ const IdeaDetail = () => {
     (idea.academicYear?.finalClosureDate
       ? new Date() > new Date(idea.academicYear.finalClosureDate)
       : false);
-  const canComment =
-  user?.role === ROLES.ACADEMIC_STAFF ||
-  user?.role === ROLES.SUPPORT_STAFF ||
-  user?.role === ROLES.QA_COORDINATOR;
+  const canComment = !!user && user.role !== ROLES.ADMIN && user.role !== ROLES.QA_MANAGER;
 
-const canVote =
-  user?.role === ROLES.ACADEMIC_STAFF ||
-  user?.role === ROLES.SUPPORT_STAFF;
+  const canVote = !!user && user.role !== ROLES.ADMIN && user.role !== ROLES.QA_MANAGER;
 
   const sortedComments = [...comments].sort(
     (a, b) => new Date(b.createdAt) - new Date(a.createdAt)

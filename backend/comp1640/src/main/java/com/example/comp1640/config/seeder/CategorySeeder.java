@@ -26,7 +26,7 @@ public class CategorySeeder implements CommandLineRunner {
          return;
       }
 
-      User qaManager = userRepo.findByEmail("qa.manager@rikkei.edu.vn").orElse(
+      User qaManager = userRepo.findByEmail("qa.manager@greenwich.edu.vn").orElse(
             userRepo.findByEmail("admin@gmail.com").orElseThrow());
 
       List<Category> categories = List.of(

@@ -52,7 +52,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
    @Override
    public void configureClientInboundChannel(ChannelRegistration registration) {
-      // ✅ Thêm interceptor để xauthenticate STOMP connect request
+      // Thêm interceptor để xauthenticate STOMP connect request
       registration.interceptors(new ChannelInterceptor() {
          @Override
          public Message<?> preSend(Message<?> message, MessageChannel channel) {
