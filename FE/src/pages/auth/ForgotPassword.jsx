@@ -14,19 +14,19 @@ const ForgotPassword = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!email) {
-      notification.warning({ title: "Thiếu email", description: "Vui lòng nhập email của bạn" });
+      notification.warning({ title: "Missing email", description: "Please enter your email" });
       return;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      notification.error({ title: "Email không hợp lệ", description: "Vui lòng nhập địa chỉ email hợp lệ" });
+      notification.error({ title: "Invalid email", description: "Please enter a valid email address" });
       return;
     }
     setLoading(true);
     setTimeout(() => {
       notification.success({
-        title: "Đã gửi link đặt lại",
-        description: "Nếu email tồn tại, link đặt lại mật khẩu đã được gửi.",
+        title: "Reset link sent",
+        description: "If the email exists, a password reset link has been sent.",
       });
       setLoading(false);
       setTimeout(() => navigate("/login"), 1500);

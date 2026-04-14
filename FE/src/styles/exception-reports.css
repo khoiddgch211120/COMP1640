@@ -198,6 +198,29 @@
   padding-top: 8px;
 }
 
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .exc-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .exc-page-title { font-size: 17px; }
+  .exc-alert-row {
+    flex-direction: column;
+  }
+  .exc-alert { min-width: 0; }
+  .exc-filter-row {
+    flex-direction: column;
+  }
+  .exc-search-input { max-width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .exc-page-icon { font-size: 22px; padding: 8px; }
+  .exc-page-title { font-size: 15px; }
+}
+
 .exc-modal-content {
   font-size: 14px;
   color: #374151;

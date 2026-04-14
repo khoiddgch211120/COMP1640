@@ -190,6 +190,7 @@ function getNavItems(role) {
 ═══════════════════════════════════════════════════════════ */
 const MainLayout = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -236,7 +237,10 @@ const MainLayout = () => {
   const navItems = getNavItems(displayRole);
 
   return (
-    <div className={`main-shell${collapsed ? " sidebar-collapsed" : ""}`}>
+    <div className={`main-shell${collapsed ? " sidebar-collapsed" : ""}${mobileOpen ? " sidebar-mobile-open" : ""}`}>
+      {/* ── Sidebar overlay (mobile) ── */}
+      {mobileOpen && <div className="main-sidebar-overlay" onClick={() => setMobileOpen(false)} />}
+
       {/* ── SIDEBAR ── */}
       <aside className="main-sidebar">
         {/* Brand */}
@@ -279,6 +283,7 @@ const MainLayout = () => {
               className={({ isActive }) =>
                 `main-nav-item${isActive ? " main-nav-item--active" : ""}`
               }
+              onClick={() => setMobileOpen(false)}
             >
               <span className="main-nav-icon">{item.icon}</span>
               {!collapsed && <span className="main-nav-label">{item.label}</span>}
@@ -305,6 +310,11 @@ const MainLayout = () => {
         {/* Topbar */}
         <div className="main-topbar">
           <div className="main-topbar-breadcrumb">
+            <button className="main-mobile-menu-btn" onClick={() => setMobileOpen(true)} title="Open menu">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+              </svg>
+            </button>
             <span className="main-topbar-title">Staff Panel</span>
           </div>
           <div className="main-topbar-actions">

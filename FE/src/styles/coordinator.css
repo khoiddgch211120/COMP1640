@@ -418,7 +418,27 @@
 .co-empty p { font-size: 14px; margin: 0; }
 
 /* ── Responsive tweaks ───────────────────────────────────── */
+@media (max-width: 768px) {
+  .co-page-title { font-size: 18px; }
+  .co-page-header { flex-direction: column; align-items: flex-start; }
+  .co-stat-value { font-size: 24px; }
+  .co-stat-card { padding: 14px 16px; }
+  .co-card-head { padding: 12px 14px; }
+  .co-table th, .co-table td { padding: 9px 12px; }
+  .co-notif-item { padding: 12px 14px; gap: 10px; }
+  .co-notif-title { white-space: normal; }
+  .co-notif-filters { gap: 6px; }
+  .co-mark-all-btn { margin-left: 0; }
+}
+
 @media (max-width: 600px) {
   .co-table th:nth-child(3),
   .co-table td:nth-child(3) { display: none; }
+}
+
+@media (max-width: 480px) {
+  .co-page-title { font-size: 16px; }
+  .co-stat-icon { width: 30px; height: 30px; }
+  .co-stat-value { font-size: 20px; }
+  .co-notif-icon { width: 34px; height: 34px; }
 }

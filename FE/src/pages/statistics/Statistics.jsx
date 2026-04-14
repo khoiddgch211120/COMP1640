@@ -1,10 +1,18 @@
 import { useEffect, useState, useMemo } from "react";
 import { useSelector } from "react-redux";
-import { Spin, Table, Card, Statistic, Row, Col, Select, Button, message, Space, Alert } from "antd";
-import { BarChartOutlined, FileExcelOutlined, InfoCircleOutlined } from "@ant-design/icons";
+import { Spin, Table, Select, message, Alert } from "antd";
+import {
+  BarChartOutlined,
+  FileExcelOutlined,
+  FolderOpenOutlined,
+  TeamOutlined,
+  BulbOutlined,
+  EyeOutlined,
+} from "@ant-design/icons";
 import { ROLES } from "../../constants/roles";
 import { getAcademicYears } from "../../services/academicYearService";
 import { getStatisticsReport, exportToCSV, exportAttachmentsAsZip } from "../../services/reportService";
+import "../../styles/statistics.css";
 
 const { Option } = Select;
 const FULL_ACCESS_ROLES = [ROLES.ADMIN, ROLES.QA_MANAGER];
@@ -98,14 +106,25 @@ const Statistics = () => {
 
   return (
     <Spin spinning={fetchingYears}>
-      <div style={{ padding: "24px" }}>
-        <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 8 }}>
-          <BarChartOutlined style={{ marginRight: 8 }} />
-          System Statistics
-        </h1>
-        <p style={{ color: "#64748b", marginBottom: 16 }}>
-          {hasFullAccess ? "University-wide Dashboard" : `Department Dashboard: ${userDeptName}`}
-        </p>
+      <div className="stats-page">
+        {/* ── Header ── */}
+        <div className="stats-header">
+          <div className="stats-header-left">
+            <h1>
+              <BarChartOutlined />
+              System Statistics
+            </h1>
+            <p>
+              {hasFullAccess
+                ? "University-wide idea analytics and department performance"
+                : `Department Dashboard — ${userDeptName}`}
+            </p>
+          </div>
+          <span className="stats-header-badge">
+            <EyeOutlined />
+            {hasFullAccess ? "Full Access" : "Department View"}
+          </span>
+        </div>
 
         {/* Warning: Only show when dept ID truly not found after loading */}
         {!hasFullAccess && !userDeptId && !fetchingYears && (
@@ -114,55 +133,126 @@ const Statistics = () => {
             description="Your account is not linked to any department. Please contact Admin."
             type="error"
             showIcon
-            style={{ marginBottom: 20 }}
           />
         )}
 
-        <Card style={{ marginBottom: 24, borderRadius: 8 }}>
-          <Space size="large" wrap>
+        {/* ── Filter Bar ── */}
+        <div className="stats-filter-bar">
+          <div>
+            <label>Academic Year:</label>
+            <Select value={selectedYearId} onChange={setSelectedYearId} style={{ width: 160 }}>
+              {academicYears.map((y) => (
+                <Option key={y.yearId} value={y.yearId}>
+                  {y.yearLabel}
+                </Option>
+              ))}
+            </Select>
+          </div>
+
+          {hasFullAccess && (
             <div>
-              <span style={{ marginRight: 8 }}>Academic Year:</span>
-              <Select value={selectedYearId} onChange={setSelectedYearId} style={{ width: 150 }}>
-                {academicYears.map(y => <Option key={y.yearId} value={y.yearId}>{y.yearLabel}</Option>)}
+              <label>Department:</label>
+              <Select
+                value={selectedDeptId}
+                onChange={setSelectedDeptId}
+                style={{ width: 220 }}
+                placeholder="All Departments"
+                allowClear
+              >
+                {statistics.map((s) => (
+                  <Option key={s.deptId || s.dept_id} value={s.deptId || s.dept_id}>
+                    {s.deptName || s.dept_name}
+                  </Option>
+                ))}
               </Select>
             </div>
+          )}
 
-            {hasFullAccess && (
-              <div>
-                <span style={{ marginRight: 8 }}>Filter Department:</span>
-                <Select
-                  value={selectedDeptId}
-                  onChange={setSelectedDeptId}
-                  style={{ width: 200 }}
-                  placeholder="All Departments"
-                  allowClear
-                >
-                  {statistics.map(s => (
-                    <Option key={s.deptId || s.dept_id} value={s.deptId || s.dept_id}>
-                      {s.deptName || s.dept_name}
-                    </Option>
-                  ))}
-                </Select>
-              </div>
-            )}
-          </Space>
-        </Card>
+          {hasFullAccess && (
+            <div className="stats-export-btns" style={{ marginLeft: "auto" }}>
+              <button
+                className="stats-export-btn stats-export-btn--primary"
+                onClick={async () => {
+                  try {
+                    await exportToCSV(selectedYearId);
+                    message.success("CSV exported successfully");
+                  } catch {
+                    message.error("Failed to export CSV");
+                  }
+                }}
+              >
+                <FileExcelOutlined /> Export CSV
+              </button>
+              <button
+                className="stats-export-btn"
+                onClick={async () => {
+                  try {
+                    await exportAttachmentsAsZip(selectedYearId);
+                    message.success("Attachments exported successfully");
+                  } catch {
+                    message.error("Failed to export attachments");
+                  }
+                }}
+              >
+                <FolderOpenOutlined /> Export Attachments
+              </button>
+            </div>
+          )}
+        </div>
 
-        <Row gutter={16} style={{ marginBottom: 24 }}>
-          <Col span={8}><Card bordered={false}><Statistic title="Ideas" value={totalIdeas} /></Card></Col>
-          <Col span={8}><Card bordered={false}><Statistic title="Contributors" value={totalContributors} /></Card></Col>
-          <Col span={8}><Card bordered={false}><Statistic title="View Scope" value={hasFullAccess ? "Full" : "Local"} /></Card></Col>
-        </Row>
+        {/* ── Stat Cards ── */}
+        <div className="stats-cards-row">
+          <div className="stats-card">
+            <div className="stats-card-icon stats-card-icon--blue">
+              <BulbOutlined />
+            </div>
+            <div className="stats-card-body">
+              <div className="stats-card-label">Total Ideas</div>
+              <div className="stats-card-value">{totalIdeas}</div>
+            </div>
+          </div>
 
-        <Card title="Detailed Data">
-          <Table
-            columns={columns}
-            dataSource={filteredData}
-            rowKey={(record) => record.deptId || record.dept_id}
-            loading={loading}
-            pagination={hasFullAccess}
-          />
-        </Card>
+          <div className="stats-card">
+            <div className="stats-card-icon stats-card-icon--green">
+              <TeamOutlined />
+            </div>
+            <div className="stats-card-body">
+              <div className="stats-card-label">Contributors</div>
+              <div className="stats-card-value">{totalContributors}</div>
+            </div>
+          </div>
+
+          <div className="stats-card">
+            <div className="stats-card-icon stats-card-icon--purple">
+              <EyeOutlined />
+            </div>
+            <div className="stats-card-body">
+              <div className="stats-card-label">Departments</div>
+              <div className="stats-card-value">{filteredData.length}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Table ── */}
+        <div className="stats-table-card">
+          <div className="stats-table-head">
+            <span className="stats-table-title">
+              <BarChartOutlined /> Department Breakdown
+            </span>
+            <span style={{ fontSize: 13, color: "#94a3b8" }}>
+              {filteredData.length} {filteredData.length === 1 ? "department" : "departments"}
+            </span>
+          </div>
+          <div className="stats-table-body">
+            <Table
+              columns={columns}
+              dataSource={filteredData}
+              rowKey={(record) => record.deptId || record.dept_id}
+              loading={loading}
+              pagination={hasFullAccess ? { pageSize: 10 } : false}
+            />
+          </div>
+        </div>
       </div>
     </Spin>
   );

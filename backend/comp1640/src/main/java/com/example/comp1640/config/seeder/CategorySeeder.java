@@ -8,9 +8,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 @Component
+@Order(7)
 public class CategorySeeder implements CommandLineRunner {
 
    @Autowired
@@ -26,8 +28,14 @@ public class CategorySeeder implements CommandLineRunner {
          return;
       }
 
-      User qaManager = userRepo.findByEmail("qa.manager@rikkei.edu.vn").orElse(
-            userRepo.findByEmail("admin@gmail.com").orElseThrow());
+      User qaManager = userRepo.findByEmail("qa.manager@greenwich.edu.vn")
+            .or(() -> userRepo.findByEmail("admin@greenwich.edu.vn"))
+            .or(() -> userRepo.findByEmail("admin@gmail.com"))
+            .or(() -> userRepo.findAll().stream()
+                  .filter(u -> u.getRole() != null && (u.getRole().getRoleName().name().equals("ADMIN")
+                        || u.getRole().getRoleName().name().equals("QA_MANAGER")))
+                  .findFirst())
+            .orElseThrow(() -> new IllegalStateException("Missing required admin or QA manager user for category seeding"));
 
       List<Category> categories = List.of(
             createCategory("Cải tiến quy trình", "Tối ưu hóa workflow nội bộ", qaManager),

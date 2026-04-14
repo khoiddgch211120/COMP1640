@@ -22,7 +22,7 @@ const CustomTooltip = ({ active, payload, label }) => {
       boxShadow: "0 4px 16px rgba(0,0,0,0.09)", fontSize: 13,
     }}>
       <p style={{ margin: 0, fontWeight: 700, color: "#0f172a" }}>{label}</p>
-      <p style={{ margin: "3px 0 0", color: "#2563eb" }}>{payload[0].value} ý tưởng</p>
+      <p style={{ margin: "3px 0 0", color: "#2563eb" }}>{payload[0].value} ideas</p>
     </div>
   );
 };
@@ -85,7 +85,7 @@ const CoordinatorDashboard = () => {
 
   const deptName  = user?.deptName || "Department";
   const yearLabel = currentYear?.yearLabel || "N/A";
-  const formatDate = (d) => d ? new Date(d).toLocaleDateString("vi-VN") : "—";
+  const formatDate = (d) => d ? new Date(d).toLocaleDateString("en-GB") : "—";
 
   return (
     <div className="co-page">
@@ -95,7 +95,7 @@ const CoordinatorDashboard = () => {
           <h1 className="co-page-title">
             Dashboard — {deptName}
           </h1>
-          <p className="co-page-sub">Tổng quan ý tưởng trong phạm vi department của bạn</p>
+          <p className="co-page-sub">Overview of ideas within your department</p>
         </div>
         <span style={{
           fontSize: 12, color: "#64748b", background: "#f1f5f9",
@@ -107,7 +107,7 @@ const CoordinatorDashboard = () => {
 
       {loading ? (
         <div style={{ textAlign: "center", padding: "60px 0", color: "#64748b" }}>
-          Đang tải dữ liệu...
+          Loading data...
         </div>
       ) : (
         <>
@@ -115,7 +115,7 @@ const CoordinatorDashboard = () => {
           <div className="co-stats-grid">
             <div className="co-stat-card">
               <div className="co-stat-head">
-                <span className="co-stat-label">Tổng ý tưởng</span>
+                <span className="co-stat-label">Total Ideas</span>
                 <span className="co-stat-icon co-stat-icon--blue">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                     <path d="M12 2a7 7 0 0 1 7 7c0 3-1.5 5-3.5 6.5V17a1 1 0 0 1-1 1h-5a1 1 0 0 1-1-1v-1.5C6.5 14 5 12 5 9a7 7 0 0 1 7-7z"/>
@@ -124,12 +124,12 @@ const CoordinatorDashboard = () => {
                 </span>
               </div>
               <div className="co-stat-value">{totalIdeas}</div>
-              <div className="co-stat-footer">Trong phòng ban</div>
+              <div className="co-stat-footer">In department</div>
             </div>
 
             <div className="co-stat-card">
               <div className="co-stat-head">
-                <span className="co-stat-label">Người đóng góp</span>
+                <span className="co-stat-label">Contributors</span>
                 <span className="co-stat-icon co-stat-icon--green">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -140,12 +140,12 @@ const CoordinatorDashboard = () => {
                 </span>
               </div>
               <div className="co-stat-value">{totalContributors}</div>
-              <div className="co-stat-footer">Staff đã nộp ý tưởng</div>
+              <div className="co-stat-footer">Staff who submitted ideas</div>
             </div>
 
             <div className="co-stat-card">
               <div className="co-stat-head">
-                <span className="co-stat-label">Ẩn danh</span>
+                <span className="co-stat-label">Anonymous</span>
                 <span className="co-stat-icon co-stat-icon--amber">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                     <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
@@ -155,12 +155,12 @@ const CoordinatorDashboard = () => {
                 </span>
               </div>
               <div className="co-stat-value">{anonymousCount}</div>
-              <div className="co-stat-footer">Ý tưởng ẩn danh</div>
+              <div className="co-stat-footer">Anonymous ideas</div>
             </div>
 
             <div className="co-stat-card">
               <div className="co-stat-head">
-                <span className="co-stat-label">Năm học</span>
+                <span className="co-stat-label">Academic Year</span>
                 <span className="co-stat-icon co-stat-icon--purple">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -172,7 +172,7 @@ const CoordinatorDashboard = () => {
               </div>
               <div className="co-stat-value" style={{ fontSize: 16 }}>{yearLabel}</div>
               <div className="co-stat-footer">
-                {currentYear?.ideaOpen ? "✅ Đang mở" : "🔒 Đã đóng"}
+                {currentYear?.ideaOpen ? "✅ Open" : "🔒 Closed"}
               </div>
             </div>
           </div>
@@ -181,12 +181,12 @@ const CoordinatorDashboard = () => {
           <div className="co-row">
             <div className="co-card">
               <div className="co-card-head">
-                <span className="co-card-title">Ý tưởng theo tháng</span>
-                <span style={{ fontSize: 12, color: "#94a3b8" }}>{monthlyData.length} tháng</span>
+                <span className="co-card-title">Ideas by Month</span>
+                <span style={{ fontSize: 12, color: "#94a3b8" }}>{monthlyData.length} months</span>
               </div>
               {monthlyData.length === 0 ? (
                 <div style={{ padding: "40px 0", textAlign: "center", color: "#94a3b8" }}>
-                  Chưa có dữ liệu
+                  No data available
                 </div>
               ) : (
                 <div className="co-chart-wrap" style={{ height: 250, minWidth: 0 }}>
@@ -206,7 +206,7 @@ const CoordinatorDashboard = () => {
 
             <div className="co-card">
               <div className="co-card-head">
-                <span className="co-card-title">Top đóng góp</span>
+                <span className="co-card-title">Top Contributors</span>
               </div>
               <div className="co-category-list">
                 {(() => {
@@ -221,13 +221,13 @@ const CoordinatorDashboard = () => {
                     .map(([name, count]) => (
                       <div key={name} className="co-category-item">
                         <span className="co-category-name">{name}</span>
-                        <span className="co-category-count">{count} ý tưởng</span>
+                        <span className="co-category-count">{count} ideas</span>
                       </div>
                     ));
                 })()}
                 {ideas.filter((i) => !i.isAnonymous).length === 0 && (
                   <div style={{ color: "#94a3b8", fontSize: 13, padding: "12px 0" }}>
-                    Chưa có dữ liệu
+                    No data available
                   </div>
                 )}
               </div>
@@ -237,21 +237,21 @@ const CoordinatorDashboard = () => {
           {/* ── Recent ideas table ── */}
           <div className="co-card">
             <div className="co-card-head">
-              <span className="co-card-title">Ý tưởng gần đây</span>
-              <span style={{ fontSize: 12, color: "#94a3b8" }}>5 ý tưởng mới nhất</span>
+              <span className="co-card-title">Recent Ideas</span>
+              <span style={{ fontSize: 12, color: "#94a3b8" }}>5 latest ideas</span>
             </div>
             <div className="co-card-body" style={{ overflowX: "auto" }}>
               {recentIdeas.length === 0 ? (
                 <div style={{ padding: "32px 0", textAlign: "center", color: "#94a3b8" }}>
-                  Chưa có ý tưởng nào
+                  No ideas yet
                 </div>
               ) : (
                 <table className="co-table">
                   <thead>
                     <tr>
-                      <th>Tiêu đề</th>
-                      <th>Tác giả</th>
-                      <th>Ngày nộp</th>
+                      <th>Title</th>
+                      <th>Author</th>
+                      <th>Submitted</th>
                       <th>Upvotes</th>
                       <th>Downvotes</th>
                     </tr>
@@ -267,7 +267,7 @@ const CoordinatorDashboard = () => {
                           {idea.title}
                         </td>
                         {/* QA_COORDINATOR must not see anonymous identities */}
-                        <td>{idea.isAnonymous ? "Ẩn danh" : (idea.authorName ?? "—")}</td>
+                        <td>{idea.isAnonymous ? "Anonymous" : (idea.authorName ?? "—")}</td>
                         <td style={{ whiteSpace: "nowrap" }}>{formatDate(idea.submittedAt)}</td>
                         <td>{idea.upvotes ?? 0}</td>
                         <td>{idea.downvotes ?? 0}</td>

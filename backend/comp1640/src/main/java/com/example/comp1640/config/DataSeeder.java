@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +18,7 @@ import com.example.comp1640.repository.RoleRepository;
 import com.example.comp1640.repository.UserRepository;
 
 @Component
+@Order(1)
 public class DataSeeder implements CommandLineRunner {
 
     private final RoleRepository roleRepo;

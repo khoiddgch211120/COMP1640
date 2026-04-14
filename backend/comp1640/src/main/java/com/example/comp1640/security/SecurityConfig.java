@@ -31,7 +31,10 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173",  // Vite dev server
-                "http://localhost:3000"   // fallback nếu dùng port khác
+                "http://localhost:3000",  // fallback nếu dùng port khác
+                "https://antitt.io.vn",   // Production domain
+                "http://antitt.io.vn",
+                "http://103.56.160.43:24700"  // Production IP:port
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));

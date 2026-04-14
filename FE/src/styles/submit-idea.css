@@ -420,6 +420,10 @@
   margin: 0 0 8px;
 }
 
+@media (max-width: 768px) {
+  .id-submit-grid { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 640px) {
   .id-card-body, .id-comments-card { padding: 22px 18px; }
   .id-title { font-size: 21px; }

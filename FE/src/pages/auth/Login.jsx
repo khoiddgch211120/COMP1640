@@ -14,7 +14,7 @@ import { login as loginApi } from "../../services/authService";
 import { ROLES } from "../../constants/roles";
 
 /* ============================================================
-   ROLE ROUTE - Điều hướng sau khi đăng nhập thành công
+   ROLE ROUTE - Redirect after successful login
 ============================================================ */
 const ROLE_ROUTE = {
   [ROLES.ADMIN]: "/admin/dashboard",
@@ -41,8 +41,8 @@ const Login = () => {
 
     if (!email || !password) {
       notification.warning({
-        message: "Thiếu thông tin",
-        description: "Vui lòng nhập email và mật khẩu",
+        message: "Missing information",
+        description: "Please enter your email and password",
       });
       return;
     }
@@ -75,7 +75,7 @@ const Login = () => {
         "Invalid email or password";
 
       notification.error({
-        message: "Đăng nhập thất bại",
+        message: "Login failed",
         description: msg,
       });
     } finally {

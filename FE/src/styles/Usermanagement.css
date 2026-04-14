@@ -84,3 +84,20 @@
   font-weight: 600;
   color: var(--text-primary);
 }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .user-mgmt { max-width: 100%; }
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  .detail-avatar-block {
+    flex-direction: column;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .detail-avatar { width: 48px; height: 48px; font-size: 18px; }
+  .detail-name { font-size: 15px; }
+}

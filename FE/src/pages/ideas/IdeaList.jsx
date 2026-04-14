@@ -45,7 +45,7 @@ const IdeaList = () => {
   const [totalPages,    setTotalPages]    = useState(0);
   const [totalElements, setTotalElements] = useState(0);
 
-  const PAGE_SIZE = 6;
+  const PAGE_SIZE = 10;
 
   // Permission to see identity (Admin/QA Manager)
   const canSeeIdentity = CAN_SEE_IDENTITY_ROLES.includes(user?.role);
@@ -234,15 +234,52 @@ const IdeaList = () => {
       )}
 
       {/* ── Pagination ── */}
-      {totalPages > 1 && (
-        <div className="id-pagination">
-          <button disabled={currentPage === 0} onClick={() => setCurrentPage(p => p - 1)}>← Prev</button>
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button key={i} className={currentPage === i ? "id-page-btn--active" : ""} onClick={() => setCurrentPage(i)}>{i + 1}</button>
-          ))}
-          <button disabled={currentPage === totalPages - 1} onClick={() => setCurrentPage(p => p + 1)}>Next →</button>
-        </div>
-      )}
+      {totalPages > 1 && (() => {
+        const pages = [];
+        const delta = 2;
+        const left  = Math.max(0, currentPage - delta);
+        const right = Math.min(totalPages - 1, currentPage + delta);
+
+        if (left > 0) pages.push(0);
+        if (left > 1) pages.push('...');
+        for (let i = left; i <= right; i++) pages.push(i);
+        if (right < totalPages - 2) pages.push('...');
+        if (right < totalPages - 1) pages.push(totalPages - 1);
+
+        return (
+          <div className="id-pagination">
+            <button
+              className="id-page-btn id-page-btn--nav"
+              disabled={currentPage === 0}
+              onClick={() => setCurrentPage(p => p - 1)}
+            >
+              ← Prev
+            </button>
+
+            {pages.map((p, idx) =>
+              p === '...' ? (
+                <span key={`dots-${idx}`} className="id-page-dots">…</span>
+              ) : (
+                <button
+                  key={p}
+                  className={`id-page-btn${currentPage === p ? ' id-page-btn--active' : ''}`}
+                  onClick={() => setCurrentPage(p)}
+                >
+                  {p + 1}
+                </button>
+              )
+            )}
+
+            <button
+              className="id-page-btn id-page-btn--nav"
+              disabled={currentPage === totalPages - 1}
+              onClick={() => setCurrentPage(p => p + 1)}
+            >
+              Next →
+            </button>
+          </div>
+        );
+      })()}
     </div>
   );
 };

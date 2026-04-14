@@ -322,3 +322,28 @@
   cursor: not-allowed;
   transform: none;
 }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .ta-page { max-width: 100%; }
+  .ta-header { gap: 10px; }
+  .ta-title { font-size: 18px; }
+  .ta-card-body { padding: 14px 16px; }
+  .ta-actions { flex-direction: column; }
+  .ta-btn-cancel, .ta-btn-accept { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .tg-box {
+    max-width: 100%;
+    padding: 24px 20px 20px;
+    border-radius: 16px;
+  }
+  .tg-icon-wrap { width: 48px; height: 48px; }
+  .tg-title { font-size: 16px; }
+  .tg-desc { font-size: 12.5px; }
+  .tg-btn-ok { height: 40px; font-size: 13px; }
+  .ta-header-icon { width: 40px; height: 40px; }
+  .ta-title { font-size: 16px; }
+  .ta-rule { padding: 10px 12px; }
+}

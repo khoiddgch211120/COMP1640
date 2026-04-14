@@ -318,29 +318,52 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding-top: 8px;
+  padding: 20px 0 8px;
 }
 
 .id-page-btn {
-  width: 36px; height: 36px;
-  border-radius: var(--id-radius-sm);
+  min-width: 38px; height: 38px;
+  border-radius: 10px;
   border: 1.5px solid var(--id-border);
   background: var(--id-card);
   font-size: 13px;
   font-weight: 600;
   color: var(--id-text-2);
   cursor: pointer;
-  transition: all var(--id-transition);
+  transition: all 0.2s ease;
   font-family: 'Cabin', system-ui, sans-serif;
   display: flex; align-items: center; justify-content: center;
 }
-.id-page-btn:hover { border-color: var(--id-blue); color: var(--id-blue); }
+.id-page-btn:hover:not(:disabled) {
+  border-color: var(--id-blue);
+  color: var(--id-blue);
+  background: #eff6ff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.12);
+}
+.id-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 .id-page-btn--active {
   background: var(--id-blue);
   border-color: var(--id-blue);
   color: #fff;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.25);
 }
-.id-page-btn--nav { width: auto; padding: 0 12px; }
+.id-page-btn--active:hover { background: #1d4ed8; color: #fff; }
+.id-page-btn--nav {
+  width: auto;
+  padding: 0 16px;
+  font-size: 13px;
+  gap: 4px;
+}
+.id-page-dots {
+  width: 38px; height: 38px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: var(--id-text-3);
+  user-select: none;
+}
 
 /* ── Empty state ─────────────────────────────────────────── */
 .id-empty {
@@ -791,4 +814,21 @@
   color: var(--id-red);
   font-size: 15px;
   font-weight: 600;
+}
+
+/* ── Responsive enhancements ─────────────────────────────── */
+@media (max-width: 768px) {
+  .id-filter-bar { flex-direction: column; align-items: stretch; }
+  .id-search-wrap { max-width: 100%; }
+  .id-stats-row { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .id-grid { grid-template-columns: 1fr; }
+  .id-card { padding: 14px; }
+  .id-page-controls { gap: 4px; }
+  .id-page-btn { min-width: 32px; height: 32px; font-size: 12px; }
+}
+
+@media (max-width: 480px) {
+  .id-stats-row { grid-template-columns: 1fr; }
+  .id-page-btn--nav { padding: 6px 10px; font-size: 12px; }
+  .id-access-denied { padding: 18px; font-size: 13px; }
 }

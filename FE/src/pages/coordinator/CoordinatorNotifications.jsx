@@ -7,7 +7,7 @@ import '../../styles/coordinator.css';
 const formatDate = (d) => {
   if (!d) return '';
   const date = new Date(d);
-  return date.toLocaleString('vi-VN', {
+  return date.toLocaleString('en-GB', {
     day: '2-digit', month: '2-digit', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   });
@@ -19,10 +19,10 @@ const timeAgo = (dateStr) => {
   const mins  = Math.floor(diff / 60000);
   const hours = Math.floor(diff / 3600000);
   const days  = Math.floor(diff / 86400000);
-  if (mins  < 1)  return 'Vừa xong';
-  if (mins  < 60) return `${mins} phút trước`;
-  if (hours < 24) return `${hours} giờ trước`;
-  return `${days} ngày trước`;
+  if (mins  < 1)  return 'Just now';
+  if (mins  < 60) return `${mins} minutes ago`;
+  if (hours < 24) return `${hours} hours ago`;
+  return `${days} days ago`;
 };
 
 /* ─── Type label ─────────────────────────────────────────── */
@@ -66,7 +66,7 @@ const CoordinatorNotifications = () => {
         <div>
           <h1 className="co-page-title">Notifications</h1>
           <p className="co-page-sub">
-            Thông báo về ý tưởng và bình luận trong department của bạn
+            Notifications about ideas and comments in your department
           </p>
         </div>
         {/* Actions */}
@@ -80,7 +80,7 @@ const CoordinatorNotifications = () => {
                 border: '1px solid #bfdbfe', cursor: 'pointer', fontWeight: 500,
               }}
             >
-              ✓ Đánh dấu tất cả đã đọc
+              ✓ Mark all as read
             </button>
           )}
           {messages.length > 0 && (
@@ -92,7 +92,7 @@ const CoordinatorNotifications = () => {
                 border: '1px solid #e2e8f0', cursor: 'pointer',
               }}
             >
-              Xoá tất cả
+              Clear all
             </button>
           )}
         </div>
@@ -106,9 +106,9 @@ const CoordinatorNotifications = () => {
           borderRadius: 10, border: '1px solid #e2e8f0',
           fontSize: 13, color: '#64748b',
         }}>
-          <span>Tổng: <strong style={{ color: '#0f172a' }}>{messages.length}</strong></span>
-          <span>Chưa đọc: <strong style={{ color: '#2563eb' }}>{unreadCount}</strong></span>
-          <span>Đã đọc: <strong style={{ color: '#16a34a' }}>{messages.length - unreadCount}</strong></span>
+          <span>Total: <strong style={{ color: '#0f172a' }}>{messages.length}</strong></span>
+          <span>Unread: <strong style={{ color: '#2563eb' }}>{unreadCount}</strong></span>
+          <span>Read: <strong style={{ color: '#16a34a' }}>{messages.length - unreadCount}</strong></span>
         </div>
       )}
 
@@ -123,9 +123,9 @@ const CoordinatorNotifications = () => {
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
             <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
           </svg>
-          <p style={{ fontWeight: 500, fontSize: 15, margin: 0 }}>Chưa có thông báo nào</p>
+          <p style={{ fontWeight: 500, fontSize: 15, margin: 0 }}>No notifications yet</p>
           <p style={{ fontSize: 13, margin: '6px 0 0' }}>
-            Thông báo sẽ xuất hiện khi có ý tưởng mới trong department của bạn.
+            Notifications will appear when there are new ideas in your department.
           </p>
         </div>
       )}
@@ -173,7 +173,7 @@ const CoordinatorNotifications = () => {
                       fontSize: 10, fontWeight: 600, color: '#2563eb',
                       background: '#dbeafe', padding: '1px 6px', borderRadius: 8,
                     }}>
-                      Mới
+                      New
                     </span>
                   )}
                 </div>
@@ -182,7 +182,7 @@ const CoordinatorNotifications = () => {
                   margin: 0, fontSize: 14, fontWeight: notif.isRead ? 400 : 500,
                   color: '#0f172a',
                 }}>
-                  {notif.title || 'Thông báo mới'}
+                  {notif.title || 'New notification'}
                 </p>
 
                 {notif.message && (
@@ -201,7 +201,7 @@ const CoordinatorNotifications = () => {
                     🕐 {timeAgo(notif.createdAt)}
                   </span>
                   {notif.ideaId && (
-                    <span style={{ color: '#2563eb' }}>→ Xem ý tưởng</span>
+                    <span style={{ color: '#2563eb' }}>→ View idea</span>
                   )}
                 </div>
               </div>
